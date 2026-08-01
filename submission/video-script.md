@@ -1,9 +1,31 @@
 # Demo video script — Stage Manager (≤3:00)
 
-**Goal:** One chuckle, then clarity. Show the real job, the CLI, one live ring, writeback.  
-**Primary cue:** `stuck_support` · **Second cue (live or name-drop):** `agent_needs_decision`
+**Status:** DRAFT — awaiting Assaf approval before regenerating the reel.  
+**Do not ship the current `stage-manager-demo.mp4` as final** (it was built without a usable audio track; rebuild after approval).
 
-Both cues have been proven live (decision **1** each). Video can show one live ring and name-drop the second, or cut both if time allows.
+**Goal:** Problem → why phone → product → dress rehearsal → live decision → writeback → business value → end.  
+**Tone:** Stage Manager. One light beat, then clarity.  
+**Primary cue on screen:** `stuck_support` · **Second cue:** `agent_needs_decision` (name-drop or flash)
+
+---
+
+## Problem statement (must land early)
+
+CS owns named accounts and renewals, but the signal that matters is buried under Slack, ticket queues, and dashboards. When support loops, SLA turns red, an agent hits `needs_human`, or onboarding stalls, the “notification” is easy to miss — until churn or breach is already expensive.
+
+**Phone is the interrupt that still works** — but only if it is rare, short, structured, and aimed at the **CS owner**, not a spam dialer to the customer.
+
+## Business value (say plainly)
+
+| Value | One line for VO / card |
+| --- | --- |
+| **Right person** | Interrupt the owner, not the account. |
+| **Faster decision** | Closed-set 1 / 2 / 3 in ~60s instead of thread archaeology. |
+| **Audit trail** | Decision lands in prompt book / show report — not lost in chat. |
+| **Safe by default** | Dress rehearsal first; live needs explicit `PLACES`; never call the customer. |
+| **One engine** | Four cue types, same pipeline — practical Monday-morning CS ops. |
+
+Prize narrative we aim at: **Most Practical**.
 
 ---
 
@@ -11,19 +33,30 @@ Both cues have been proven live (decision **1** each). Video can show one live r
 
 | Time | Shot | Spoken / on-screen |
 | --- | --- | --- |
-| **0:00–0:20** | Face or title card → terminal ready | **VO:** “Customer Success owns the account. Slack owns the noise. When Acme’s support path is stuck, we don’t dial the customer — we cue the firefighter.” *Beat / half-smile:* “Stage Manager. Headset on.” |
-| **0:20–0:50** | Terminal: `cd skills/customer-success-voice-signal` → dress rehearsal | **VO:** “Dress rehearsal first. Default. No ring.” *Run:* `npm run signal -- --fixture stuck_support_acme.json` · Show call sheet preview + simulated line reading 1 · “Prompt book and show report update without touching a phone.” |
-| **0:50–1:10** | Quick `--list` or second fixture flash | **VO:** “Four cues on the sheet — stuck support, SLA, agent needs a decision, health stall. Same engine.” *Optional flash:* `agent_needs_decision_acme.json` in `--list`. |
-| **1:10–2:10** | Curtain-up CLI + phone rings + answer | **VO:** “Curtain up. Live gate: `--live` and `PLACES`.” *Run:* `npm run signal -- --fixture stuck_support_acme.json --live PLACES` · Cut to phone ringing · **On call (Stage Manager):** “Hi Maya. Stage Manager. You're up for Acme.” · Brief (ticket stuck, two bot handoffs) · “Line reading. Press or say 1, 2, or 3.” · Maya: “One.” · “Confirming option 1 — take over in chat. Logging to the prompt book. Clear.” |
-| **2:10–2:35** | Terminal + `data/show-report.md` / prompt book | **VO:** “Decision one — take over in chat. Written to the prompt book and show report. Structured. Auditable. No CRM cosplay.” |
-| **2:35–2:50** | Name-drop / optional second curtain-up | **VO:** “Same engine when an agent hits needs-human — approve A, approve B, or escalate. We already ran that live: option one, allow the exception.” *Optional:* flash `agent_needs_decision` show report. |
-| **2:50–3:00** | Tagline card | **VO:** “When the account is on fire, we cue the firefighter — not the building. Stage Manager. CALL-E.” · End card: repo + skill path. |
+| **0:00–0:25** | Title: **Stage Manager** · dark stage / spotlight | **VO — problem:** “Customer Success owns the revenue relationship. Slack owns the noise. When a named account is stuck — looping support, red SLA, agent blocked, health going quiet — the alert hides under everything else.” |
+| **0:25–0:40** | Tagline card | **VO — value:** “Phone still cuts through. We don’t dial the customer. We cue the firefighter.” *Beat:* “Stage Manager. Headset on.” **On screen:** *Places, please — your account is on.* |
+| **0:40–1:05** | Terminal dress rehearsal | **VO:** “Dress rehearsal first — default, no ring, no keys required for judges.” *Run:* `npm run signal -- --fixture stuck_support_acme.json` · Show call sheet + line readings 1/2/3 · “Preview the cue. Update the prompt book without touching a phone.” |
+| **1:05–1:20** | `--list` / four cues | **VO:** “Four cues, one engine: stuck support, SLA risk, agent needs a decision, health or onboarding stall.” |
+| **1:20–2:15** | Curtain-up + call beat (live take or recreated beat) | **VO:** “Curtain up. Live gate: `--live` and `PLACES`.” · **On call:** “Hi Maya. Stage Manager. You’re up for Acme.” · Brief · “Line reading — one, two, or three.” · Maya: “One.” · “Take over in chat. Logging to the prompt book. Clear.” |
+| **2:15–2:35** | Show report / prompt book | **VO — value:** “Decision one — take over in chat. Structured writeback. Auditable. The kind of trail you can hand a manager, not another Slack shrug.” |
+| **2:35–2:50** | Second cue flash | **VO:** “Same path when an agent hits needs-human — approve A, B, or escalate. We ran that live too.” |
+| **2:50–3:00** | End card: repo + skill path | **VO:** “When the account is on fire, we cue the firefighter — not the building. Stage Manager. CALL-E.” |
 
-**Hard stop at 3:00.** Prefer landing at ~2:50.
+**Hard stop ≤3:00.** Prefer ~2:50.
 
 ---
 
-## Stage Manager call beat (record this take clean)
+## On-screen business-value beats (optional lower-thirds)
+
+Use 1–2 max so it doesn’t feel like a pitch deck:
+
+1. `CS owner only · never the customer`  
+2. `Dress rehearsal default · live needs PLACES`  
+3. `Decision → prompt book`
+
+---
+
+## Stage Manager call beat (clean take)
 
 ```text
 Hi Maya. Stage Manager. You're up for Acme.
@@ -42,29 +75,28 @@ Confirming option 1 — take over in chat now. Logging to the prompt book.
 Clear. Break a leg — or just open the ticket.
 ```
 
-One chuckle max in the open (or in the VO before the ring). Then business.
-
 ---
 
-## B-roll / screen checklist
+## B-roll checklist
 
-- [ ] Terminal font large enough for 1080p crop  
-- [ ] Dress rehearsal output: persona, cue, line readings, “no ring”  
-- [ ] Curtain-up command visible (`--live PLACES`) — **no secrets on screen** (mask `.env`, blur phone if needed)  
-- [ ] Phone UI: incoming call + answer (or screen-record handset)  
-- [ ] Show report / prompt book snippet with `stuck_support` + decision 1  
-- [ ] Fixtures list or `agent_needs_decision` name-drop (~2s)  
-- [ ] End card: `skills/customer-success-voice-signal/` + hackathon repo URL  
+- [ ] Terminal font large enough for 1080p  
+- [ ] Dress rehearsal: persona, cue, line readings, “no ring”  
+- [ ] Curtain-up command (`--live PLACES`) — **no secrets**  
+- [ ] Writeback with `stuck_support` → decision 1  
+- [ ] `agent_needs_decision` name-drop  
+- [ ] End card: `skills/customer-success-voice-signal/` + repo URL  
 
 ## Do not show
 
-- API keys, full E.164, `.env` contents  
-- Fake “dashboard” UI (none shipped)  
-- Pitch-deck slides or prize-chasing language  
-- Long phase calendars or architecture essays  
+- API keys, full E.164, `.env`  
+- Fake product dashboard  
+- Prize-chasing / “please give us Most Practical” language  
 
-## Recording notes
+---
 
-- Capture dress rehearsal offline first (reliable cut).  
-- Curtain-up: one clean answered take; keep a dress-rehearsal fallback cut if the live ring flakes.  
-- Mic: VO can be post; live call audio from the handset is the hero beat.  
+## Approval
+
+Reply with **approve** (or edit notes). After approval we will:
+
+1. Rebuild the mp4 **with a real audio track** (TTS or your VO files).  
+2. Keep ≤3:00 and match this script’s problem + value beats.
