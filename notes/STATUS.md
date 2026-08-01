@@ -9,7 +9,7 @@
 | CALL-E SDK | `@call-e/calle` ^0.6.0 — **live dial proven** |
 | Extra calls requested | Not yet |
 | Code started | **Yes** — `skills/customer-success-voice-signal/` |
-| First live probe | Curtain-up completed; **voicemail** (no line reading). Retry when answered. |
+| First live probe | Voicemail, then **answered** — line reading **1** (`take_over_chat`) on `stuck_support` |
 | Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
 | PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1 |
 
@@ -26,9 +26,9 @@ See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 
 ## Blockers
 
-- Live line reading (pick up the phone on retry)  
 - Extra CALL-E calls form if quota tight  
-- Demo video  
+- Second cue live/demo polish (`agent_needs_decision`)  
+- Demo video ≤3 min + awesome-list PR + Devpost  
 
 ## Log
 
@@ -38,3 +38,4 @@ See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 - 2026-07-31: Architecture flow + stack/hosting/tone docs; private GitHub `customer-success-voice-signal-hackathon`.  
 - 2026-08-01: Rebuilt full Stage Manager skill scaffold (schemas, fixtures, dress rehearsal CLI, writeback, curtain-up client).  
 - 2026-08-01: First curtain-up probe — auth OK, ring OK, voicemail; mapping fixed to `no_answer`.  
+- 2026-08-01: Second curtain-up — answered; decision **1** Take over in chat now.  
