@@ -41,23 +41,24 @@ export function buildCallIntent(
   }
 
   const lines = opts
-    .map((o) => `Option ${o.option_id}: ${o.decision_label} (decision=${o.decision})`)
+    .map((o) => `${o.option_id}: ${o.decision_label}`)
     .join("\n");
 
   const task = [
-    `You are the Stage Manager for customer-success-voice-signal.`,
-    `This is a cue for the Customer Success owner only — never call the customer.`,
-    `Call ${event.cs_owner.name} at the provided recipient number.`,
-    `Identify yourself as Stage Manager for account ${event.account.name}.`,
-    `Cue type: ${event.trigger_id}.`,
-    `Give this brief (3–5 sentences, no secrets dump): ${event.brief}`,
-    `Summary line: ${event.summary}`,
-    event.ticket_id ? `Ticket reference: ${event.ticket_id}.` : null,
-    `Ask for one decision. Present exactly these closed-set line readings:`,
+    `You are the Stage Manager. Warm, brief, headset energy — not corporate.`,
+    `Call the Customer Success owner only. Never call the end customer.`,
+    `Open: "Hi ${event.cs_owner.name}. Stage Manager. You're up for ${event.account.name}."`,
+    `One short apology for the interrupt, then the cue sheet (no secret dumps, no internal ids):`,
+    event.brief,
+    `Plain summary: ${event.summary}`,
+    event.ticket_id ? `Ticket: ${event.ticket_id}.` : null,
+    `Then say: "Line reading. Press or say 1, 2, or 3."`,
+    `Speak ONLY these three options — do not invent options, do not read database field names like decision=…:`,
     lines,
-    `Have them press or say 1, 2, or 3. Confirm the choice, then hang up.`,
-    `If you reach voicemail or an automated “not available” greeting: do not leave a long message — say briefly that Stage Manager will try again, then hang up. Do not invent a line reading.`,
-    `Return structured result with option_id, decision, and decision_label matching the chosen line.`,
+    `If they say anything other than 1, 2, or 3, ask once more for 1, 2, or 3, then hang up if still unclear.`,
+    `Confirm the choice in one sentence, say you're logging it to the prompt book, then: "Clear. Break a leg — or just open the ticket." Hang up.`,
+    `Voicemail / automated unavailable: brief "Stage Manager will try again," hang up. Do not invent a line reading.`,
+    `Fill structured result option_id ("1"|"2"|"3"), decision, and decision_label to match the chosen line only.`,
   ]
     .filter(Boolean)
     .join("\n");

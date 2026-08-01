@@ -39,12 +39,12 @@ const OPTION_SETS: Record<TriggerId, DecisionOption[]> = {
     {
       option_id: "1",
       decision: "approve_a",
-      decision_label: "Approve option A",
+      decision_label: "Approve A — allow the one-time exception",
     },
     {
       option_id: "2",
       decision: "approve_b",
-      decision_label: "Approve option B",
+      decision_label: "Approve B — require the signed amendment first",
     },
     {
       option_id: "3",

@@ -18,6 +18,8 @@ export interface ToDecisionInput {
   /** CALL-E call/recipient summary when structured result is missing */
   callSummary?: string | null;
   taskCompleted?: boolean | null;
+  /** Transcript turns for fallback option parsing */
+  transcriptTexts?: string[];
   /** Dress rehearsal may simulate a choice (default option 1). */
   simulatedOptionId?: "1" | "2" | "3";
 }
@@ -31,8 +33,29 @@ function looksLikeVoicemailOrNoAnswer(summary: string | null | undefined): boole
     s.includes("no answer") ||
     s.includes("didn't answer") ||
     s.includes("did not answer") ||
-    s.includes("unreachable")
+    s.includes("unreachable") ||
+    s.includes("did not connect") ||
+    s.includes("didn't connect") ||
+    s.includes("no transcript") ||
+    s.includes("busy or unavailable") ||
+    s.includes("may be busy")
   );
+}
+
+/** Last clear 1/2/3 from user-ish transcript lines. */
+function optionFromTranscript(
+  texts: string[] | undefined,
+  options: DecisionOption[],
+): DecisionOption | null {
+  if (!texts?.length) return null;
+  const joined = texts.join(" \n ");
+  // Prefer explicit lone digits / "option N" near the end
+  const candidates = [...joined.matchAll(/\b(?:option\s*)?([123])\b/gi)].map(
+    (m) => m[1],
+  );
+  const last = candidates[candidates.length - 1];
+  if (!last) return null;
+  return options.find((o) => o.option_id === last) ?? null;
 }
 
 function matchOption(
@@ -86,20 +109,27 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
     });
   }
 
-  const matched = matchOption(
-    options,
-    input.structured,
-    mode === "dress_rehearsal" ? (input.simulatedOptionId ?? "1") : undefined,
-  );
+  const matched =
+    matchOption(
+      options,
+      input.structured,
+      mode === "dress_rehearsal" ? (input.simulatedOptionId ?? "1") : undefined,
+    ) ?? optionFromTranscript(input.transcriptTexts, options);
 
   if (!matched) {
     const vm = looksLikeVoicemailOrNoAnswer(input.callSummary);
+    const unclear =
+      (input.callSummary ?? "").toLowerCase().includes("invalid") ||
+      (input.callSummary ?? "").toLowerCase().includes("out-of-range") ||
+      (input.callSummary ?? "").toLowerCase().includes("not confirmed");
     const noStructured =
       !input.structured || Object.keys(input.structured).length === 0;
     const decision = vm ? "no_answer" : "unclear";
     const decision_label = vm
       ? "No line reading — voicemail / no answer"
-      : "Could not map line reading";
+      : unclear
+        ? "Unclear line reading — no valid 1/2/3"
+        : "Could not map line reading";
     return DecisionResultSchema.parse({
       trigger_id: event.trigger_id,
       account_id: event.account.id,

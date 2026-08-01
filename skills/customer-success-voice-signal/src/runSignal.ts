@@ -263,6 +263,10 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
       structured,
       callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
       taskCompleted: call.taskCompleted,
+      transcriptTexts: call.recipients[0]?.attempts?.[0]?.transcriptTurns
+        ?.filter((t) => t.speaker === "user")
+        .map((t) => t.text ?? "")
+        .filter(Boolean),
     });
     const paths = await writeback({
       dataDir: args.env.dataDir,

@@ -1,29 +1,28 @@
 # PRD — customer-success-voice-signal
 
 **Product / skill id:** `customer-success-voice-signal`  
-**Persona:** **Stage Manager** (theater vocabulary hard)  
-**GitHub (private):** see repo `customer-success-voice-signal-hackathon`  
+**Persona:** **Stage Manager**  
 **Hackathon:** CALL-E: Your Code Is Calling  
 **Last updated:** 2026-08-01  
-**Status:** Decisions locked for MVP · name locked · persona locked  
+**Status:** MVP decisions locked · skill built under `skills/customer-success-voice-signal/`
 
-**Related docs:** [03-architecture-flow.md](./03-architecture-flow.md) · [04-stack-hosting-tone.md](./04-stack-hosting-tone.md) · [05-dev-design-plan.md](./05-dev-design-plan.md)
+**Related:** [03-architecture-flow.md](./03-architecture-flow.md) · [04-stack-hosting-tone.md](./04-stack-hosting-tone.md) · [05-dev-design-plan.md](./05-dev-design-plan.md)
 
 ## Decisions (Assaf)
 
 | # | Decision | Choice |
 | --- | --- | --- |
 | 0 | Name | **`customer-success-voice-signal`** |
-| 1 | MVP phone target | **CS only** — CALL-E calls the CS owner / TAM, not the customer |
-| 2 | Triggers in scope | **All of:** stuck support · SLA risk · agent needs decision · health/onboarding stall |
-| 3 | Branding | **Sentry-shaped, not Sentry-branded** — fictional “error-monitoring / technical SaaS” |
+| 1 | MVP phone target | **CS only** — CALL-E rings the CS owner / TAM, not the customer |
+| 2 | Triggers in scope | stuck support · SLA risk · agent needs decision · health/onboarding stall |
+| 3 | Branding | **Sentry-shaped, not Sentry-branded** — fictional error-monitoring / technical SaaS |
 | 4 | Persona | **Stage Manager** — dress rehearsal / curtain up / cue / prompt book / HOLD |
 
 ---
 
 ## One-liner
 
-> **customer-success-voice-signal** — when a **named account** hits a high-risk **cue**, the **Stage Manager** rings the **CS owner** via CALL-E with a 60-second brief and **closed-set line readings** — then writes the decision to the **prompt book** and **show report**.
+> When a **named account** hits a high-risk **cue**, the **Stage Manager** rings the **CS owner** via CALL-E with a short brief and **closed-set line readings** — then writes the decision to the **prompt book** and **show report**.
 
 **Not:** a customer dialer, SDR tool, or generic “AI phone agent.”
 
@@ -31,14 +30,7 @@
 
 ## Problem
 
-CS owns revenue and relationships but lives in noisy queues and dashboards. High-signal moments get buried:
-
-- Support/AI loops while a strategic account waits  
-- SLA turns red  
-- An automation/agent cannot proceed without a human  
-- Onboarding or health silently stalls before renewal  
-
-Chat and email do not interrupt. Phone does — if the call is **rare, short, structured, and for the right person**.
+CS owns revenue and relationships but lives in noisy queues. High-signal moments get buried: support/AI loops on strategic accounts, SLA going red, an agent stuck on `needs_human`, onboarding/health stalling before renewal. Chat does not interrupt. Phone does — if the call is **rare, short, structured, and for the right person**.
 
 ---
 
@@ -46,44 +38,43 @@ Chat and email do not interrupt. Phone does — if the call is **rare, short, st
 
 | Role | Description |
 | --- | --- |
-| **Primary** | Customer Success Manager / TAM for technical B2B SaaS (error monitoring, infra, devtools — *shaped like Sentry, not named*) |
-| **Secondary** | Support lead / SE who hands context into the same account object |
-| **Not a user in MVP** | End customer (no outbound to customer in MVP) |
+| **Primary** | CSM / TAM for technical B2B SaaS (error monitoring, infra, devtools — *shaped like Sentry, not named*) |
+| **Secondary** | Support lead / SE who feeds context into the same account object |
+| **Not in MVP** | End customer (no outbound to customer) |
 
 ---
 
-## When CS gets a phone call (trigger catalog)
+## Triggers
 
-All triggers share: **named/CS-owned account** + **opt-in phone** + **severity ≥ threshold** + **house dark respected on curtain-up**.
+All share: **named/CS-owned account** + **opt-in phone** + **severity ≥ high** + **house dark respected on curtain-up**.
 
-| ID | Trigger | Example (fictional) | Call goal |
-| --- | --- | --- | --- |
-| `stuck_support` | AI/support path stuck or customer looping on open case | Ticket #4821, 2 bot handoffs, no resolution | Decide: take over in chat / assign SE / schedule later |
-| `sla_risk` | SLA breach imminent or breached on owned account | Enterprise Acme, P1, 15 min to breach | Decide: own it now / page backup / accept risk |
-| `agent_needs_decision` | Agent emits `needs_human` with options | Agent cannot approve exception / missing policy | Speak a choice among 2–3 options |
-| `health_onboarding` | Health or onboarding stall on named account | No first event in 14d, or usage −40% + renewal window | Decide: outreach plan / SE join / wait & watch |
+| ID | Trigger | Call goal |
+| --- | --- | --- |
+| `stuck_support` | AI/support path stuck on open case | take over chat / assign SE / snooze |
+| `sla_risk` | SLA breach imminent on owned account | own it / page backup / accept risk |
+| `agent_needs_decision` | Agent emits `needs_human` with options | approve A / approve B / reject-escalate |
+| `health_onboarding` | Health or onboarding stall | book SE / watchlist / flag churn |
 
-**MVP demo** should show **at least two** triggers live (recommend: `stuck_support` + `agent_needs_decision`) and list the others as first-class config so judges see full coverage.
+**Demo cues:** `stuck_support` + `agent_needs_decision` (fixtures + live path for the first; second as first-class config / name-drop).
 
 ---
 
-## Call experience (CS is callee — Stage Manager)
+## Call experience (Stage Manager)
 
-1. Phone rings (CS owner E.164 from the call sheet).  
-2. Stage Manager identifies: persona + account + cue type.  
-3. 3–5 sentence brief (no secrets dump).  
-4. **One decision** with closed-set **line readings** 1 / 2 / 3 (plus honest “not now” where applicable).  
-5. Confirm choice.  
-6. Hang up.  
-7. Structured result → **prompt book** + **show report**.
+1. Phone rings (CS owner E.164 from env / call sheet).  
+2. Identify: Stage Manager + account + cue.  
+3. Short brief (no secrets dump).  
+4. One decision — line readings **1 / 2 / 3**.  
+5. Confirm → hang up.  
+6. Structured result → **prompt book** + **show report**.
 
-**Modes:** **Dress rehearsal** (default, no ring) · **Curtain up** (`--live` + type/env `PLACES`).
+**Modes:** **Dress rehearsal** (default, no ring, no CALLE key) · **Curtain up** (`--live` + `PLACES`; needs `CALLE_API_KEY` + `CS_OWNER_E164`).
 
 **Never in MVP:** call the customer; medical/emergency; auto-dial without policy match; long discovery interview.
 
 ---
 
-## Structured result schema (draft)
+## Structured result
 
 ```json
 {
@@ -93,76 +84,49 @@ All triggers share: **named/CS-owned account** + **opt-in phone** + **severity �
   "cs_owner_id": "cs_maya",
   "call_run_id": "calle_…",
   "decision": "take_over_chat",
-  "decision_label": "I'll take over in chat now",
+  "decision_label": "Take over in chat now",
   "option_id": "1",
-  "notes_short": "optional free text if captured",
+  "notes_short": null,
   "follow_up_at": null,
-  "completed_at": "ISO-8601"
+  "completed_at": "ISO-8601",
+  "mode": "curtain_up"
 }
 ```
 
-Options are **trigger-specific** but always closed set for the call.
-
-### Example option sets (line readings)
-
-**stuck_support**
-
-1. Take over in chat now  
-2. Assign to SE / specialist  
-3. Not now — snooze 2 hours  
-
-**sla_risk**
-
-1. I own this ticket now  
-2. Page backup CS/SE  
-3. Acknowledge risk, no action  
-
-**agent_needs_decision**
-
-1. Approve option A  
-2. Approve option B  
-3. Reject — escalate to manager  
-
-**health_onboarding**
-
-1. Book SE technical session (I’ll follow up in product)  
-2. Mark watchlist — no outreach yet  
-3. Flag churn risk for manager  
+Options are trigger-specific, always closed set. Unmapped live outcomes may be `no_answer` or `unclear` — never a fake line reading.
 
 ---
 
-## System flow
+## System flow (built)
 
 ```text
-Cue (fixture or webhook)
+Cue (fixture via CLI)
   → normalize → AccountEvent
-  → policy: owned? severity? house dark? already cued?
-  → dress rehearsal preview (default)
-  → curtain-up: CalleClient.createAndWait  // CS only
-  → map → DecisionResult
-  → writeback (prompt book NDJSON + show report markdown)
+  → shouldRing (owned? severity? house dark? already cued?)
+  → dress rehearsal preview (default)  OR  curtainUp(createAndWait)
+  → toDecision → DecisionResult
+  → writeback (prompt-book.ndjson + show-report.md; cue-history on live)
 ```
 
 ---
 
 ## Non-goals (hackathon)
 
-- Customer outbound calls  
+- Customer outbound  
 - Real Sentry production integrations  
-- Full CRM OAuth  
-- Multi-tenant SaaS billing  
-- Sentiment inference / diagnosis  
-- Emergency / medical / legal advice calls  
+- Full CRM OAuth / multi-tenant billing  
+- Demo UI app (CLI is the surface)  
+- Required Slack / DB  
+- Sentiment inference · emergency / medical / legal advice  
 
 ---
 
-## Branding rules
+## Branding
 
 | OK | Not OK |
 | --- | --- |
-| “Error monitoring SaaS”, “devtools platform”, “performance product” | “Sentry”, internal codenames, real customer names |
-| Fictional orgs: Acme, Globex, Initech | Real customer logos/data |
-| Roles: CSM, TAM, SE, Support | Implying official employer product |
+| “Error monitoring SaaS”, “devtools platform” | “Sentry”, internal codenames, real customers |
+| Fictional orgs: Acme, Globex, Initech | Real logos/data |
 
 ---
 
@@ -170,36 +134,23 @@ Cue (fixture or webhook)
 
 | Criterion | How we hit it |
 | --- | --- |
-| Real World Impact | Named-account CS interrupt is a real job-to-be-done |
-| Quality of Idea | Phone as **CS control plane**, not spam dialer; multi-trigger one engine; Stage Manager persona |
+| Real World Impact | Named-account CS interrupt is a real job |
+| Quality of Idea | Phone as CS control plane; multi-trigger one engine; Stage Manager |
 | Technical Implementation | CALL-E `createAndWait` at runtime; schema; dress rehearsal; writeback |
-| Demo | ≤3 min: cue → dress rehearsal → curtain-up → decision → prompt book |
+| Demo | ≤3 min: cue → dress rehearsal → curtain-up → prompt book |
+
+**Prize target:** Most Practical first; Innovative secondary; always submit Most Valuable Feedback survey.
 
 ---
 
-## Prize targeting
-
-1. **Most Practical** (primary)  
-2. Innovative only as secondary narrative (“agent stuck → phone”)  
-3. Always submit **Most Valuable Feedback** survey  
-
----
-
-## Packaging (awesome-phone-call-agents)
+## Packaging
 
 | Field | Value |
 | --- | --- |
-| Contribution area | `skills/customer-success-voice-signal/` (primary); optional thin `apps/` later |
-| Skill folder | `customer-success-voice-signal/` |
-| List blurb (draft) | Stage Manager voice signal for CS: CALL-E cues the account owner when support is stuck, SLA is at risk, an agent needs a decision, or health/onboarding stalls — structured decision writeback, dress rehearsal first. |
-
-## Open implementation choices (next)
-
-- [x] Product/skill name → `customer-success-voice-signal`  
-- [x] Persona → Stage Manager  
-- [x] Skill scaffold under `skills/customer-success-voice-signal/`  
-- [ ] Real curtain-up in demo video  
-- [ ] Optional Slack webhook writeback  
+| Path | `skills/customer-success-voice-signal/` |
+| PR (hackathon repo) | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1 |
+| Awesome-list target | https://github.com/CALLE-AI/awesome-phone-call-agents |
+| Blurb | Stage Manager cues CALL-E to ring the CS owner when support is stuck, SLA is at risk, an agent needs a decision, or health/onboarding stalls — closed-set writeback, dress rehearsal first. |
 
 ---
 
@@ -207,6 +158,6 @@ Cue (fixture or webhook)
 
 | Date | Change |
 | --- | --- |
-| 2026-07-31 | Locked: CS-only MVP; all four trigger families; Sentry-shaped unbranded |
-| 2026-07-31 | Named **customer-success-voice-signal** |
-| 2026-08-01 | Locked persona **Stage Manager**; dress rehearsal / curtain up vocabulary |
+| 2026-07-31 | Locked: CS-only MVP; four trigger families; Sentry-shaped unbranded; named product |
+| 2026-08-01 | Persona Stage Manager; skill scaffolded; dress rehearsal + curtain-up path |
+| 2026-08-01 | Docs trimmed to match as-built (CLI, no demo UI / Slack / DB) |

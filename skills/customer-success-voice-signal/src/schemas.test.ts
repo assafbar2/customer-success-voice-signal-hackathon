@@ -140,7 +140,7 @@ describe("intent — Stage Manager language", () => {
     expect(intent.persona).toBe("Stage Manager");
     expect(intent.never_call_customer).toBe(true);
     expect(intent.task).toMatch(/Stage Manager/);
-    expect(intent.task).toMatch(/never call the customer/i);
+    expect(intent.task).toMatch(/never call the (end )?customer/i);
     expect(intent.options).toHaveLength(3);
     expect(intent.options.map((o) => o.option_id)).toEqual(["1", "2", "3"]);
     expect(intent.result_schema).toMatchObject({

@@ -24,30 +24,42 @@ interface CliArgs {
 function printHelp(): void {
   console.log(`
 Stage Manager — customer-success-voice-signal
+Cue the CS owner (never the customer) when a named account hits a high-risk moment.
 
 Usage:
-  npm run signal -- [options]
+  npm run signal -- --fixture <file> [options]
+  npm run signal -- --trigger <id> [options]
   npm run dry-run -- --fixture <file>
 
+Dress rehearsal (default — no ring, no CALLE key):
+  npm run signal -- --fixture stuck_support_acme.json
+  npm run signal -- --fixture agent_needs_decision_acme.json
+  npm run signal -- --list
+  npm run signal -- --last
+
+Curtain-up (real phone — needs .env + PLACES):
+  npm run signal -- --fixture stuck_support_acme.json --live PLACES
+  API keys: https://dashboard.heycall-e.com/account/api-keys
+
 Options:
-  --fixture <file>   Cue fixture under fixtures/ (e.g. stuck_support_acme.json)
-  --trigger <id>     Filter/list by trigger_id
-  --live             Request curtain-up (requires type/env PLACES)
-  --dry-run          Force dress rehearsal (default)
-  PLACES             Confirm live gate when used with --live
+  --fixture <file>   Cue under fixtures/ (e.g. stuck_support_acme.json)
+  --trigger <id>     Pick first fixture for this trigger_id
+  --live             Request curtain-up (still needs PLACES)
+  --dry-run          Force dress rehearsal
+  PLACES             Live gate confirm (or SIGNAL_CONFIRM=PLACES)
   --list             List fixtures on the call sheet
-  --last             Show last prompt-book / show-report entries
-  --verbose          Print full call sheet preview
+  --last             Tail prompt book / show report
+  --verbose          Full call sheet preview
   --help             This cue sheet
 
 Exit codes:
   0  ok (dress rehearsal or curtain-up)
-  2  HOLD (policy / live gate / house dark)
-  3  failure
+  2  HOLD (policy / live gate / house dark / placeholder phone)
+  3  failure (bad fixture, missing key, CALL-E error)
 
 Modes:
   Dress rehearsal  Default. No ring. Does not append cue-history.
-  Curtain up       --live AND PLACES (env SIGNAL_CONFIRM=PLACES or argv PLACES).
+  Curtain up       --live AND PLACES. Rings CS_OWNER_E164 via CALL-E.
 `);
 }
 

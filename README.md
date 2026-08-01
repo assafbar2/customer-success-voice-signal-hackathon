@@ -2,65 +2,84 @@
 
 **Product:** [`customer-success-voice-signal`](docs/02-prd.md) · **Persona:** Stage Manager  
 **Hackathon:** [CALL-E: Your Code Is Calling](https://call-e.devpost.com/)  
-**Deadline:** 2026-09-14  
-**Status:** Registered · PRD locked · skill scaffolded · private GitHub  
+**PR:** https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1  
 
 > *When the account is on fire, we cue the firefighter — not the building.*
 
-## Goal
+When a named account hits a high-risk **cue**, the **Stage Manager** rings the **CS owner** (not the customer) with a short brief and line readings; the decision lands in the **prompt book** / **show report**.
 
-Win **Most Practical Use Case** ($4,000) if possible; stay competitive for Innovative / Honorable; always submit **Most Valuable Feedback** survey.
+---
+
+## How judges run this
+
+```bash
+git clone https://github.com/assafbar2/customer-success-voice-signal-hackathon.git
+cd customer-success-voice-signal-hackathon/skills/customer-success-voice-signal
+npm install
+npm test && npm run typecheck
+
+# 1) Dress rehearsal — default, no ring, no CALL-E key
+npm run signal -- --fixture stuck_support_acme.json
+npm run signal -- --fixture agent_needs_decision_acme.json
+npm run signal -- --list
+npm run signal -- --last
+
+# 2) Curtain-up — real phone (operator only)
+# Get a key: https://dashboard.heycall-e.com/account/api-keys
+# cp .env.example .env  → set CALLE_API_KEY, CS_OWNER_E164, SIGNAL_CONFIRM=PLACES
+# npm run signal -- --fixture stuck_support_acme.json --live PLACES
+```
+
+Full skill docs: [`skills/customer-success-voice-signal/README.md`](skills/customer-success-voice-signal/README.md) · [`SKILL.md`](skills/customer-success-voice-signal/SKILL.md)
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Ok |
+| 2 | HOLD (policy / live gate / house dark) |
+| 3 | Failure |
+
+**Safety:** CS owner only · dress rehearsal default · curtain-up needs `--live` + `PLACES` · fixture phones never dialed live.
+
+---
 
 ## Docs map
 
 | Path | Purpose |
 | --- | --- |
-| [docs/02-prd.md](docs/02-prd.md) | Product requirements |
-| [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | **One-view flow, entities, functions** |
-| [docs/04-stack-hosting-tone.md](docs/04-stack-hosting-tone.md) | **Stack, free hosting, Stage Manager tone** |
-| [docs/05-dev-design-plan.md](docs/05-dev-design-plan.md) | Skill phases + runbook |
-| [docs/01-ideas-1-2-5.md](docs/01-ideas-1-2-5.md) | Earlier idea exploration |
+| [docs/02-prd.md](docs/02-prd.md) | Product decisions |
+| [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | As-built flow + modules |
+| [docs/04-stack-hosting-tone.md](docs/04-stack-hosting-tone.md) | Stack + Stage Manager glossary |
+| [docs/05-dev-design-plan.md](docs/05-dev-design-plan.md) | Done / remaining runbook |
+| [docs/01-ideas-1-2-5.md](docs/01-ideas-1-2-5.md) | Historical idea exploration |
 | [notes/STATUS.md](notes/STATUS.md) | Status log |
-| [skills/customer-success-voice-signal/](skills/customer-success-voice-signal/) | **Stage Manager skill** |
-| `submission/` | Devpost / video / PR checklist |
+| [submission/video-script.md](submission/video-script.md) | ≤3 min demo script |
+| [skills/…](skills/customer-success-voice-signal/) | **Stage Manager skill** |
 
 ## Official links
 
-- Devpost: https://call-e.devpost.com/
-- Rules: https://call-e.devpost.com/rules
-- Setup / integrations: https://github.com/CALLE-AI/call-e-integrations
-- **CALL-E API keys (get / rotate):** https://dashboard.heycall-e.com/account/api-keys
-- **Submit PR here:** https://github.com/CALLE-AI/awesome-phone-call-agents
-- Extra calls form: https://forms.gle/EPQttEZ1rkW8iq9q6
-- Feedback survey (MVF prize): via Devpost details
-- Skill key docs: [skills/.../references/auth-and-keys.md](skills/customer-success-voice-signal/references/auth-and-keys.md)
+- Devpost: https://call-e.devpost.com/  
+- Rules: https://call-e.devpost.com/rules  
+- **CALL-E API keys:** https://dashboard.heycall-e.com/account/api-keys  
+- **Submit PR here:** https://github.com/CALLE-AI/awesome-phone-call-agents  
+- Extra calls form: https://forms.gle/EPQttEZ1rkW8iq9q6  
 
-## Product (locked)
+## MVP choices
 
-### `customer-success-voice-signal`
-
-When a named account hits a high-risk **cue**, the **Stage Manager** rings the **CS owner** (not the customer) with a short brief and line readings; structured result goes to the **prompt book** / **show report**.
-
-See [docs/02-prd.md](docs/02-prd.md). Background: [docs/01-ideas-1-2-5.md](docs/01-ideas-1-2-5.md).
-
-| MVP | Choice |
+| | |
 | --- | --- |
-| Name / skill id | `customer-success-voice-signal` |
-| Persona | Stage Manager |
 | Callee | CS only |
 | Triggers | stuck support · SLA · agent needs decision · health/onboarding |
-| Branding | Sentry-shaped, not branded |
-| Default mode | Dress rehearsal (no ring) |
-| Live gate | `--live` + type/env `PLACES` |
-| PR target | `skills/customer-success-voice-signal/` |
+| Default | Dress rehearsal (no ring) |
+| Live gate | `--live` + `PLACES` |
+| Surface | CLI (no demo UI yet) |
 
-## Next actions
+## Remaining
 
-- [ ] Request extra CALL-E calls  
-- [ ] Curtain-up one live cue for demo video  
-- [ ] Package / PR to awesome-phone-call-agents  
-- [x] Scaffold `skills/customer-success-voice-signal/`  
-- [x] Dress rehearsal path green  
+- [ ] Demo video ≤3 min  
+- [ ] PR to awesome-phone-call-agents + Devpost  
+- [ ] Request extra CALL-E calls if quota tight  
+- [x] Skill scaffold + dress rehearsal  
+- [x] Curtain-up path (`stuck_support` → decision 1)  
 
 ## Judging (equal weight)
 

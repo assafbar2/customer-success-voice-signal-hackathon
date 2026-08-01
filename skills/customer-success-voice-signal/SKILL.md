@@ -10,65 +10,45 @@ When a **named account** hits a high-risk moment, the **Stage Manager** cues CAL
 
 **Not:** a customer dialer. **Never** call the customer in MVP.
 
-## Glossary (hard vocabulary)
+## Glossary
 
 | Term | Meaning |
 | --- | --- |
 | **Dress rehearsal** | Dry-run. Default. No ring. Cue-history not appended. |
 | **Curtain up** | Live CALL-E call. Requires `--live` **and** type/env `PLACES`. |
-| **Cue** | A trigger event (`stuck_support`, `sla_risk`, `agent_needs_decision`, `health_onboarding`). |
-| **Cue sheet / call sheet** | Who we may ring (CS owner E.164 allowlist). |
-| **Line readings** | Closed-set options 1 / 2 / 3 spoken on the call. |
-| **Prompt book** | NDJSON audit of cues and decisions (`data/prompt-book.ndjson`). |
-| **Show report** | Markdown writeback summary (`data/show-report.md`). |
+| **Cue** | Trigger (`stuck_support`, `sla_risk`, `agent_needs_decision`, `health_onboarding`). |
+| **Line readings** | Closed-set options 1 / 2 / 3. |
+| **Prompt book** | NDJSON audit (`data/prompt-book.ndjson`). |
+| **Show report** | Markdown writeback (`data/show-report.md`). |
 | **House dark** | Quiet hours. Enforced on curtain-up only. |
-| **HOLD** | Policy stop — no live ring (exit code 2). |
+| **HOLD** | Policy stop — exit code 2. |
 
-## When to use
-
-- Support/AI path stuck on a CS-owned account
-- SLA breach imminent on a named account
-- An agent emits `needs_human` with options
-- Health or onboarding stall before renewal
-
-## When not to use
-
-- Calling the end customer
-- Medical, emergency, legal, or harassment contexts
-- Guessing phone numbers or skipping consent / opt-in
-- Curtain-up without explicit `--live` + `PLACES`
-
-## How to run
+## How judges run this
 
 ```bash
 cd skills/customer-success-voice-signal
 npm install
+npm test && npm run typecheck
 
 # Dress rehearsal (default — no secrets needed for dial)
 npm run signal -- --fixture stuck_support_acme.json
-
-# List cues
+npm run signal -- --fixture agent_needs_decision_acme.json
 npm run signal -- --list
+npm run signal -- --last
+```
 
-# Curtain-up (real ring) — parent/operator only
-# Requires CALLE_API_KEY (https://dashboard.heycall-e.com/account/api-keys),
-# CS_OWNER_E164, and PLACES
+### Curtain-up (operator only — real ring)
+
+Requires `CALLE_API_KEY` from **https://dashboard.heycall-e.com/account/api-keys**, plus `CS_OWNER_E164`, and `PLACES`:
+
+```bash
+# cp .env.example .env  then fill keys locally (never commit .env)
 npm run signal -- --fixture stuck_support_acme.json --live PLACES
 ```
 
-**API keys:** create or rotate at https://dashboard.heycall-e.com/account/api-keys — details in [references/auth-and-keys.md](references/auth-and-keys.md).
+Details: [references/auth-and-keys.md](references/auth-and-keys.md).
 
-## Safety
-
-Read [references/safety.md](references/safety.md) and [references/auth-and-keys.md](references/auth-and-keys.md).
-
-- Callee is **CS owner only**
-- Fixture phones are placeholders (`+15555550100`) — curtain-up rejects them
-- `CS_OWNER_E164` from env overrides owner phone on curtain-up
-- House dark enforced only when the curtain is up
-- Dress rehearsal does **not** append cue-history (demos re-run cleanly)
-
-## Exit codes
+### Exit codes
 
 | Code | Meaning |
 | --- | --- |
@@ -76,8 +56,32 @@ Read [references/safety.md](references/safety.md) and [references/auth-and-keys.
 | 2 | HOLD — policy / live gate / house dark / placeholder |
 | 3 | Failure — bad fixture, missing key, CALL-E error |
 
+## When to use
+
+- Support/AI path stuck on a CS-owned account  
+- SLA breach imminent on a named account  
+- An agent emits `needs_human` with options  
+- Health or onboarding stall before renewal  
+
+## When not to use
+
+- Calling the end customer  
+- Medical, emergency, legal, or harassment contexts  
+- Guessing phones or skipping consent / opt-in  
+- Curtain-up without `--live` + `PLACES`  
+
+## Safety
+
+Read [references/safety.md](references/safety.md).
+
+- Callee is **CS owner only**  
+- Fixture phones (`+15555550100`) rejected on curtain-up  
+- `CS_OWNER_E164` overrides owner phone on live  
+- House dark on curtain-up only  
+- Dress rehearsal does **not** append cue-history  
+
 ## Writeback
 
-- Prompt book: `data/prompt-book.ndjson`
-- Show report: `data/show-report.md`
-- Cue history (curtain-up only): `data/cue-history.ndjson`
+- Prompt book: `data/prompt-book.ndjson`  
+- Show report: `data/show-report.md`  
+- Cue history (curtain-up only): `data/cue-history.ndjson`  
