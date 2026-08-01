@@ -1,7 +1,0 @@
-file '/workspace/submission/demo-reel/parts/00.mp4'
-file '/workspace/submission/demo-reel/parts/01.mp4'
-file '/workspace/submission/demo-reel/parts/02.mp4'
-file '/workspace/submission/demo-reel/parts/03.mp4'
-file '/workspace/submission/demo-reel/parts/04.mp4'
-file '/workspace/submission/demo-reel/parts/05.mp4'
-file '/workspace/submission/demo-reel/parts/06.mp4'
