@@ -1,10 +1,17 @@
 # CALL-E API notes (Stage Manager)
 
+## Get / rotate API keys
+
+**https://dashboard.heycall-e.com/account/api-keys**
+
+Put the value in `skills/customer-success-voice-signal/.env` as `CALLE_API_KEY` (gitignored).  
+Skill docs: [`../skills/customer-success-voice-signal/references/auth-and-keys.md`](../skills/customer-success-voice-signal/references/auth-and-keys.md).
+
 ## SDK
 
 - Package: `@call-e/calle` `^0.6.0`
 - Entry: `CalleClient` → `client.calls.createAndWait(...)`
-- Auth: `CALLE_API_KEY` (Bearer); optional `CALLE_BASE_URL`
+- Auth: `CALLE_API_KEY` (Bearer) from the dashboard link above; optional `CALLE_BASE_URL`
 
 ## Curtain-up payload shape
 

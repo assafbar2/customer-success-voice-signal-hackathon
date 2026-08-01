@@ -52,10 +52,13 @@ PLACES             Live gate confirmation (or SIGNAL_CONFIRM=PLACES)
 
 ## Curtain-up checklist
 
-1. Copy `.env.example` → `.env` (already present in private workspaces)
-2. Set `CALLE_API_KEY`, `CS_OWNER_E164`, `SIGNAL_CONFIRM=PLACES`
-3. Run: `npm run signal -- --fixture stuck_support_acme.json --live PLACES`
-4. Confirm writeback in `data/prompt-book.ndjson` and `data/show-report.md`
+1. Copy `.env.example` → `.env` (never commit `.env`)
+2. Get / rotate an API key: **https://dashboard.heycall-e.com/account/api-keys**
+3. Set `CALLE_API_KEY`, `CS_OWNER_E164`, `SIGNAL_CONFIRM=PLACES`
+4. Run: `npm run signal -- --fixture stuck_support_acme.json --live PLACES`
+5. Confirm writeback in `data/prompt-book.ndjson` and `data/show-report.md`
+
+Full key-swap notes: [`references/auth-and-keys.md`](references/auth-and-keys.md).
 
 ## Layout
 

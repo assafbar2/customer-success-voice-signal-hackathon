@@ -2,11 +2,22 @@
 
 Stage Manager loads env via `src/config/env.ts` (`loadDotEnv` + `readSkillEnv`).
 
+## Get / rotate CALL-E API keys
+
+**Create, copy, or rotate keys here:**
+
+**https://dashboard.heycall-e.com/account/api-keys**
+
+Paste the value into local `.env` as `CALLE_API_KEY=…`.  
+Never commit `.env`. Swap keys anytime — no code changes.
+
+Dress rehearsal does **not** need a key. Curtain-up does.
+
 ## Required for curtain-up
 
 | Variable | Purpose |
 | --- | --- |
-| `CALLE_API_KEY` | CALL-E Developer API key (`CalleClient`) |
+| `CALLE_API_KEY` | CALL-E Developer API key from [API keys](https://dashboard.heycall-e.com/account/api-keys) (`CalleClient`) |
 | `CS_OWNER_E164` | Real CS owner phone (overrides fixture placeholder) |
 | `SIGNAL_CONFIRM` | Must be `PLACES` (or pass `PLACES` on argv with `--live`) |
 
@@ -28,3 +39,4 @@ Stage Manager loads env via `src/config/env.ts` (`loadDotEnv` + `readSkillEnv`).
 - Never print API keys or full phone numbers in logs (mask E.164)
 - Dress rehearsal does not need `CALLE_API_KEY` to succeed
 - Use `.env.example` as the empty placeholder template
+- More CALL-E notes: [`../../../research/calle-api-notes.md`](../../../research/calle-api-notes.md)

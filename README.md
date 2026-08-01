@@ -29,9 +29,11 @@ Win **Most Practical Use Case** ($4,000) if possible; stay competitive for Innov
 - Devpost: https://call-e.devpost.com/
 - Rules: https://call-e.devpost.com/rules
 - Setup / integrations: https://github.com/CALLE-AI/call-e-integrations
+- **CALL-E API keys (get / rotate):** https://dashboard.heycall-e.com/account/api-keys
 - **Submit PR here:** https://github.com/CALLE-AI/awesome-phone-call-agents
 - Extra calls form: https://forms.gle/EPQttEZ1rkW8iq9q6
 - Feedback survey (MVF prize): via Devpost details
+- Skill key docs: [skills/.../references/auth-and-keys.md](skills/customer-success-voice-signal/references/auth-and-keys.md)
 
 ## Product (locked)
 
