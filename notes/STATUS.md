@@ -6,9 +6,12 @@
 | Devpost | Registered |
 | Primary idea | **`customer-success-voice-signal`** — Stage Manager; CS-only callee; multi-trigger |
 | Persona | **Stage Manager** (dress rehearsal / curtain up) |
-| CALL-E SDK | `@call-e/calle` ^0.6.0 wired for curtain-up |
+| CALL-E SDK | `@call-e/calle` ^0.6.0 — **live dial proven** |
 | Extra calls requested | Not yet |
 | Code started | **Yes** — `skills/customer-success-voice-signal/` |
+| First live probe | Curtain-up completed; **voicemail** (no line reading). Retry when answered. |
+| Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
+| PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1 |
 
 ## Locked decisions
 
@@ -23,8 +26,9 @@ See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 
 ## Blockers
 
-- Curtain-up demo call + video  
-- Extra CALL-E calls form  
+- Live line reading (pick up the phone on retry)  
+- Extra CALL-E calls form if quota tight  
+- Demo video  
 
 ## Log
 
@@ -33,3 +37,4 @@ See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 - 2026-07-31: Named **customer-success-voice-signal**.  
 - 2026-07-31: Architecture flow + stack/hosting/tone docs; private GitHub `customer-success-voice-signal-hackathon`.  
 - 2026-08-01: Rebuilt full Stage Manager skill scaffold (schemas, fixtures, dress rehearsal CLI, writeback, curtain-up client).  
+- 2026-08-01: First curtain-up probe — auth OK, ring OK, voicemail; mapping fixed to `no_answer`.  
