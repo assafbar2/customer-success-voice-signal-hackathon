@@ -216,4 +216,27 @@ describe("toDecision mapping", () => {
     expect(result.option_id).toBe("hold");
     expect(result.decision).toBe("hold");
   });
+
+  it("maps voicemail summary to no_answer", () => {
+    const raw = JSON.parse(
+      readFileSync(path.join(fixturesDir, "stuck_support_acme.json"), "utf8"),
+    );
+    const event = normalizeEvent(raw);
+    const options = pickOptions(event.trigger_id);
+    const intent = buildCallIntent(event, event.cs_owner.e164, options);
+    const result = toDecision({
+      event,
+      intent,
+      options,
+      mode: "curtain_up",
+      callRunId: "call_vm",
+      structured: null,
+      callSummary:
+        "The call reached voicemail, so no CS decision was obtained from Maya.",
+      taskCompleted: false,
+    });
+    expect(result.decision).toBe("no_answer");
+    expect(result.decision_label).toMatch(/voicemail/i);
+    expect(result.option_id).toBe("unknown");
+  });
 });

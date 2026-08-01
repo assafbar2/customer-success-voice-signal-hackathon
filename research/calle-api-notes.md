@@ -32,6 +32,8 @@ await client.calls.createAndWait({
 Prefer `call.structuredResult`, fall back to `call.recipients[0].structuredResult`.
 Map via `src/map/toDecision.ts` onto `DecisionResult`.
 
+If structured result is missing and the summary mentions voicemail / no answer → `decision: no_answer` (not a fake line reading).
+
 ## Modes
 
 | Mode | Ring? | Cue-history? |
@@ -39,7 +41,14 @@ Map via `src/map/toDecision.ts` onto `DecisionResult`.
 | Dress rehearsal | No | No |
 | Curtain up | Yes (`createAndWait`) | Yes |
 
+## Live probe log (no secrets)
+
+| Date | Path | Result | Notes |
+| --- | --- | --- | --- |
+| 2026-08-01 | SDK curtain-up `stuck_support` | Call `completed`, `taskCompleted: false` | Reached **voicemail**; no structured line reading. Auth + dial path proven. Retry when CS can pick up. |
+
 ## Docs
 
 - https://docs.heycall-e.com/
 - https://github.com/CALLE-AI/call-e-integrations
+- Skill key swap: `skills/customer-success-voice-signal/references/auth-and-keys.md`

@@ -15,8 +15,24 @@ export interface ToDecisionInput {
   callRunId?: string | null;
   structured?: Record<string, unknown> | null;
   holdReason?: string | null;
+  /** CALL-E call/recipient summary when structured result is missing */
+  callSummary?: string | null;
+  taskCompleted?: boolean | null;
   /** Dress rehearsal may simulate a choice (default option 1). */
   simulatedOptionId?: "1" | "2" | "3";
+}
+
+function looksLikeVoicemailOrNoAnswer(summary: string | null | undefined): boolean {
+  if (!summary) return false;
+  const s = summary.toLowerCase();
+  return (
+    s.includes("voicemail") ||
+    s.includes("not available") ||
+    s.includes("no answer") ||
+    s.includes("didn't answer") ||
+    s.includes("did not answer") ||
+    s.includes("unreachable")
+  );
 }
 
 function matchOption(
@@ -77,18 +93,29 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
   );
 
   if (!matched) {
+    const vm = looksLikeVoicemailOrNoAnswer(input.callSummary);
+    const noStructured =
+      !input.structured || Object.keys(input.structured).length === 0;
+    const decision = vm ? "no_answer" : "unclear";
+    const decision_label = vm
+      ? "No line reading — voicemail / no answer"
+      : "Could not map line reading";
     return DecisionResultSchema.parse({
       trigger_id: event.trigger_id,
       account_id: event.account.id,
       account_name: event.account.name,
       cs_owner_id: event.cs_owner.id,
       call_run_id: input.callRunId ?? null,
-      decision: "unknown",
-      decision_label: "Could not map line reading",
+      decision,
+      decision_label,
       option_id: "unknown",
-      notes_short: input.structured
-        ? JSON.stringify(input.structured).slice(0, 200)
-        : null,
+      notes_short: input.callSummary
+        ? input.callSummary.slice(0, 280)
+        : input.structured
+          ? JSON.stringify(input.structured).slice(0, 200)
+          : noStructured
+            ? "No structured result from CALL-E"
+            : null,
       follow_up_at: null,
       completed_at: new Date().toISOString(),
       mode,

@@ -261,6 +261,8 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
       mode,
       callRunId: call.id,
       structured,
+      callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
+      taskCompleted: call.taskCompleted,
     });
     const paths = await writeback({
       dataDir: args.env.dataDir,

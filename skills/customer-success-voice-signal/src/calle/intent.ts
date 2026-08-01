@@ -56,6 +56,7 @@ export function buildCallIntent(
     `Ask for one decision. Present exactly these closed-set line readings:`,
     lines,
     `Have them press or say 1, 2, or 3. Confirm the choice, then hang up.`,
+    `If you reach voicemail or an automated “not available” greeting: do not leave a long message — say briefly that Stage Manager will try again, then hang up. Do not invent a line reading.`,
     `Return structured result with option_id, decision, and decision_label matching the chosen line.`,
   ]
     .filter(Boolean)
