@@ -10,7 +10,8 @@
 | Code | **Yes** — `skills/customer-success-voice-signal/` |
 | Live cues | **2 succeeded** — `stuck_support` → **1** take over chat; `agent_needs_decision` → **1** approve A (exception) |
 | Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
-| PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1 |
+| Judge site | [`site/`](../site/) — Vercel / GitHub Pages (see site README) |
+| Demo reel | [`submission/demo-reel/stage-manager-demo.mp4`](../submission/demo-reel/stage-manager-demo.mp4) (~70s TTS placeholder) |
 
 ## Locked decisions
 

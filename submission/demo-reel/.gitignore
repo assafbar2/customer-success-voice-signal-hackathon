@@ -1,0 +1,6 @@
+# Demo reel intermediates (keep final mp4)
+submission/demo-reel/audio/
+submission/demo-reel/frames/
+submission/demo-reel/parts/
+submission/demo-reel/parts.txt
+submission/demo-reel/*.wav

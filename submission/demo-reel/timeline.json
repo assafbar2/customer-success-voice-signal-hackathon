@@ -1,0 +1,37 @@
+[
+  {
+    "wav": "/workspace/submission/demo-reel/audio/01.wav",
+    "frame": "/workspace/submission/demo-reel/frames/01_title.png",
+    "dur": 13.17093
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/02.wav",
+    "frame": "/workspace/submission/demo-reel/frames/02_dress.png",
+    "dur": 12.348073
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/03.wav",
+    "frame": "/workspace/submission/demo-reel/frames/03_cues.png",
+    "dur": 9.27941
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/04.wav",
+    "frame": "/workspace/submission/demo-reel/frames/04_call.png",
+    "dur": 12.243764
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/05.wav",
+    "frame": "/workspace/submission/demo-reel/frames/05_writeback.png",
+    "dur": 7.122993
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/06.wav",
+    "frame": "/workspace/submission/demo-reel/frames/06_second.png",
+    "dur": 8.410204
+  },
+  {
+    "wav": "/workspace/submission/demo-reel/audio/07.wav",
+    "frame": "/workspace/submission/demo-reel/frames/07_end.png",
+    "dur": 7.339683
+  }
+]

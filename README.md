@@ -10,6 +10,15 @@ When a named account hits a high-risk **cue**, the **Stage Manager** rings the *
 
 ---
 
+## Judge site + demo reel
+
+- **Landing page (source):** [`site/`](site/) — Stage Manager one-pager for judges  
+  - **Vercel:** import the repo, root directory `site` → https://vercel.com/new/clone?repository-url=https://github.com/assafbar2/customer-success-voice-signal-hackathon&root-directory=site  
+  - **GitHub Pages:** workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) (enable Pages → Source: GitHub Actions after first push)
+- **Self-made demo video (~70s TTS):** [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · rebuild: `bash submission/demo-reel/build.sh`  
+  - Script: [`submission/video-script.md`](submission/video-script.md)  
+  - Honest note: voice is espeak (robotic). Swap VO later for a human take if you want polish.
+
 ## How judges run this
 
 ```bash
