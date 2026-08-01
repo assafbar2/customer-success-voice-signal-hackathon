@@ -8,7 +8,7 @@
 | Persona | **Stage Manager** (dress rehearsal / curtain up) |
 | CALL-E SDK | `@call-e/calle` ^0.6.0 — dial path proven |
 | Code | **Yes** — `skills/customer-success-voice-signal/` |
-| Live cues | **2 attempted** — `stuck_support` **succeeded** (decision **1** / `take_over_chat`); `agent_needs_decision` rung, mapping still flaky (unclear) |
+| Live cues | **2 succeeded** — `stuck_support` → **1** take over chat; `agent_needs_decision` → **1** approve A (exception) |
 | Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
 | PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1 |
 
@@ -25,9 +25,13 @@ See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 
 ## Blockers / next
 
-- Demo video ≤3 min ([`submission/video-script.md`](../submission/video-script.md))  
+- Record demo video ≤3 min ([`submission/video-script.md`](../submission/video-script.md))  
 - Awesome-list PR + Devpost package  
 - Extra CALL-E calls if quota tight  
+
+## Log
+
+- 2026-08-01: Live `stuck_support` → decision 1. Live `agent_needs_decision` → decision 1 (after call-copy polish). Docs polished to as-built; video script added.  
 - Optional: second cue live polish (`agent_needs_decision`)
 
 ## Log

@@ -1,7 +1,9 @@
 # Demo video script — Stage Manager (≤3:00)
 
 **Goal:** One chuckle, then clarity. Show the real job, the CLI, one live ring, writeback.  
-**Primary cue:** `stuck_support` · **Name-drop:** `agent_needs_decision`
+**Primary cue:** `stuck_support` · **Second cue (live or name-drop):** `agent_needs_decision`
+
+Both cues have been proven live (decision **1** each). Video can show one live ring and name-drop the second, or cut both if time allows.
 
 ---
 
@@ -14,7 +16,7 @@
 | **0:50–1:10** | Quick `--list` or second fixture flash | **VO:** “Four cues on the sheet — stuck support, SLA, agent needs a decision, health stall. Same engine.” *Optional flash:* `agent_needs_decision_acme.json` in `--list`. |
 | **1:10–2:10** | Curtain-up CLI + phone rings + answer | **VO:** “Curtain up. Live gate: `--live` and `PLACES`.” *Run:* `npm run signal -- --fixture stuck_support_acme.json --live PLACES` · Cut to phone ringing · **On call (Stage Manager):** “Hi Maya. Stage Manager. You're up for Acme.” · Brief (ticket stuck, two bot handoffs) · “Line reading. Press or say 1, 2, or 3.” · Maya: “One.” · “Confirming option 1 — take over in chat. Logging to the prompt book. Clear.” |
 | **2:10–2:35** | Terminal + `data/show-report.md` / prompt book | **VO:** “Decision one — take over in chat. Written to the prompt book and show report. Structured. Auditable. No CRM cosplay.” |
-| **2:35–2:50** | Name-drop second cue (fixture or one line of `--list`) | **VO:** “Same path for when an agent hits needs-human — closed-set approve A, B, or escalate. We don’t freestyle policy on a cold call.” |
+| **2:35–2:50** | Name-drop / optional second curtain-up | **VO:** “Same engine when an agent hits needs-human — approve A, approve B, or escalate. We already ran that live: option one, allow the exception.” *Optional:* flash `agent_needs_decision` show report. |
 | **2:50–3:00** | Tagline card | **VO:** “When the account is on fire, we cue the firefighter — not the building. Stage Manager. CALL-E.” · End card: repo + skill path. |
 
 **Hard stop at 3:00.** Prefer landing at ~2:50.
