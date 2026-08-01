@@ -1,223 +1,158 @@
 # Architecture & flow — `customer-success-voice-signal`
 
-One-page view of **what we are building**.  
-Tone: serious ops problem, **light delivery** (see § Tone).
+What was built. Stage Manager tone lives in call copy and CLI; this page stays structural.
 
 ---
 
-## 1. System context (who talks to whom)
+## 1. System context
 
 ```text
-┌─────────────┐     events      ┌──────────────────────────────────┐
-│  Triggers   │ ───────────────►│  customer-success-voice-signal   │
-│  (fixtures  │                 │  (this product)                  │
-│   / webhooks│                 └───────────┬──────────────────────┘
-│   / agents) │                             │
-└─────────────┘                             │ plan / run / get
-                                            ▼
-                                   ┌─────────────────┐
-                                   │     CALL-E      │
-                                   │  (real phone)   │
-                                   └────────┬────────┘
-                                            │ rings
-                                            ▼
-                                   ┌─────────────────┐
-                                   │   CS Owner 📱   │
-                                   │  (only callee)  │
-                                   └────────┬────────┘
-                                            │ decision
-                                            ▼
-                                   ┌─────────────────┐
-                                   │   Writeback     │
-                                   │ ticket · Slack  │
-                                   │ · audit file    │
-                                   └─────────────────┘
+┌─────────────┐   fixture / CLI   ┌──────────────────────────────────┐
+│  Cue sheet  │ ─────────────────►│  customer-success-voice-signal   │
+│  (4 JSON)   │                   │  npm run signal                  │
+└─────────────┘                   └───────────┬──────────────────────┘
+                                              │ curtain-up only
+                                              ▼
+                                     ┌─────────────────┐
+                                     │     CALL-E      │
+                                     │  createAndWait  │
+                                     └────────┬────────┘
+                                              │ rings CS owner only
+                                              ▼
+                                     ┌─────────────────┐
+                                     │   Writeback     │
+                                     │ prompt-book     │
+                                     │ show-report     │
+                                     │ cue-history*    │
+                                     └─────────────────┘
+* cue-history on curtain-up only
 ```
 
-**Never in MVP:** CALL-E → customer.
+**Never in MVP:** CALL-E → customer. No Slack required. No DB. No demo UI app.
 
 ---
 
-## 2. End-to-end flow (happy path)
+## 2. End-to-end flow
 
 ```text
-                    ┌──────────────┐
-                    │   TRIGGER    │  stuck_support | sla_risk |
-                    │   arrives    │  agent_needs_decision |
-                    └──────┬───────┘  health_onboarding
-                           │
-                           ▼
-                    ┌──────────────┐
-                    │  NORMALIZE   │  → AccountEvent
-                    │  + POLICY    │  owned? severity? quiet hours?
-                    └──────┬───────┘  already called? allowlist?
-                           │
-              ┌────────────┴────────────┐
-              │ dry_run === true ?      │
-              └────────────┬────────────┘
-                     yes   │   no
-              ┌────────────┘   └────────────┐
-              ▼                             ▼
-     ┌────────────────┐            ┌────────────────┐
-     │ PREVIEW ONLY   │            │  plan_call     │──► CALL-E
-     │ (no phone)     │            │  run_call      │──► CALL-E
-     └────────────────┘            │  get_call_run  │◄── CALL-E
-                                   └───────┬────────┘
-                                           │
-                                           ▼
-                                   ┌────────────────┐
-                                   │ MAP → Decision │
-                                   │ Result schema  │
-                                   └───────┬────────┘
-                                           │
-                                           ▼
-                                   ┌────────────────┐
-                                   │ WRITEBACK      │
-                                   │ + AUDIT LOG    │
-                                   └────────────────┘
+CLI (--fixture | --trigger)
+        │
+        ▼
+   normalize  →  AccountEvent
+        │
+        ▼
+   shouldRing →  HOLD? ──yes──► writeback (hold) → exit 2
+        │ no
+        ▼
+   buildCallIntent (Stage Manager task + line readings 1/2/3)
+        │
+   ┌────┴────────────────────────────┐
+   │ dress rehearsal (default)       │ curtain-up
+   │ no CALLE key needed             │ --live + PLACES
+   │ simulate option 1               │ curtainUp(createAndWait)
+   └────┬────────────────────────────┴────┬
+        │                                 │
+        ▼                                 ▼
+   toDecision                        toDecision (structured /
+                                     transcript / no_answer)
+        │                                 │
+        └────────────┬────────────────────┘
+                     ▼
+              writeback
+              · prompt-book.ndjson
+              · show-report.md
+              · cue-history.ndjson (curtain-up only)
 ```
 
 ### Call beat (what CS hears)
 
 ```text
-Ring → "Hi {name}, voice signal for {account}."
-     → 3–5 sentence brief (why we're interrupting)
-     → "Press or say 1, 2, or 3:" [options]
-     → Confirm choice
-     → "Logged. Back to your day." → hangup
+Ring → "Hi {name}. Stage Manager. You're up for {account}."
+     → Short cue brief (no secrets dump)
+     → "Line reading. Press or say 1, 2, or 3." [closed set]
+     → Confirm → log to prompt book → hang up
 ```
+
+**Modes:** dress rehearsal (default, no ring) · curtain up (`--live` + `PLACES`).
 
 ---
 
-## 3. Entities
+## 3. Source layout (as built)
 
 ```text
-┌──────────────────┐       owns        ┌──────────────────┐
-│     Account      │◄──────────────────│     CsOwner      │
-│ id, name, tier   │                   │ id, name, e164   │
-│ health_flags     │                   │ quiet_hours      │
-└────────┬─────────┘                   │ opt_in_phone     │
-         │                             └──────────────────┘
-         │ 1..n
-         ▼
-┌──────────────────┐       emits       ┌──────────────────┐
-│     Ticket /     │                  │   AgentRuntime   │
-│     Case         │                  │  (needs_human)   │
-└────────┬─────────┘                  └────────┬─────────┘
-         │                                     │
-         └──────────────┬──────────────────────┘
-                        ▼
-              ┌──────────────────┐
-              │  AccountEvent    │
-              │  trigger_id      │
-              │  severity        │
-              │  summary         │
-              │  option_set[]    │
-              └────────┬─────────┘
-                       │
-                       ▼
-              ┌──────────────────┐     ┌──────────────────┐
-              │   CallIntent     │────►│   CallRun        │
-              │   (to CALL-E)    │     │   (from CALL-E)  │
-              └──────────────────┘     └────────┬─────────┘
-                                                │
-                                                ▼
-                                       ┌──────────────────┐
-                                       │ DecisionResult   │
-                                       │ → writeback      │
-                                       └──────────────────┘
+skills/customer-success-voice-signal/
+├── src/
+│   ├── cli.ts                 # npm run signal
+│   ├── runSignal.ts           # orchestrator
+│   ├── schemas.ts             # Zod: AccountEvent, CallIntent, DecisionResult
+│   ├── config/env.ts          # .env + live gate
+│   ├── ingest/normalize.ts    # raw fixture → AccountEvent
+│   ├── policy/
+│   │   ├── shouldRing.ts      # opt-in, severity, house dark, dedupe, placeholders
+│   │   └── options.ts         # closed-set line readings per trigger
+│   ├── calle/
+│   │   ├── intent.ts          # buildCallIntent (Stage Manager task)
+│   │   └── client.ts          # curtainUp → CalleClient.createAndWait
+│   ├── map/toDecision.ts      # structured / transcript / no_answer → DecisionResult
+│   └── writeback/index.ts     # prompt book · show report · cue-history
+├── fixtures/                  # 4 cues (Acme / Globex / Initech)
+└── data/                      # local writeback (gitignored)
 ```
+
+| Module | Responsibility |
+| --- | --- |
+| `normalize` | One `AccountEvent` shape for all four triggers |
+| `shouldRing` | Opt-in, severity ≥ high, house dark (live only), dedupe, placeholder reject |
+| `buildCallIntent` | Stage Manager task + result schema |
+| `curtainUp` | **Only** CALL-E invocation (`createAndWait`) |
+| `toDecision` | Map structured result / transcript / voicemail → schema |
+| `writeback` | Prompt book + show report; cue-history on curtain-up |
+
+---
+
+## 4. Entities
 
 | Entity | Role |
 | --- | --- |
 | **Account** | Named customer org CS owns |
-| **CsOwner** | Only person we call |
-| **AccountEvent** | Normalized trigger |
-| **CallIntent** | What we ask CALL-E to do |
-| **CallRun** | Transcript + metadata from CALL-E |
-| **DecisionResult** | Closed-set choice + writeback payload |
+| **CsOwner** | Only person we call (`CS_OWNER_E164` overrides fixture on live) |
+| **AccountEvent** | Normalized cue |
+| **CallIntent** | Task + options + result schema for CALL-E |
+| **DecisionResult** | Closed-set choice (or hold / no_answer / unclear) |
 
 ---
 
-## 4. Functions / modules
+## 5. Trigger → line readings
 
-```text
-customer-success-voice-signal/
-│
-├── ingest/
-│   └── normalizeEvent(raw) → AccountEvent
-│
-├── policy/
-│   ├── shouldRing(event, owner, now) → boolean
-│   └── pickOptions(trigger_id) → Option[]
-│
-├── calle/
-│   ├── planCall(intent)      → plan   // CALL-E
-│   ├── runCall(plan)         → runId  // CALL-E
-│   └── getCallRun(runId)     → run    // CALL-E
-│
-├── map/
-│   └── toDecision(run, options) → DecisionResult
-│
-├── writeback/
-│   ├── toTicketNote(result)
-│   ├── toSlack(result)          // optional webhook
-│   └── toAuditFile(result)
-│
-└── demo/
-    ├── fixtures/*.json          // Acme tickets, fake health
-    └── trigger-ui or CLI        // "fire stuck_support for Acme"
+| trigger_id | Demo fixture | Options (1 / 2 / 3) |
+| --- | --- | --- |
+| `stuck_support` | `stuck_support_acme.json` | take over chat · assign SE · snooze 2h |
+| `agent_needs_decision` | `agent_needs_decision_acme.json` | approve A · approve B · reject/escalate |
+| `sla_risk` | `sla_risk_globex.json` | own it · page backup · accept risk |
+| `health_onboarding` | `health_onboarding_initech.json` | book SE · watchlist · flag churn |
+
+Demo-ready live path: **`stuck_support`** (+ name-drop `agent_needs_decision`).
+
+---
+
+## 6. CLI
+
+```bash
+npm run signal -- --fixture stuck_support_acme.json          # dress rehearsal
+npm run signal -- --fixture stuck_support_acme.json --live PLACES  # curtain-up
+npm run signal -- --list | --last | --verbose | --help
 ```
 
-| Function | Responsibility |
-| --- | --- |
-| `normalizeEvent` | One shape for all four triggers |
-| `shouldRing` | Quiet hours, severity, dedupe, allowlist |
-| `planCall` / `runCall` / `getCallRun` | **Only** place CALL-E is invoked |
-| `toDecision` | Parse spoken/DTMF choice → schema |
-| `writeback.*` | Side effects after the call |
-| `demo/*` | Judge-friendly fire button |
+Exit: `0` ok · `2` HOLD · `3` failure.
 
 ---
 
-## 5. Sequence (one stuck_support call)
+## 7. Done glance
 
 ```text
-Demo UI / CLI          Voice Signal           CALL-E              CS Owner
-     │                      │                    │                    │
-     │  fire(stuck_support) │                    │                    │
-     │─────────────────────►│                    │                    │
-     │                      │  plan_call         │                    │
-     │                      │───────────────────►│                    │
-     │                      │  run_call          │                    │
-     │                      │───────────────────►│── ring ───────────►│
-     │                      │                    │◄─ "2" ─────────────│
-     │                      │  get_call_run      │                    │
-     │                      │───────────────────►│                    │
-     │                      │  DecisionResult    │                    │
-     │                      │  writeback         │                    │
-     │◄── show result ──────│                    │                    │
+[Fixture] → [normalize] → [shouldRing] → [dress rehearsal | CALL-E → CS]
+                                              → [toDecision] → [writeback]
 ```
 
----
-
-## 6. Trigger → options (quick map)
-
-| trigger_id | CS hears options (examples) |
-| --- | --- |
-| `stuck_support` | 1 take over chat · 2 assign SE · 3 snooze 2h |
-| `sla_risk` | 1 I own it · 2 page backup · 3 accept risk |
-| `agent_needs_decision` | 1 approve A · 2 approve B · 3 reject / escalate |
-| `health_onboarding` | 1 book SE session · 2 watchlist · 3 flag churn risk |
-
----
-
-## 7. What “done” looks like in one glance
-
-```text
-[Event] → [Policy OK?] → [CALL-E → CS phone] → [Decision] → [Ticket/Slack/Audit]
-                │ no
-                └── log skip (no call)
-```
-
-**Built =** that path works for ≥2 triggers, dry-run mode, one real CALL-E call in the demo video, skill packaged for the awesome-list PR.
+**Shipped:** four fixtures, dress rehearsal, curtain-up client, writeback, vitest.  
+**Not shipped:** demo UI, Slack writeback, DB.

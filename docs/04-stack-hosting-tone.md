@@ -1,137 +1,103 @@
-# Tech stack · hosting · tone
+# Stack · submission · Stage Manager tone
 
-## 1. Tech stack (locked proposal)
+## 1. Stack (as built)
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Language | **TypeScript** | CALL-E ecosystem is TS-friendly; fast skill/app scaffolding |
-| Runtime | **Node.js 20+** | CLI + small web demo |
-| Package | **npm** workspace / single package | Simple for judges |
-| CALL-E | **CLI + MCP tools** (`plan_call`, `run_call`, `get_call_run`) via `@call-e/cli` / integrations | Required for hackathon; runtime, not mock-only |
-| API shape | Thin **Hono** or **Express** demo server *or* CLI-first + static UI | Prefer **CLI + minimal Vite UI** if we want a browser “Fire signal” button |
-| Validation | **Zod** | Event + DecisionResult schemas |
-| Config | `.env` + JSON fixtures | No DB for MVP |
-| Persistence MVP | **JSON/NDJSON files** on disk (audit log, last decisions) | Free, portable, honest |
-| Optional writeback | Slack incoming webhook | One env var |
-| Tests | **vitest** + dry-run fixtures | No real calls in CI |
-| Package for PR | Agent **Skill** folder `customer-success-voice-signal/` | Matches awesome-phone-call-agents |
+| Layer | Choice |
+| --- | --- |
+| Language / runtime | TypeScript · Node 20+ |
+| Package | `skills/customer-success-voice-signal/` (npm) |
+| CALL-E | `@call-e/calle` → `CalleClient.calls.createAndWait` |
+| Surface | CLI — `npm run signal` |
+| Validation | Zod |
+| Config | `.env` + JSON fixtures — **no DB** |
+| Writeback | `prompt-book.ndjson` · `show-report.md` · `cue-history.ndjson` (live only) |
+| Tests | vitest (no real calls in CI) |
 
-### Explicit non-stack (MVP)
+### Explicit non-stack
 
 - No Postgres/Redis  
 - No real Sentry API  
+- No demo UI app yet  
+- Slack webhook optional / unused in MVP  
 - No customer telephony beyond CALL-E  
-- No heavy frontend framework (React only if Vite demo needs it; keep UI dumb)
 
-### Default monorepo layout (this repo)
+### Layout
 
 ```text
-customer-success-voice-signal-hackathon/   # GitHub name
-├── docs/                  # already started as calle-hackathon-2026/docs
-├── skills/
-│   └── customer-success-voice-signal/
-│       ├── SKILL.md
-│       ├── package.json
-│       ├── src/
-│       └── fixtures/
-└── apps/demo-console/     # optional thin UI to fire triggers
+customer-success-voice-signal-hackathon/
+├── docs/
+├── notes/STATUS.md
+├── research/calle-api-notes.md
+├── submission/video-script.md
+└── skills/customer-success-voice-signal/
+    ├── SKILL.md
+    ├── src/          # see 03-architecture-flow.md
+    └── fixtures/
 ```
 
-*(Local folder may stay `calle-hackathon-2026` or be renamed to match GitHub.)*
-
 ---
 
-## 2. Hosting (free) + hackathon rules
+## 2. Submission (what judges need)
 
-### Hackathon requirements (from official rules)
-
-| Required? | What |
+| Required | What |
 | --- | --- |
-| **Yes** | Working project; CALL-E used at runtime |
-| **Yes** | PR to [awesome-phone-call-agents](https://github.com/CALLE-AI/awesome-phone-call-agents) |
-| **Yes** | Devpost submission + PR URL |
-| **Yes** | Public demo **video** ≤3 min (YouTube/Vimeo) |
-| **Yes** | CALL-E account email |
-| **Optional** | URL to functional demo app |
-| **Yes if private demo** | Login credentials for judges if site is private |
+| Yes | Working project; CALL-E at runtime |
+| Yes | PR to [awesome-phone-call-agents](https://github.com/CALLE-AI/awesome-phone-call-agents) |
+| Yes | Devpost + PR URL + ≤3 min video |
+| Yes | CALL-E account email |
+| Optional | Hosted demo URL — **not required**; CLI + video is enough |
 
-**No requirement** for a specific cloud, paid hosting, or always-on multi-region deploy. Judges may judge from **video + description** only.
+**Secrets:** `CALLE_*` / phones never committed. Keys: https://dashboard.heycall-e.com/account/api-keys  
 
-### Free hosting options (if we expose a demo URL)
-
-| Host | Fit | Notes |
-| --- | --- | --- |
-| **Railway / Render free tier** | Small Node API | Sleeps on free tier — say so in README |
-| **Fly.io free allowance** | Node | Good enough for demo window |
-| **Vercel** | Static demo UI + serverless routes | Fine if CALL-E secrets stay server-side |
-| **Local + ngrok / Cloudflare Tunnel** | Live judging only | Fragile; video still primary |
-| **GitHub only** | Skill + CLI dry-run | Totally valid if video shows real call |
-
-**Recommendation:**  
-1. **Ship skill + CLI** as the core (always works offline from clone).  
-2. Optional **demo console** on **Vercel or Render free**.  
-3. **Win on video**, not uptime. Put dry-run in the video first, then one real CALL-E call.
-
-### Secrets
-
-- `CALLE_*` / CLI auth: never commit  
-- Demo deploy: env vars on host  
-- Fixtures use fictional phones  
+**Win on video**, not uptime. Dress rehearsal first, then one curtain-up.
 
 ---
 
-## 3. Tone — light, funny, judges should chuckle
+## 3. Tone — Stage Manager
 
-### Principle
-
-**High-stakes CS problem, low-pomp delivery.**  
-We’re not clownish about outages — we’re human about the absurdity of “please check the dashboard at 2am.”
-
-### Voice
+**High-stakes CS problem, backstage delivery.** Short cues, closed-set line readings, dry wit — no corporate synergy.
 
 | Do | Don’t |
 | --- | --- |
-| Dry wit, short lines | Corporate “synergy” |
-| Self-aware agent (“I’m the annoying-but-useful ring”) | Cruel jokes about customers or CS burn-out |
-| Option labels with personality | Meme spam mid-call |
+| Theater ops vocabulary (hard) | Generic “AI assistant” voice |
+| Dry wit, short lines | Synergy / pitch-deck fluff |
+| “Cueing you, not the customer” | Jokes about customers or burn-out |
 | README that smiles | Undermining safety / consent |
 
-### Microcopy examples
+### Glossary
 
-**Product tagline options:**
+| Term | Meaning |
+| --- | --- |
+| **Dress rehearsal** | Dry-run. Default. No ring. |
+| **Curtain up** | Live CALL-E (`--live` + `PLACES`). |
+| **Cue** | Trigger event on a named account. |
+| **Line readings** | Closed-set options 1 / 2 / 3. |
+| **Prompt book** | NDJSON audit (`data/prompt-book.ndjson`). |
+| **Show report** | Markdown writeback (`data/show-report.md`). |
+| **House dark** | Quiet hours — curtain-up only. |
+| **Call sheet** | Who we may ring (CS allowlist). |
+| **HOLD** | Policy stop; exit code 2. |
 
-- *The only CS notification that can’t hide under Slack.*  
-- *When the account is on fire, we call the firefighter — not the building.*  
-- *Voice signal for Customer Success. Dashboards are optional; picking up is not.*  
+### Microcopy
 
-**On the call (light):**
+**Tagline:** *When the account is on fire, we cue the firefighter — not the building.*
 
-- “Sorry to interrupt your meeting about meetings…”  
-- “This is a voice signal, not a crisis hotline. Well — account crisis. Small c.”  
-- “Option 3 is ‘not now,’ also known as the honest choice.”  
+**On the call:**
 
-**After decision:**
+- “Hi Maya. Stage Manager. You're up for Acme.”  
+- “Line reading. Press or say 1, 2, or 3.”  
+- “Confirming option 1. Logging to the prompt book.”  
 
-- “Logged. You may return to your regularly scheduled Slack.”  
-- “Decision locked. The robots will pretend they knew.”  
+**CLI:**
 
-**UI / CLI:**
+- `Dress rehearsal (no ring)`  
+- `Curtain up — this rings the CS owner`  
+- `HOLD: …`  
 
-- Button: `Fire voice signal (dry-run)`  
-- Button: `Actually ring CS (this is not a drill… ok it kind of is)`  
-- Empty state: `No signals. Either everything is fine, or nobody’s looking. Sus.`  
+### Safety stays straight-faced
 
-### Safety still serious
+Funny **around** the product, never about emergency/medical, harassment, or leaking data. Consent, call sheet, and house dark stay serious.
 
-Funny **around** the product, never about:
+### Demo video
 
-- Emergency / medical  
-- Harassment or spam  
-- Leaking customer data  
-
-Consent, allowlist, quiet hours stay straight-faced.
-
-### Demo video tone
-
-Open with one chuckle line → show the problem → call → writeback.  
-Judges remember **delight + clarity**, not stand-up.
+One Stage Manager chuckle → cue → dress rehearsal → curtain-up → prompt book. Delight + clarity, not stand-up.

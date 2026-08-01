@@ -1,0 +1,78 @@
+# customer-success-voice-signal
+
+**Persona:** Stage Manager  
+**Callee:** CS owner only — never the customer  
+**Default mode:** Dress rehearsal (no ring)
+
+> When the account is on fire, we cue the firefighter — not the building.
+
+## How judges run this
+
+```bash
+cd skills/customer-success-voice-signal
+npm install
+npm test && npm run typecheck
+
+# Dress rehearsal — no ring, no CALL-E key
+npm run signal -- --fixture stuck_support_acme.json
+npm run signal -- --fixture agent_needs_decision_acme.json
+npm run signal -- --list
+npm run signal -- --last
+```
+
+### Curtain-up (real phone — operator only)
+
+1. Copy `.env.example` → `.env` (never commit `.env`)
+2. API key: **https://dashboard.heycall-e.com/account/api-keys**
+3. Set `CALLE_API_KEY`, `CS_OWNER_E164`, `SIGNAL_CONFIRM=PLACES`
+4. Run: `npm run signal -- --fixture stuck_support_acme.json --live PLACES`
+5. Check `data/prompt-book.ndjson` and `data/show-report.md`
+
+### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Ok — dress rehearsal or curtain-up completed |
+| 2 | HOLD — policy / live gate / house dark / placeholder phone |
+| 3 | Failure — bad fixture, missing key, CALL-E error |
+
+### Safety
+
+- CS owner only; fixture phones (`+1555555…`) rejected on live  
+- Curtain-up needs `--live` **and** `PLACES`  
+- House dark enforced on live only  
+- Dress rehearsal does not append cue-history  
+
+See [references/safety.md](references/safety.md) · [SKILL.md](SKILL.md).
+
+## Scripts
+
+| Script | What |
+| --- | --- |
+| `npm run signal -- …` | Stage Manager CLI |
+| `npm run dry-run -- …` | Force dress rehearsal |
+| `npm test` | Vitest (no real calls) |
+| `npm run typecheck` | `tsc --noEmit` |
+
+## CLI flags
+
+```text
+--fixture <file>   Cue under fixtures/
+--trigger <id>     First fixture matching trigger_id
+--live             Request curtain-up (needs PLACES)
+--dry-run          Force dress rehearsal
+PLACES             Live gate (or SIGNAL_CONFIRM=PLACES)
+--list             List fixtures
+--last             Tail prompt book / show report
+--verbose          Full call sheet preview
+--help
+```
+
+## Cues
+
+| ID | Fixture | Demo |
+| --- | --- | --- |
+| `stuck_support` | `stuck_support_acme.json` | Primary live path |
+| `agent_needs_decision` | `agent_needs_decision_acme.json` | Second demo cue |
+| `sla_risk` | `sla_risk_globex.json` | First-class |
+| `health_onboarding` | `health_onboarding_initech.json` | First-class |

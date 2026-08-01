@@ -2,12 +2,16 @@
 
 | Field | Value |
 | --- | --- |
-| Last update | 2026-07-31 |
+| Last update | 2026-08-01 |
 | Devpost | Registered |
-| Primary idea | **`customer-success-voice-signal`** — CS-only callee; multi-trigger |
-| CALL-E installed | Not yet |
-| Extra calls requested | Not yet |
-| Code started | No |
+| Primary idea | **`customer-success-voice-signal`** — Stage Manager; CS-only callee; multi-trigger |
+| Persona | **Stage Manager** (dress rehearsal / curtain up) |
+| CALL-E SDK | `@call-e/calle` ^0.6.0 — dial path proven |
+| Code | **Yes** — `skills/customer-success-voice-signal/` |
+| Live cues | **2 succeeded** — `stuck_support` → **1** take over chat; `agent_needs_decision` → **1** approve A (exception) |
+| Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
+| Judge site | [`site/`](../site/) — Vercel / GitHub Pages (see site README) |
+| Demo reel | [`submission/demo-reel/stage-manager-demo.mp4`](../submission/demo-reel/stage-manager-demo.mp4) (~70s TTS placeholder) |
 
 ## Locked decisions
 
@@ -15,18 +19,27 @@
 1. MVP phone target: **CS only** (not customer)  
 2. Triggers: stuck support · SLA · agent decision · health/onboarding  
 3. Branding: Sentry-**shaped**, not Sentry-**branded**  
-4. Package default: **skill** → `skills/customer-success-voice-signal/`  
+4. Package: skill → `skills/customer-success-voice-signal/`  
+5. Persona: **Stage Manager**  
 
-See `docs/02-prd.md`.
+See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 
-## Blockers
+## Blockers / next
 
-- Install CALL-E + request extra calls  
-- Scaffold skill folder  
+- Record demo video ≤3 min ([`submission/video-script.md`](../submission/video-script.md))  
+- Awesome-list PR + Devpost package  
+- Extra CALL-E calls if quota tight  
 
 ## Log
 
-- 2026-07-31: Project folder created; ideas 1/2/5 writeup; registered.  
-- 2026-07-31: PRD locked (CS-only, all triggers, unbranded).  
-- 2026-07-31: Named **customer-success-voice-signal**.  
-- 2026-07-31: Architecture flow + stack/hosting/tone docs; private GitHub `customer-success-voice-signal-hackathon`.
+- 2026-08-01: Live `stuck_support` → decision 1. Live `agent_needs_decision` → decision 1 (after call-copy polish). Docs polished to as-built; video script added.  
+- Optional: second cue live polish (`agent_needs_decision`)
+
+## Log
+
+- 2026-07-31: Project folder; ideas 1/2/5; registered; PRD locked; named product; architecture + private GitHub.  
+- 2026-08-01: Stage Manager skill scaffold (schemas, fixtures, dress rehearsal CLI, writeback, curtain-up client).  
+- 2026-08-01: First curtain-up — auth OK, ring OK, **voicemail** → mapped `no_answer`.  
+- 2026-08-01: Second curtain-up (`stuck_support`) — **answered**; decision **1** Take over in chat now.  
+- 2026-08-01: Additional live probes on `agent_needs_decision` — ring OK; structured map unclear (still demo name-drop).  
+- 2026-08-01: Public docs trimmed to match as-built.  
