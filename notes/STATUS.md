@@ -3,43 +3,20 @@
 | Field | Value |
 | --- | --- |
 | Last update | 2026-08-01 |
+| Branch | **`main`** (PR #1 merged) |
 | Devpost | Registered |
-| Primary idea | **`customer-success-voice-signal`** — Stage Manager; CS-only callee; multi-trigger |
-| Persona | **Stage Manager** (dress rehearsal / curtain up) |
-| CALL-E SDK | `@call-e/calle` ^0.6.0 — dial path proven |
-| Code | **Yes** — `skills/customer-success-voice-signal/` |
-| Live cues | **2 succeeded** — `stuck_support` → **1** take over chat; `agent_needs_decision` → **1** approve A (exception) |
-| Secrets | Local `.env` only (gitignored). Never commit keys/phones. |
-| Judge site | [`site/`](../site/) — Vercel / GitHub Pages (see site README) |
-| Demo reel | [`submission/demo-reel/stage-manager-demo.mp4`](../submission/demo-reel/stage-manager-demo.mp4) (~70s TTS placeholder) |
+| Product | **`customer-success-voice-signal`** — Stage Manager |
+| Live cues | `stuck_support` → 1 · `agent_needs_decision` → 1 |
+| Judge site | GitHub Pages — enable Actions source → https://assafbar2.github.io/customer-success-voice-signal-hackathon/ |
+| Demo reel | `submission/demo-reel/stage-manager-demo.mp4` (~90s, **with AAC audio**) |
+| Video script | Approved — `submission/video-script.md` |
+| Hosting | **GitHub Pages only** (Vercel configs removed; delete any Vercel project in dashboard) |
+| Secrets | Local `.env` only — never commit |
 
-## Locked decisions
+## Next
 
-0. Name: **`customer-success-voice-signal`**  
-1. MVP phone target: **CS only** (not customer)  
-2. Triggers: stuck support · SLA · agent decision · health/onboarding  
-3. Branding: Sentry-**shaped**, not Sentry-**branded**  
-4. Package: skill → `skills/customer-success-voice-signal/`  
-5. Persona: **Stage Manager**  
-
-See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
-
-## Blockers / next
-
-- Record demo video ≤3 min ([`submission/video-script.md`](../submission/video-script.md))  
-- Awesome-list PR + Devpost package  
-- Extra CALL-E calls if quota tight  
-
-## Log
-
-- 2026-08-01: Live `stuck_support` → decision 1. Live `agent_needs_decision` → decision 1 (after call-copy polish). Docs polished to as-built; video script added.  
-- Optional: second cue live polish (`agent_needs_decision`)
-
-## Log
-
-- 2026-07-31: Project folder; ideas 1/2/5; registered; PRD locked; named product; architecture + private GitHub.  
-- 2026-08-01: Stage Manager skill scaffold (schemas, fixtures, dress rehearsal CLI, writeback, curtain-up client).  
-- 2026-08-01: First curtain-up — auth OK, ring OK, **voicemail** → mapped `no_answer`.  
-- 2026-08-01: Second curtain-up (`stuck_support`) — **answered**; decision **1** Take over in chat now.  
-- 2026-08-01: Additional live probes on `agent_needs_decision` — ring OK; structured map unclear (still demo name-drop).  
-- 2026-08-01: Public docs trimmed to match as-built.  
+- [ ] Settings → Pages → Source: GitHub Actions (if not already)  
+- [ ] Delete accidental Vercel project in vercel.com/dashboard  
+- [ ] Upload demo reel / YouTube for Devpost  
+- [ ] PR to awesome-phone-call-agents  
+- [ ] Devpost submit + MVF survey  
