@@ -2,7 +2,7 @@ name: Deploy Stage Manager site to GitHub Pages
 
 on:
   push:
-    branches: [main, cursor/stage-manager-skill-4ac1]
+    branches: [main]
     paths:
       - "site/**"
       - ".github/workflows/pages.yml"

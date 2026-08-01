@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build ≤3min Stage Manager demo reel from espeak VO + still frames."""
+"""Build ≤3min Stage Manager demo reel from espeak VO + still frames (with audio)."""
 from __future__ import annotations
 
 import json
@@ -14,34 +14,35 @@ AUDIO = REEL / "audio"
 PARTS = REEL / "parts"
 W, H = 1920, 1080
 
+# Approved script VO (submission/video-script.md)
 LINES = [
     (
         "01",
-        "Customer Success owns the account. Slack owns the noise. When Acme is stuck, we don't dial the customer. We cue the firefighter. Stage Manager. Headset on.",
+        "Customer Success owns the revenue relationship. Slack owns the noise. When a named account is stuck — looping support, red S L A, agent blocked, health going quiet — the alert hides under everything else.",
     ),
     (
         "02",
-        "Dress rehearsal first. Default. No ring. The call sheet prints. Line readings one, two, three. Prompt book updates without touching a phone.",
+        "Phone still cuts through. We don't dial the customer. We cue the firefighter. Stage Manager. Headset on. Places, please — your account is on.",
     ),
     (
         "03",
-        "Four cues on the sheet. Stuck support. S L A risk. Agent needs a decision. Health stall. Same engine.",
+        "Dress rehearsal first — default, no ring, no keys required for judges. Preview the cue. Update the prompt book without touching a phone.",
     ),
     (
         "04",
-        "Curtain up. Live gate: live and places. Stage Manager calls Maya for Acme. Line reading. She says one. Take over in chat. Logged.",
+        "Four cues, one engine: stuck support, S L A risk, agent needs a decision, health or onboarding stall.",
     ),
     (
         "05",
-        "Decision one. Written to the prompt book and show report. Structured. Auditable.",
+        "Curtain up. Live gate: live and places. Hi Maya. Stage Manager. You're up for Acme. Line reading — one, two, or three. Maya says one. Take over in chat. Logging to the prompt book. Clear.",
     ),
     (
         "06",
-        "Same path when an agent hits needs human. We already ran that live. Option one: allow the exception.",
+        "Decision one — take over in chat. Structured writeback. Auditable. The kind of trail you can hand a manager, not another Slack shrug. Same path when an agent hits needs-human — we ran that live too.",
     ),
     (
         "07",
-        "When the account is on fire, we cue the firefighter, not the building. Stage Manager. Call E.",
+        "When the account is on fire, we cue the firefighter — not the building. Stage Manager. Call E.",
     ),
 ]
 
@@ -84,6 +85,24 @@ def draw_term(d, lines, title):
         y += 42
 
 
+def wav_duration(path: Path) -> float:
+    return float(
+        subprocess.check_output(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "csv=p=0",
+                str(path),
+            ],
+            text=True,
+        ).strip()
+    )
+
+
 def main() -> None:
     FRAMES.mkdir(parents=True, exist_ok=True)
     AUDIO.mkdir(parents=True, exist_ok=True)
@@ -100,33 +119,45 @@ def main() -> None:
     DIM = (183, 174, 160)
 
     img, d = bg()
-    centered(d, "STAGE MANAGER", 360, Fb, SPOT)
-    centered(d, "Places, please — your account is on.", 480, Fh)
-    centered(d, "CALL-E hackathon · CS owner only", 580, Fs, DIM)
+    centered(d, "STAGE MANAGER", 340, Fb, SPOT)
+    centered(d, "The alert hides under Slack.", 470, Fh)
+    centered(d, "Problem · phone interrupt · CS owner only", 560, Fs, DIM)
     img.save(FRAMES / "01_title.png")
 
-    dress = (REEL / "dress-rehearsal.txt").read_text().splitlines() if (REEL / "dress-rehearsal.txt").exists() else []
-    dress = [ln.replace("/workspace/skills/customer-success-voice-signal/", "") for ln in dress]
+    img, d = bg()
+    centered(d, "Places, please —", 380, Fh)
+    centered(d, "your account is on.", 460, Fh, SPOT)
+    centered(d, "We cue the firefighter — not the building.", 560, Fs, DIM)
+    img.save(FRAMES / "02_value.png")
+
+    dress = (
+        (REEL / "dress-rehearsal.txt").read_text().splitlines()
+        if (REEL / "dress-rehearsal.txt").exists()
+        else []
+    )
+    dress = [
+        ln.replace("/workspace/skills/customer-success-voice-signal/", "") for ln in dress
+    ]
     img, d = bg()
     draw_term(d, dress, "Dress rehearsal · no ring")
-    img.save(FRAMES / "02_dress.png")
+    img.save(FRAMES / "03_dress.png")
 
     img, d = bg()
     draw_term(
         d,
         [
-            "Four cues on the call sheet",
+            "Four cues · one engine",
             "",
             "  stuck_support",
             "  sla_risk",
             "  agent_needs_decision",
             "  health_onboarding",
             "",
-            "Same engine. CS owner only.",
+            "Same pipeline. CS owner only.",
         ],
         "Cue sheet",
     )
-    img.save(FRAMES / "03_cues.png")
+    img.save(FRAMES / "04_cues.png")
 
     img, d = bg()
     draw_term(
@@ -145,28 +176,23 @@ def main() -> None:
         ],
         "Live line reading",
     )
-    img.save(FRAMES / "04_call.png")
+    img.save(FRAMES / "05_call.png")
 
     img, d = bg()
     draw_term(
         d,
         [
-            "Prompt book / show report",
+            "Business value — writeback",
             "",
             "stuck_support        → 1  Take over in chat",
             "agent_needs_decision → 1  Approve A (exception)",
             "",
-            "Structured. Auditable. No CRM cosplay.",
+            "Right person · faster decision · audit trail",
+            "Safe by default · one engine",
         ],
-        "Writeback",
+        "Prompt book / show report",
     )
-    img.save(FRAMES / "05_writeback.png")
-
-    img, d = bg()
-    centered(d, "Same engine.", 380, Fh, SPOT)
-    centered(d, "agent_needs_decision — live option 1", 480, font(36))
-    centered(d, "Approve A — allow the exception", 560, Fs, DIM)
-    img.save(FRAMES / "06_second.png")
+    img.save(FRAMES / "06_writeback.png")
 
     img, d = bg()
     centered(d, "When the account is on fire,", 340, Fh)
@@ -183,39 +209,30 @@ def main() -> None:
 
     frame_names = [
         "01_title",
-        "02_dress",
-        "03_cues",
-        "04_call",
-        "05_writeback",
-        "06_second",
+        "02_value",
+        "03_dress",
+        "04_cues",
+        "05_call",
+        "06_writeback",
         "07_end",
     ]
+
+    parts: list[Path] = []
     segs = []
     for i, (sid, _) in enumerate(LINES):
         wav = AUDIO / f"{sid}.wav"
         frame = FRAMES / f"{frame_names[i]}.png"
-        dur = float(
-            subprocess.check_output(
-                [
-                    "ffprobe",
-                    "-v",
-                    "error",
-                    "-show_entries",
-                    "format=duration",
-                    "-of",
-                    "csv=p=0",
-                    str(wav),
-                ],
-                text=True,
-            ).strip()
-        )
+        dur = wav_duration(wav)
         part = PARTS / f"{i:02d}.mp4"
+        # Explicit AAC audio — previous -c copy concat dropped the track
         subprocess.check_call(
             [
                 "ffmpeg",
                 "-y",
                 "-loop",
                 "1",
+                "-framerate",
+                "30",
                 "-i",
                 str(frame),
                 "-i",
@@ -230,22 +247,47 @@ def main() -> None:
                 "aac",
                 "-b:a",
                 "192k",
+                "-ar",
+                "44100",
+                "-ac",
+                "2",
                 "-shortest",
-                "-vf",
-                "scale=1920:1080",
+                "-movflags",
+                "+faststart",
                 str(part),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        segs.append({"wav": str(wav), "frame": str(frame), "dur": dur, "part": str(part)})
+        # verify audio present
+        probe = subprocess.check_output(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "csv=p=0",
+                str(part),
+            ],
+            text=True,
+        ).strip()
+        if "audio" not in probe:
+            raise RuntimeError(f"No audio in {part}")
+        parts.append(part)
+        segs.append({"id": sid, "frame": frame_names[i], "approx_seconds": round(dur, 1)})
+        print(f"part {part.name} audio={probe} dur={dur:.1f}s")
 
-    (REEL / "timeline.json").write_text(json.dumps(segs, indent=2))
     lst = REEL / "parts.txt"
-    lst.write_text("".join(f"file '{s['part']}'\n" for s in segs))
+    lst.write_text("".join(f"file '{p}'\n" for p in parts))
     out = REEL / "stage-manager-demo.mp4"
     artifact = Path("/opt/cursor/artifacts/demo/stage-manager-demo.mp4")
     artifact.parent.mkdir(parents=True, exist_ok=True)
+
+    # Re-encode concat so audio survives
     subprocess.check_call(
         [
             "ffmpeg",
@@ -256,15 +298,42 @@ def main() -> None:
             "0",
             "-i",
             str(lst),
-            "-c",
-            "copy",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-movflags",
+            "+faststart",
             str(out),
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
     artifact.write_bytes(out.read_bytes())
-    print(f"wrote {out} ({out.stat().st_size} bytes), total ~{sum(s['dur'] for s in segs):.1f}s")
+    (REEL / "timeline.json").write_text(json.dumps(segs, indent=2))
+
+    astreams = subprocess.check_output(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a",
+            "-show_entries",
+            "stream=codec_name,channels,sample_rate",
+            "-of",
+            "json",
+            str(out),
+        ],
+        text=True,
+    )
+    total = sum(s["approx_seconds"] for s in segs)
+    print(f"wrote {out} ({out.stat().st_size} bytes) ~{total:.1f}s")
+    print("audio streams:", astreams)
 
 
 if __name__ == "__main__":

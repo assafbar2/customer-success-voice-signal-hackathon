@@ -12,11 +12,12 @@ When a named account hits a high-risk **cue**, the **Stage Manager** rings the *
 
 ## Judge site + demo reel
 
-- **Landing page (source):** [`site/`](site/) — Stage Manager one-pager for judges  
-  - **GitHub Pages (recommended for hackathon):** Settings → Pages → Source: GitHub Actions · workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) → `https://assafbar2.github.io/customer-success-voice-signal-hackathon/`  
-  - **Vercel (optional):** https://vercel.com/new → **Import** this existing repo (do **not** use “Clone”) → Root Directory `site`  
-- **Video script (approve first):** [`submission/video-script.md`](submission/video-script.md)  
-- **Placeholder reel:** [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) — currently **silent / not final**; rebuild after script approval  
+- **Landing page:** [`site/`](site/) via **GitHub Pages**  
+  - Enable: Settings → Pages → Source: **GitHub Actions**  
+  - Workflow: [`.github/workflows/pages.yml`](.github/workflows/pages.yml)  
+  - URL: https://assafbar2.github.io/customer-success-voice-signal-hackathon/  
+- **Video script:** [`submission/video-script.md`](submission/video-script.md) (approved)  
+- **Demo reel:** [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · rebuild: `bash submission/demo-reel/build.sh`  
 
 ## How judges run this
 
