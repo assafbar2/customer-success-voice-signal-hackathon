@@ -2,12 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Last update | 2026-07-31 |
+| Last update | 2026-08-01 |
 | Devpost | Registered |
-| Primary idea | **`customer-success-voice-signal`** — CS-only callee; multi-trigger |
-| CALL-E installed | Not yet |
+| Primary idea | **`customer-success-voice-signal`** — Stage Manager; CS-only callee; multi-trigger |
+| Persona | **Stage Manager** (dress rehearsal / curtain up) |
+| CALL-E SDK | `@call-e/calle` ^0.6.0 wired for curtain-up |
 | Extra calls requested | Not yet |
-| Code started | No |
+| Code started | **Yes** — `skills/customer-success-voice-signal/` |
 
 ## Locked decisions
 
@@ -16,17 +17,19 @@
 2. Triggers: stuck support · SLA · agent decision · health/onboarding  
 3. Branding: Sentry-**shaped**, not Sentry-**branded**  
 4. Package default: **skill** → `skills/customer-success-voice-signal/`  
+5. Persona: **Stage Manager**  
 
-See `docs/02-prd.md`.
+See `docs/02-prd.md` · `docs/05-dev-design-plan.md`.
 
 ## Blockers
 
-- Install CALL-E + request extra calls  
-- Scaffold skill folder  
+- Curtain-up demo call + video  
+- Extra CALL-E calls form  
 
 ## Log
 
 - 2026-07-31: Project folder created; ideas 1/2/5 writeup; registered.  
 - 2026-07-31: PRD locked (CS-only, all triggers, unbranded).  
 - 2026-07-31: Named **customer-success-voice-signal**.  
-- 2026-07-31: Architecture flow + stack/hosting/tone docs; private GitHub `customer-success-voice-signal-hackathon`.
+- 2026-07-31: Architecture flow + stack/hosting/tone docs; private GitHub `customer-success-voice-signal-hackathon`.  
+- 2026-08-01: Rebuilt full Stage Manager skill scaffold (schemas, fixtures, dress rehearsal CLI, writeback, curtain-up client).  

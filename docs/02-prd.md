@@ -1,12 +1,13 @@
 # PRD — customer-success-voice-signal
 
 **Product / skill id:** `customer-success-voice-signal`  
+**Persona:** **Stage Manager** (theater vocabulary hard)  
 **GitHub (private):** see repo `customer-success-voice-signal-hackathon`  
 **Hackathon:** CALL-E: Your Code Is Calling  
-**Last updated:** 2026-07-31  
-**Status:** Decisions locked for MVP · name locked  
+**Last updated:** 2026-08-01  
+**Status:** Decisions locked for MVP · name locked · persona locked  
 
-**Related docs:** [03-architecture-flow.md](./03-architecture-flow.md) · [04-stack-hosting-tone.md](./04-stack-hosting-tone.md)  
+**Related docs:** [03-architecture-flow.md](./03-architecture-flow.md) · [04-stack-hosting-tone.md](./04-stack-hosting-tone.md) · [05-dev-design-plan.md](./05-dev-design-plan.md)
 
 ## Decisions (Assaf)
 
@@ -16,12 +17,13 @@
 | 1 | MVP phone target | **CS only** — CALL-E calls the CS owner / TAM, not the customer |
 | 2 | Triggers in scope | **All of:** stuck support · SLA risk · agent needs decision · health/onboarding stall |
 | 3 | Branding | **Sentry-shaped, not Sentry-branded** — fictional “error-monitoring / technical SaaS” |
+| 4 | Persona | **Stage Manager** — dress rehearsal / curtain up / cue / prompt book / HOLD |
 
 ---
 
 ## One-liner
 
-> **customer-success-voice-signal** — when a **named account** hits a high-risk moment, the system **calls the CS owner** via CALL-E with a 60-second brief and **asks for a decision** — then writes the structured result back to the ticket/account.
+> **customer-success-voice-signal** — when a **named account** hits a high-risk **cue**, the **Stage Manager** rings the **CS owner** via CALL-E with a 60-second brief and **closed-set line readings** — then writes the decision to the **prompt book** and **show report**.
 
 **Not:** a customer dialer, SDR tool, or generic “AI phone agent.”
 
@@ -52,7 +54,7 @@ Chat and email do not interrupt. Phone does — if the call is **rare, short, st
 
 ## When CS gets a phone call (trigger catalog)
 
-All triggers share: **named/CS-owned account** + **opt-in phone** + **severity ≥ threshold** + **quiet hours respected**.
+All triggers share: **named/CS-owned account** + **opt-in phone** + **severity ≥ threshold** + **house dark respected on curtain-up**.
 
 | ID | Trigger | Example (fictional) | Call goal |
 | --- | --- | --- | --- |
@@ -65,15 +67,17 @@ All triggers share: **named/CS-owned account** + **opt-in phone** + **severity �
 
 ---
 
-## Call experience (CS is callee)
+## Call experience (CS is callee — Stage Manager)
 
-1. Phone rings (CS owner E.164 from allowlist).  
-2. Agent identifies: product name + account + trigger type (plain language).  
+1. Phone rings (CS owner E.164 from the call sheet).  
+2. Stage Manager identifies: persona + account + cue type.  
 3. 3–5 sentence brief (no secrets dump).  
-4. **One decision** with 2–3 spoken options (plus “call me back later”).  
+4. **One decision** with closed-set **line readings** 1 / 2 / 3 (plus honest “not now” where applicable).  
 5. Confirm choice.  
 6. Hang up.  
-7. Structured result written back.
+7. Structured result → **prompt book** + **show report**.
+
+**Modes:** **Dress rehearsal** (default, no ring) · **Curtain up** (`--live` + type/env `PLACES`).
 
 **Never in MVP:** call the customer; medical/emergency; auto-dial without policy match; long discovery interview.
 
@@ -99,7 +103,7 @@ All triggers share: **named/CS-owned account** + **opt-in phone** + **severity �
 
 Options are **trigger-specific** but always closed set for the call.
 
-### Example option sets
+### Example option sets (line readings)
 
 **stuck_support**
 
@@ -130,16 +134,13 @@ Options are **trigger-specific** but always closed set for the call.
 ## System flow
 
 ```text
-Event (fixture or webhook)
+Cue (fixture or webhook)
   → normalize → AccountEvent
-  → policy: owned? severity? quiet hours? already called?
-  → dry-run preview (default for non-prod)
-  → plan_call (CALL-E)
-  → run_call (CALL-E)     // CS only
-  → get_call_run
+  → policy: owned? severity? house dark? already cued?
+  → dress rehearsal preview (default)
+  → curtain-up: CalleClient.createAndWait  // CS only
   → map → DecisionResult
-  → writeback (ticket note + Slack/file)
-  → audit log
+  → writeback (prompt book NDJSON + show report markdown)
 ```
 
 ---
@@ -160,7 +161,7 @@ Event (fixture or webhook)
 | OK | Not OK |
 | --- | --- |
 | “Error monitoring SaaS”, “devtools platform”, “performance product” | “Sentry”, internal codenames, real customer names |
-| Fictional orgs: Acme, Globex | Real customer logos/data |
+| Fictional orgs: Acme, Globex, Initech | Real customer logos/data |
 | Roles: CSM, TAM, SE, Support | Implying official employer product |
 
 ---
@@ -170,9 +171,9 @@ Event (fixture or webhook)
 | Criterion | How we hit it |
 | --- | --- |
 | Real World Impact | Named-account CS interrupt is a real job-to-be-done |
-| Quality of Idea | Phone as **CS control plane**, not spam dialer; multi-trigger one engine |
-| Technical Implementation | CALL-E plan/run/get at runtime; schema; dry-run; writeback |
-| Demo | ≤3 min: trigger → live/real call to CS → decision → writeback |
+| Quality of Idea | Phone as **CS control plane**, not spam dialer; multi-trigger one engine; Stage Manager persona |
+| Technical Implementation | CALL-E `createAndWait` at runtime; schema; dress rehearsal; writeback |
+| Demo | ≤3 min: cue → dress rehearsal → curtain-up → decision → prompt book |
 
 ---
 
@@ -190,14 +191,15 @@ Event (fixture or webhook)
 | --- | --- |
 | Contribution area | `skills/customer-success-voice-signal/` (primary); optional thin `apps/` later |
 | Skill folder | `customer-success-voice-signal/` |
-| List blurb (draft) | Voice signal for CS: CALL-E calls the account owner when support is stuck, SLA is at risk, an agent needs a decision, or health/onboarding stalls — structured decision writeback, dry-run first. |
+| List blurb (draft) | Stage Manager voice signal for CS: CALL-E cues the account owner when support is stuck, SLA is at risk, an agent needs a decision, or health/onboarding stalls — structured decision writeback, dress rehearsal first. |
 
 ## Open implementation choices (next)
 
 - [x] Product/skill name → `customer-success-voice-signal`  
-- [ ] Skill vs app vs both for PR (default: **skill first**)  
-- [ ] Writeback targets for demo (file + Slack webhook enough?)  
-- [ ] Real CALL-E call in video vs dry-run + one live  
+- [x] Persona → Stage Manager  
+- [x] Skill scaffold under `skills/customer-success-voice-signal/`  
+- [ ] Real curtain-up in demo video  
+- [ ] Optional Slack webhook writeback  
 
 ---
 
@@ -207,3 +209,4 @@ Event (fixture or webhook)
 | --- | --- |
 | 2026-07-31 | Locked: CS-only MVP; all four trigger families; Sentry-shaped unbranded |
 | 2026-07-31 | Named **customer-success-voice-signal** |
+| 2026-08-01 | Locked persona **Stage Manager**; dress rehearsal / curtain up vocabulary |

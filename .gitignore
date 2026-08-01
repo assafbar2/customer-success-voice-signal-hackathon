@@ -10,3 +10,9 @@ dist/
 coverage/
 .calle/
 *.pem
+data/**
+!data/.gitkeep
+skills/**/data/**
+!skills/**/data/.gitkeep
+skills/**/node_modules/
+skills/**/dist/

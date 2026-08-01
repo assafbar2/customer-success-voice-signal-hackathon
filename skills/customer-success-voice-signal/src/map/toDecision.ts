@@ -1,0 +1,135 @@
+import type {
+  AccountEvent,
+  CallIntent,
+  DecisionOption,
+  DecisionResult,
+} from "../schemas.js";
+import { DecisionResultSchema } from "../schemas.js";
+import type { RingMode } from "../policy/shouldRing.js";
+
+export interface ToDecisionInput {
+  event: AccountEvent;
+  intent: CallIntent;
+  options: DecisionOption[];
+  mode: RingMode;
+  callRunId?: string | null;
+  structured?: Record<string, unknown> | null;
+  holdReason?: string | null;
+  /** Dress rehearsal may simulate a choice (default option 1). */
+  simulatedOptionId?: "1" | "2" | "3";
+}
+
+function matchOption(
+  options: DecisionOption[],
+  structured: Record<string, unknown> | null | undefined,
+  fallbackId?: "1" | "2" | "3",
+): DecisionOption | null {
+  if (structured) {
+    const optionId = String(structured.option_id ?? "");
+    const byId = options.find((o) => o.option_id === optionId);
+    if (byId) return byId;
+
+    const decision = String(structured.decision ?? "");
+    const byDecision = options.find((o) => o.decision === decision);
+    if (byDecision) return byDecision;
+
+    const label = String(structured.decision_label ?? "");
+    const byLabel = options.find(
+      (o) => o.decision_label.toLowerCase() === label.toLowerCase(),
+    );
+    if (byLabel) return byLabel;
+  }
+
+  if (fallbackId) {
+    return options.find((o) => o.option_id === fallbackId) ?? null;
+  }
+  return null;
+}
+
+/**
+ * Map CALL-E structured result (or dress-rehearsal preview) → DecisionResult.
+ */
+export function toDecision(input: ToDecisionInput): DecisionResult {
+  const { event, options, mode } = input;
+
+  if (input.holdReason) {
+    return DecisionResultSchema.parse({
+      trigger_id: event.trigger_id,
+      account_id: event.account.id,
+      account_name: event.account.name,
+      cs_owner_id: event.cs_owner.id,
+      call_run_id: null,
+      decision: "hold",
+      decision_label: "HOLD",
+      option_id: "hold",
+      notes_short: input.holdReason,
+      follow_up_at: null,
+      completed_at: new Date().toISOString(),
+      mode,
+      hold_reason: input.holdReason,
+    });
+  }
+
+  const matched = matchOption(
+    options,
+    input.structured,
+    mode === "dress_rehearsal" ? (input.simulatedOptionId ?? "1") : undefined,
+  );
+
+  if (!matched) {
+    return DecisionResultSchema.parse({
+      trigger_id: event.trigger_id,
+      account_id: event.account.id,
+      account_name: event.account.name,
+      cs_owner_id: event.cs_owner.id,
+      call_run_id: input.callRunId ?? null,
+      decision: "unknown",
+      decision_label: "Could not map line reading",
+      option_id: "unknown",
+      notes_short: input.structured
+        ? JSON.stringify(input.structured).slice(0, 200)
+        : null,
+      follow_up_at: null,
+      completed_at: new Date().toISOString(),
+      mode,
+      hold_reason: null,
+    });
+  }
+
+  const notes =
+    input.structured && typeof input.structured.notes_short === "string"
+      ? input.structured.notes_short
+      : mode === "dress_rehearsal"
+        ? "Dress rehearsal preview — no live ring."
+        : null;
+
+  return DecisionResultSchema.parse({
+    trigger_id: event.trigger_id,
+    account_id: event.account.id,
+    account_name: event.account.name,
+    cs_owner_id: event.cs_owner.id,
+    call_run_id: input.callRunId ?? (mode === "dress_rehearsal" ? "dress_rehearsal" : null),
+    decision: matched.decision,
+    decision_label: matched.decision_label,
+    option_id: matched.option_id,
+    notes_short: notes,
+    follow_up_at: null,
+    completed_at: new Date().toISOString(),
+    mode,
+    hold_reason: null,
+  });
+}
+
+export function previewIntentSummary(intent: CallIntent): string {
+  const lines = intent.options
+    .map((o) => `  ${o.option_id}. ${o.decision_label}`)
+    .join("\n");
+  return [
+    `Persona: ${intent.persona}`,
+    `Cue: ${intent.trigger_id}`,
+    `Account: ${intent.account_name} (${intent.account_id})`,
+    `Call sheet: ${intent.cs_owner_name} (CS only — never customer)`,
+    `Line readings:`,
+    lines,
+  ].join("\n");
+}

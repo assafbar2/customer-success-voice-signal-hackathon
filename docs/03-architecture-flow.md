@@ -53,16 +53,16 @@ Tone: serious ops problem, **light delivery** (see § Tone).
                     └──────┬───────┘  already called? allowlist?
                            │
               ┌────────────┴────────────┐
-              │ dry_run === true ?      │
+              │ dress rehearsal?        │  (default; curtain-up = --live + PLACES)
               └────────────┬────────────┘
                      yes   │   no
               ┌────────────┘   └────────────┐
               ▼                             ▼
      ┌────────────────┐            ┌────────────────┐
-     │ PREVIEW ONLY   │            │  plan_call     │──► CALL-E
-     │ (no phone)     │            │  run_call      │──► CALL-E
-     └────────────────┘            │  get_call_run  │◄── CALL-E
-                                   └───────┬────────┘
+     │ DRESS REHEARSAL│            │  curtain-up    │
+     │ preview only   │            │  CalleClient   │──► CALL-E
+     │ (no ring)      │            │  createAndWait │──► CS phone
+     └────────────────┘            └───────┬────────┘
                                            │
                                            ▼
                                    ┌────────────────┐
@@ -73,19 +73,22 @@ Tone: serious ops problem, **light delivery** (see § Tone).
                                            ▼
                                    ┌────────────────┐
                                    │ WRITEBACK      │
-                                   │ + AUDIT LOG    │
+                                   │ prompt book    │
+                                   │ show report    │
                                    └────────────────┘
 ```
 
-### Call beat (what CS hears)
+### Call beat (what CS hears — Stage Manager)
 
 ```text
-Ring → "Hi {name}, voice signal for {account}."
-     → 3–5 sentence brief (why we're interrupting)
-     → "Press or say 1, 2, or 3:" [options]
+Ring → "Hi {name}, Stage Manager for {account}."
+     → Cue type in plain language + 3–5 sentence brief
+     → "Line readings — press or say 1, 2, or 3:" [closed set]
      → Confirm choice
-     → "Logged. Back to your day." → hangup
+     → "Logged in the prompt book. House to half." → hangup
 ```
+
+**Modes:** dress rehearsal (default, no ring) · curtain up (`--live` + `PLACES`).
 
 ---
 

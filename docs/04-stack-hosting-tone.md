@@ -7,13 +7,13 @@
 | Language | **TypeScript** | CALL-E ecosystem is TS-friendly; fast skill/app scaffolding |
 | Runtime | **Node.js 20+** | CLI + small web demo |
 | Package | **npm** workspace / single package | Simple for judges |
-| CALL-E | **CLI + MCP tools** (`plan_call`, `run_call`, `get_call_run`) via `@call-e/cli` / integrations | Required for hackathon; runtime, not mock-only |
-| API shape | Thin **Hono** or **Express** demo server *or* CLI-first + static UI | Prefer **CLI + minimal Vite UI** if we want a browser “Fire signal” button |
+| CALL-E | **`@call-e/calle` `CalleClient.createAndWait`** | Required for hackathon; runtime, not mock-only |
+| API shape | **CLI-first** skill (`npm run signal`) | Optional thin UI later |
 | Validation | **Zod** | Event + DecisionResult schemas |
 | Config | `.env` + JSON fixtures | No DB for MVP |
-| Persistence MVP | **JSON/NDJSON files** on disk (audit log, last decisions) | Free, portable, honest |
+| Persistence MVP | **Prompt book NDJSON** + **show report** markdown | Free, portable, honest |
 | Optional writeback | Slack incoming webhook | One env var |
-| Tests | **vitest** + dry-run fixtures | No real calls in CI |
+| Tests | **vitest** + dress-rehearsal fixtures | No real calls in CI |
 | Package for PR | Agent **Skill** folder `customer-success-voice-signal/` | Matches awesome-phone-call-agents |
 
 ### Explicit non-stack (MVP)
@@ -27,7 +27,7 @@
 
 ```text
 customer-success-voice-signal-hackathon/   # GitHub name
-├── docs/                  # already started as calle-hackathon-2026/docs
+├── docs/
 ├── skills/
 │   └── customer-success-voice-signal/
 │       ├── SKILL.md
@@ -65,12 +65,12 @@ customer-success-voice-signal-hackathon/   # GitHub name
 | **Fly.io free allowance** | Node | Good enough for demo window |
 | **Vercel** | Static demo UI + serverless routes | Fine if CALL-E secrets stay server-side |
 | **Local + ngrok / Cloudflare Tunnel** | Live judging only | Fragile; video still primary |
-| **GitHub only** | Skill + CLI dry-run | Totally valid if video shows real call |
+| **GitHub only** | Skill + CLI dress rehearsal | Totally valid if video shows real call |
 
 **Recommendation:**  
 1. **Ship skill + CLI** as the core (always works offline from clone).  
 2. Optional **demo console** on **Vercel or Render free**.  
-3. **Win on video**, not uptime. Put dry-run in the video first, then one real CALL-E call.
+3. **Win on video**, not uptime. Put dress rehearsal in the video first, then one curtain-up.
 
 ### Secrets
 
@@ -80,46 +80,62 @@ customer-success-voice-signal-hackathon/   # GitHub name
 
 ---
 
-## 3. Tone — light, funny, judges should chuckle
+## 3. Tone — Stage Manager (locked persona)
 
 ### Principle
 
-**High-stakes CS problem, low-pomp delivery.**  
-We’re not clownish about outages — we’re human about the absurdity of “please check the dashboard at 2am.”
+**High-stakes CS problem, backstage delivery.**  
+The Stage Manager keeps the show moving: short cues, closed-set line readings, no drama about drama.
 
 ### Voice
 
 | Do | Don’t |
 | --- | --- |
+| Theater ops vocabulary (hard) | Generic “AI assistant” voice |
 | Dry wit, short lines | Corporate “synergy” |
-| Self-aware agent (“I’m the annoying-but-useful ring”) | Cruel jokes about customers or CS burn-out |
-| Option labels with personality | Meme spam mid-call |
+| Self-aware Stage Manager (“I’m cueing you, not the customer”) | Cruel jokes about customers or CS burn-out |
+| Line readings with personality | Meme spam mid-call |
 | README that smiles | Undermining safety / consent |
+
+### Glossary (use these terms in docs and CLI)
+
+| Term | Meaning |
+| --- | --- |
+| **Dress rehearsal** | Dry-run. Default. No ring. |
+| **Curtain up** | Live CALL-E call (`--live` + `PLACES`). |
+| **Cue** | A trigger event on a named account. |
+| **Cue sheet** | Catalog of fixtures / trigger ids. |
+| **Line readings** | Closed-set options 1 / 2 / 3. |
+| **Prompt book** | NDJSON audit of cues + decisions. |
+| **Show report** | Markdown writeback after a cue. |
+| **House dark** | Quiet hours — enforced on curtain-up only. |
+| **Call sheet** | Who we may ring (CS owner allowlist). |
+| **HOLD** | Policy stop; exit code 2. |
 
 ### Microcopy examples
 
 **Product tagline options:**
 
 - *The only CS notification that can’t hide under Slack.*  
-- *When the account is on fire, we call the firefighter — not the building.*  
-- *Voice signal for Customer Success. Dashboards are optional; picking up is not.*  
+- *When the account is on fire, we cue the firefighter — not the building.*  
+- *Stage Manager for Customer Success. Dashboards are optional; picking up is not.*  
 
-**On the call (light):**
+**On the call (Stage Manager):**
 
-- “Sorry to interrupt your meeting about meetings…”  
-- “This is a voice signal, not a crisis hotline. Well — account crisis. Small c.”  
-- “Option 3 is ‘not now,’ also known as the honest choice.”  
+- “Stage Manager for Acme — this is a cue, not a crisis hotline. Well — account crisis. Small c.”  
+- “Line readings. Option 3 is ‘not now,’ also known as the honest choice.”  
+- “Confirming option 2. Logging to the prompt book.”  
 
 **After decision:**
 
 - “Logged. You may return to your regularly scheduled Slack.”  
-- “Decision locked. The robots will pretend they knew.”  
+- “Decision locked. House to half.”  
 
 **UI / CLI:**
 
-- Button: `Fire voice signal (dry-run)`  
-- Button: `Actually ring CS (this is not a drill… ok it kind of is)`  
-- Empty state: `No signals. Either everything is fine, or nobody’s looking. Sus.`  
+- `Dress rehearsal (no ring)`  
+- `Curtain up — this rings the CS owner`  
+- Empty state: `No cues. Either the house is quiet, or nobody’s looking.`  
 
 ### Safety still serious
 
@@ -129,9 +145,9 @@ Funny **around** the product, never about:
 - Harassment or spam  
 - Leaking customer data  
 
-Consent, allowlist, quiet hours stay straight-faced.
+Consent, call sheet, house dark stay straight-faced.
 
 ### Demo video tone
 
-Open with one chuckle line → show the problem → call → writeback.  
+Open with one Stage Manager line → show the cue → dress rehearsal → curtain-up → prompt book.  
 Judges remember **delight + clarity**, not stand-up.
