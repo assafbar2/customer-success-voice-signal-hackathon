@@ -51,9 +51,12 @@ npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --list
 
 # Curtain-up (real ring) — parent/operator only
-# Requires CALLE_API_KEY, CS_OWNER_E164, and PLACES
+# Requires CALLE_API_KEY (https://dashboard.heycall-e.com/account/api-keys),
+# CS_OWNER_E164, and PLACES
 npm run signal -- --fixture stuck_support_acme.json --live PLACES
 ```
+
+**API keys:** create or rotate at https://dashboard.heycall-e.com/account/api-keys — details in [references/auth-and-keys.md](references/auth-and-keys.md).
 
 ## Safety
 
