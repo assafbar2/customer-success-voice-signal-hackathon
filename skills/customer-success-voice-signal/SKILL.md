@@ -90,6 +90,8 @@ Read [references/safety.md](references/safety.md).
 - House dark on curtain-up only (timezone-aware)  
 - Per-owner live call budget (`OWNER_MAX_RINGS`)  
 - Cue-history only after a live dial — HOLD does not poison dedupe  
+- Prefer `failureCode` / `completionConfidence` over summary heuristics  
+- Identity read-back (stage code) required before accepting 1/2/3 on curtain-up  
 
 ## Writeback
 
@@ -98,4 +100,4 @@ Read [references/safety.md](references/safety.md).
 - Cue history (live dial outcomes only): `data/cue-history.ndjson`  
 - Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))
 - Live adapters: `--adapter slack` (webhook `{text}`) · `--adapter github` (issue comment) — env-gated, placeholder HOLDs
-- HTTP cue: `npm run serve-cue` → `POST /cue` (optional `CUE_WEBHOOK_SECRET`)
+- HTTP cue: `npm run serve-cue` → `POST /cue` (optional `CUE_WEBHOOK_SECRET`)- CALL-E SDK notes: [references/calle-sdk.md](references/calle-sdk.md)
