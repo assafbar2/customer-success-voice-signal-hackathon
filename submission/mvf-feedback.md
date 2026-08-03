@@ -2,6 +2,8 @@
 
 Copy/adapt into the Devpost **Most Valuable Feedback** survey. Written from operator live ladder + SDK integration work on `customer-success-voice-signal` (@call-e/calle ^0.6.0). Honest, specific, actionable.
 
+**Pre-submit:** fill this survey in the **same window** as the demo video upload, terminal GIF, and awesome-list PR — see [`PRE-SUBMIT.md`](PRE-SUBMIT.md). MVF is a second prize track; do not leave it unchecked after the Most Practical package looks “done.”
+
 ---
 
 ## One-line summary

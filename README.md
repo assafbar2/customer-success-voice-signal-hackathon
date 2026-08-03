@@ -80,7 +80,9 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 | [docs/02-prd.md](docs/02-prd.md) | Product decisions |
 | [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | As-built flow |
 | [submission/awesome-list/PACKAGING.md](submission/awesome-list/PACKAGING.md) | Awesome-list PR packaging |
+| [submission/PRE-SUBMIT.md](submission/PRE-SUBMIT.md) | Pre-submit: video · GIF · awesome-list · MVF · Devpost |
 | [submission/mvf-feedback.md](submission/mvf-feedback.md) | Most Valuable Feedback survey draft |
+| [submission/gif-notes.md](submission/gif-notes.md) | Terminal GIF capture notes |
 | [skills/customer-success-voice-signal/references/calle-sdk.md](skills/customer-success-voice-signal/references/calle-sdk.md) | SDK fields + identity read-back |
 | [notes/STATUS.md](notes/STATUS.md) | Operator status (not a pitch deck) |
 | [LICENSE](LICENSE) | MIT |
@@ -95,11 +97,16 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 
 ## Submit checklist
 
+Master pre-submit (video · GIF · awesome-list · **MVF** · Devpost):  
+[`submission/PRE-SUBMIT.md`](submission/PRE-SUBMIT.md)
+
 - [x] Skill + dress rehearsal + curtain-up path
 - [x] Judge site on GitHub Pages
-- [ ] Terminal GIF of the dress rehearsal run (README + site) — video before the video
-- [ ] Awesome-list PR (see packaging notes — deliberately after v1 is solid) + Devpost
-- [ ] Demo video with real call audio (tracked separately — notes in `submission/video-script.md`)
+- [ ] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md)
+- [ ] Awesome-list PR — [`submission/awesome-list/PACKAGING.md`](submission/awesome-list/PACKAGING.md) (MVF is a gate)
+- [ ] Demo video — [`submission/video-script.md`](submission/video-script.md)
+- [ ] **MVF survey** — paste [`submission/mvf-feedback.md`](submission/mvf-feedback.md) on Devpost
+- [ ] Devpost form — [`submission/devpost.md`](submission/devpost.md)
 
 ## Judging criteria (Devpost)
 
@@ -107,6 +114,8 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 2. Quality of the Idea
 3. Technical Implementation (CALL-E at runtime)
 4. Product Experience & Demo (≤3 min video)
+
+Also submit **Most Valuable Feedback** (separate survey) — draft in repo.
 
 ---
 

@@ -64,6 +64,8 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 
 See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for the MVF survey (closed-set flakiness, no DTMF, failureCode docs, idempotency retries, identity primitive wishlist).
 
+**Submit MVF in the same pre-submit pass as the video, GIF, and awesome-list PR** — checklist: [`PRE-SUBMIT.md`](PRE-SUBMIT.md).
+
 ---
 
 ## Built with (Devpost tags)

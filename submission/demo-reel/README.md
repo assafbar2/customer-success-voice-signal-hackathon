@@ -24,3 +24,7 @@ bash submission/demo-reel/build.sh
 1. Record human VO matching [`../video-script.md`](../video-script.md) as WAV segments `01.wav`…`07.wav` in `audio/`.  
 2. Re-run `python3 submission/demo-reel/build_reel.py` (or splice with CapCut / Descript).  
 3. Or screen-record the live [`site/`](../../site/) + real terminal with QuickTime / OBS and lay VO under.
+
+## Pre-submit
+
+When the final video ships, tick it on [`../PRE-SUBMIT.md`](../PRE-SUBMIT.md) **together with** the MVF survey ([`../mvf-feedback.md`](../mvf-feedback.md)), terminal GIF, and awesome-list PR. MVF is not part of the reel — it’s the Devpost feedback form filled the same day.

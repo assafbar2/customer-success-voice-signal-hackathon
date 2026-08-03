@@ -27,7 +27,9 @@ Customer Success and other customer-facing teams own named accounts and renewals
 | **One engine**      | Four cue types, same pipeline — practical Monday-morning CS ops.              |
 
 
-Prize narrative we aim at: **Most Practical**.
+Prize narrative we aim at: **Most Practical** (primary) · also submit **Most Valuable Feedback** (separate survey — [`mvf-feedback.md`](mvf-feedback.md)).
+
+Pre-submit (video + GIF + awesome-list + MVF): [`PRE-SUBMIT.md`](PRE-SUBMIT.md).
 
 ---
 
@@ -45,7 +47,7 @@ Prize narrative we aim at: **Most Practical**.
 | **1:20–2:15** | Curtain-up + call beat (live take or recreated beat) | **VO:** “Curtain up. Live gate: `--live` and `PLACES`.” · **On call:** “Hi Maya. Stage Manager. You’re up for Acme.” · Brief · “Line reading — one, two, or three.” · Maya: “One.” · “Take over in chat. Logging to the prompt book. Clear.”                |
 | **2:15–2:35** | Show report / prompt book                            | **VO — value:** “Decision one — take over in chat. Structured writeback. Auditable. The kind of trail you can hand a manager, not another Slack shrug.”                                                                                                     |
 | **2:35–2:50** | Second cue flash                                     | **VO:** “Same path when an agent hits needs-human — approve A, B, or escalate. We ran that live too.”                                                                                                                                                       |
-| **2:50–3:00** | End card: repo + skill path                          | **VO:** “When the account is on fire, we cue the firefighter — not the building. Stage Manager. CALL-E.”                                                                                                                                                    |
+| **2:50–3:00** | End card: repo + skill path                          | **VO:** “When the account is on fire, we cue the firefighter — not the building. Stage Manager. CALL-E.” **On screen (small):** repo URL · `skills/customer-success-voice-signal/` · *No customers were called in the making of this demo.* |
 
 
 **Hard stop ≤3:00.** Prefer ~2:50.
@@ -94,9 +96,12 @@ Clear. Break a leg — or just open the ticket.
 - [ ] Terminal font large enough for 1080p  
 - [ ] Dress rehearsal: persona, cue, line readings, “no ring”  
 - [ ] Curtain-up command (`--live PLACES`) — **no secrets**  
+- [ ] Stage code identity beat (or dress-rehearsal note of the code)  
 - [ ] Writeback with `stuck_support` → decision 1  
+- [ ] Adapter beat (Slack/GitHub) if env available  
 - [ ] `agent_needs_decision` name-drop  
 - [ ] End card: `skills/customer-success-voice-signal/` + repo URL  
+- [ ] **Pre-submit (same day as upload):** MVF survey filled from [`mvf-feedback.md`](mvf-feedback.md) — see [`PRE-SUBMIT.md`](PRE-SUBMIT.md)
 
 
 
@@ -104,9 +109,8 @@ Clear. Break a leg — or just open the ticket.
 
 - API keys, full E.164, `.env`  
 - Fake product dashboard  
-- Prize-chasing / “please give us Most Practical” language
-
----
+- Prize-chasing / “please give us Most Practical” language  
+- Reading the MVF survey on camera (submit it on Devpost; don’t pitch it in the reel)
 
 
 
@@ -128,6 +132,10 @@ Ideas from repo review — take or leave per beat:
    that's the "Most Practical" money shot.
 5. Metaphor rationing on screen: pair theater terms with plain speech on first use
    ("dress rehearsal — dry-run", "curtain up — live call"). VO can stay theatrical.
+6. **Identity beat.** Stage code read-back before “one” — shows the decision is bound to
+   the call-sheet owner, not whoever picks up.
+7. **MVF is not a video beat** — it’s a Devpost survey filled the same day you upload the
+   video. Draft: [`mvf-feedback.md`](mvf-feedback.md). Gate: [`PRE-SUBMIT.md`](PRE-SUBMIT.md).
 
 ## Approval
 
@@ -135,4 +143,5 @@ Reply with **approve** (or edit notes). After approval we will:
 
 1. Rebuild the mp4 **with a real audio track** (TTS or your VO files).
 2. Keep ≤3:00 and match this script’s problem + value beats.
+3. Tick video + MVF together on [`PRE-SUBMIT.md`](PRE-SUBMIT.md).
 
