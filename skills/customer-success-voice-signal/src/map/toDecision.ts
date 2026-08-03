@@ -24,6 +24,18 @@ export interface ToDecisionInput {
   simulatedOptionId?: "1" | "2" | "3";
 }
 
+const WORD_TO_OPTION: Record<string, "1" | "2" | "3"> = {
+  "1": "1",
+  one: "1",
+  first: "1",
+  "2": "2",
+  two: "2",
+  second: "2",
+  "3": "3",
+  three: "3",
+  third: "3",
+};
+
 function looksLikeVoicemailOrNoAnswer(summary: string | null | undefined): boolean {
   if (!summary) return false;
   const s = summary.toLowerCase();
@@ -42,20 +54,68 @@ function looksLikeVoicemailOrNoAnswer(summary: string | null | undefined): boole
   );
 }
 
-/** Last clear 1/2/3 from user-ish transcript lines. */
-function optionFromTranscript(
+/** True when a bare digit/word is clearly not a line reading (e.g. "3 other fires"). */
+function isSpuriousDigitContext(text: string, index: number, matched: string): boolean {
+  const token = matched.trim();
+  const after = text.slice(index + matched.length, index + matched.length + 32).toLowerCase();
+  if (
+    /^\s*(other|others|more|fires|tickets|accounts|people|things|hours|minutes|days|weeks|calls|options?)\b/.test(
+      after,
+    )
+  ) {
+    return true;
+  }
+  const before = text.slice(Math.max(0, index - 24), index).toLowerCase();
+  if (
+    /\b(have|had|got|with|and|plus|another)\s*$/.test(before) &&
+    (/^\d$/.test(token) || /^(one|two|three)$/i.test(token))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Gated transcript → option. Prefer explicit "option N" / word forms.
+ * Rejects embedded counts like "3 other fires". Takes the last *confident* hit.
+ */
+export function optionFromTranscript(
   texts: string[] | undefined,
   options: DecisionOption[],
 ): DecisionOption | null {
   if (!texts?.length) return null;
   const joined = texts.join(" \n ");
-  // Prefer explicit lone digits / "option N" near the end
-  const candidates = [...joined.matchAll(/\b(?:option\s*)?([123])\b/gi)].map(
-    (m) => m[1],
-  );
-  const last = candidates[candidates.length - 1];
-  if (!last) return null;
-  return options.find((o) => o.option_id === last) ?? null;
+
+  const patterns: RegExp[] = [
+    /\boption\s*([123])\b/gi,
+    /\b(?:uh+[,.]?\s*)?(one|two|three)\b/gi,
+    /\b([123])\s*(?:please|thanks|thank you)?\b/gi,
+    // Ordinals last so "the second one" wins over the trailing word "one"
+    /\b(?:the\s+)?(first|second|third)(?:\s+one)?\b/gi,
+  ];
+
+  let lastId: "1" | "2" | "3" | null = null;
+  for (const re of patterns) {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(joined)) !== null) {
+      const raw = m[1].toLowerCase();
+      const id = WORD_TO_OPTION[raw];
+      if (!id) continue;
+      const captureOffset = Math.max(0, m[0].toLowerCase().lastIndexOf(raw));
+      const tokenIndex = m.index + captureOffset;
+      if (isSpuriousDigitContext(joined, tokenIndex, raw)) continue;
+      // "second one" — ignore the trailing "one"/"two"/"three" after an ordinal
+      if (/^(one|two|three)$/.test(raw)) {
+        const before = joined.slice(Math.max(0, tokenIndex - 14), tokenIndex).toLowerCase();
+        if (/\b(first|second|third)\s+$/.test(before)) continue;
+      }
+      lastId = id;
+    }
+  }
+
+  if (!lastId) return null;
+  return options.find((o) => o.option_id === lastId) ?? null;
 }
 
 function matchOption(
@@ -109,15 +169,39 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
     });
   }
 
+  const fromStructured = matchOption(
+    options,
+    input.structured,
+    mode === "dress_rehearsal" ? (input.simulatedOptionId ?? "1") : undefined,
+  );
+
+  const vm = looksLikeVoicemailOrNoAnswer(input.callSummary);
+  const taskFailed = input.taskCompleted === false;
+
+  // Incomplete task + voicemail/no-answer → never invent from stray digits
+  if (!fromStructured && taskFailed && vm) {
+    return DecisionResultSchema.parse({
+      trigger_id: event.trigger_id,
+      account_id: event.account.id,
+      account_name: event.account.name,
+      cs_owner_id: event.cs_owner.id,
+      call_run_id: input.callRunId ?? null,
+      decision: "no_answer",
+      decision_label: "No line reading — voicemail / no answer",
+      option_id: "unknown",
+      notes_short: input.callSummary ? input.callSummary.slice(0, 280) : null,
+      follow_up_at: null,
+      completed_at: new Date().toISOString(),
+      mode,
+      hold_reason: null,
+    });
+  }
+
   const matched =
-    matchOption(
-      options,
-      input.structured,
-      mode === "dress_rehearsal" ? (input.simulatedOptionId ?? "1") : undefined,
-    ) ?? optionFromTranscript(input.transcriptTexts, options);
+    fromStructured ??
+    (mode === "curtain_up" ? optionFromTranscript(input.transcriptTexts, options) : null);
 
   if (!matched) {
-    const vm = looksLikeVoicemailOrNoAnswer(input.callSummary);
     const unclear =
       (input.callSummary ?? "").toLowerCase().includes("invalid") ||
       (input.callSummary ?? "").toLowerCase().includes("out-of-range") ||

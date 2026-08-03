@@ -298,6 +298,10 @@ code {
   font-size: 0.92rem;
 }
 
+.flow li > span {
+  min-width: 0;
+}
+
 .flow li::before {
   counter-increment: step;
   content: counter(step, decimal-leading-zero);

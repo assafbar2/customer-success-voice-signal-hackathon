@@ -52,7 +52,7 @@ export function buildCallIntent(
     event.brief,
     `Plain summary: ${event.summary}`,
     event.ticket_id ? `Ticket: ${event.ticket_id}.` : null,
-    `Then say: "Line reading. Press or say 1, 2, or 3."`,
+    `Then say: "Line reading. Say 1, 2, or 3 — or one, two, or three."`,
     `Speak ONLY these three options — do not invent options, do not read database field names like decision=…:`,
     lines,
     `If they say anything other than 1, 2, or 3, ask once more for 1, 2, or 3, then hang up if still unclear.`,

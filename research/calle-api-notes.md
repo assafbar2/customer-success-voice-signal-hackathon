@@ -10,35 +10,30 @@ Skill docs: [`../skills/customer-success-voice-signal/references/auth-and-keys.m
 ## SDK
 
 - Package: `@call-e/calle` `^0.6.0`
-- Entry: `CalleClient` → `client.calls.createAndWait(...)`
+- Entry: `CalleClient` → `calls.create` → persist `call.id` → `calls.waitForResult` (with `idempotencyKey`)
 - Auth: `CALLE_API_KEY` (Bearer); optional `CALLE_BASE_URL`
 
 ## Curtain-up payload
 
 ```ts
-await client.calls.createAndWait({
-  task: intent.task, // Stage Manager script
-  recipients: [{ phones: [e164], region, locale }],
-  resultSchema: {
-    type: "object",
-    required: ["option_id", "decision", "decision_label"],
-    properties: { /* option_id enum 1|2|3, decision, decision_label */ },
+const created = await client.calls.create(
+  {
+    task: intent.task,
+    recipients: [{ phones: [e164], region, locale }],
+    resultSchema: intent.result_schema,
+    metadata: { skill, persona, never_call_customer: true, … },
   },
-  metadata: {
-    skill: "customer-success-voice-signal",
-    persona: "Stage Manager",
-    never_call_customer: true,
-    trigger_id,
-    account_id,
-  },
-});
+  { idempotencyKey },
+);
+// persist created.id under data/open-calls/
+const call = await client.calls.waitForResult(created.id, { timeoutMs });
 ```
 
 Implemented in `src/calle/client.ts` (`curtainUp`) + `src/calle/intent.ts` (`buildCallIntent`).
 
 ## Result mapping
 
-Prefer `call.structuredResult`, fall back to `call.recipients[0].structuredResult`, then transcript digits (`src/map/toDecision.ts`).
+Prefer `call.structuredResult`, fall back to `call.recipients[0].structuredResult`, then **gated** transcript phrases (`src/map/toDecision.ts`).
 
 If structured result is missing and the summary looks like voicemail / no answer → `decision: no_answer` (never invent a line reading).
 
@@ -47,15 +42,21 @@ If structured result is missing and the summary looks like voicemail / no answer
 | Mode | Ring? | Needs key? | Cue-history? |
 | --- | --- | --- | --- |
 | Dress rehearsal | No | No | No |
-| Curtain up | Yes | `CALLE_API_KEY` + `CS_OWNER_E164` + `--live` + `PLACES` | Yes |
+| Curtain up | Yes | `CALLE_API_KEY` + `CS_OWNER_E164` + `--live` + `PLACES` | Live dial outcomes only (HOLD does not append) |
 
 ## Live probe log (no secrets)
 
-| Date | Cue | Result | Notes |
-| --- | --- | --- | --- |
-| 2026-08-01 | `stuck_support` | Voicemail → `no_answer` | Auth + dial proven |
-| 2026-08-01 | `stuck_support` | **Decision 1** `take_over_chat` | Answered; prompt book OK |
-| 2026-08-01 | `agent_needs_decision` | `unclear` | Ring OK; mapping still flaky |
+Full ladder from operator curtain-up runs. Winning rows are real; earlier rows are assets (mapping / voicemail), not erased.
+
+| Date | Cue | Result | Call run (prefix) | Notes |
+| --- | --- | --- | --- | --- |
+| 2026-08-01 | `stuck_support` | Voicemail → `no_answer` | `call_xpCzdX7Y…` | Auth + dial proven |
+| 2026-08-01 | `stuck_support` | **Decision 1** `take_over_chat` | `call_cslZ3Hcu…` | Answered; prompt book OK |
+| 2026-08-01 | `agent_needs_decision` | `unclear` | `call_pBTeqKhl…` | Ring OK; capture flaky |
+| 2026-08-01 | `agent_needs_decision` | `unclear` | `call_9FtyqEiM…` | Ring OK; capture flaky |
+| 2026-08-01 | `agent_needs_decision` | **Decision 1** `approve_a` | `call_ylJkGID4…` | Answered; prompt book OK |
+
+Redacted committed samples: [`../submission/evidence/`](../submission/evidence/).
 
 ## Docs
 

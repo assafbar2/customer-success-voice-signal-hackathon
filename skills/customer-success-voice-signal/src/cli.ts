@@ -65,6 +65,7 @@ Modes:
   Dress rehearsal  Default. No ring. Does not append cue-history.
   Curtain up       --live AND PLACES. Rings CS_OWNER_E164 via CALL-E.
   Cue-history      Appended only after a live dial outcome — HOLD never poisons dedupe.
+  Owner budget     Max live dials per CS owner per window (OWNER_MAX_RINGS, default 2).
 `);
 }
 

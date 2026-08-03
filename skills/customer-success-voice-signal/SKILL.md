@@ -79,6 +79,7 @@ Read [references/safety.md](references/safety.md).
 - Fixture phones (`+15555550100`) rejected on curtain-up  
 - `CS_OWNER_E164` overrides owner phone on live  
 - House dark on curtain-up only (timezone-aware)  
+- Per-owner live call budget (`OWNER_MAX_RINGS`)  
 - Cue-history only after a live dial — HOLD does not poison dedupe  
 
 ## Writeback

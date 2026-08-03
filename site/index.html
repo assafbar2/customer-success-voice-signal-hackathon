@@ -17,7 +17,7 @@
     <div class="hero__veil"></div>
     <div class="hero__spot" aria-hidden="true"></div>
     <nav class="nav">
-      <span class="nav__mark">CS Voice Signal</span>
+      <span class="nav__mark">Stage Manager</span>
       <div class="nav__links">
         <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon">GitHub</a>
         <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/skills/customer-success-voice-signal">Skill</a>
@@ -27,10 +27,10 @@
 
     <div class="hero__copy">
       <p class="hero__brand">Stage Manager</p>
-      <h1 class="hero__line">Places, please — your account is on.</h1>
+      <h1 class="hero__line">When the renewal goes quiet, page the owner — not the customer.</h1>
       <p class="hero__sub">
-        High-risk CS cue → CALL-E rings the <em>owner</em>, not the customer.
-        Sixty seconds. Line reading 1 / 2 / 3. Prompt book updated.
+        Every company pages an engineer when a server goes down. Almost nobody pages the human who owns the account.
+        PagerDuty phones you to <em>acknowledge</em> an alert. Ack is not a decision — we capture one in about sixty seconds.
       </p>
       <div class="hero__actions">
         <a class="btn btn--primary" href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/skills/customer-success-voice-signal">Open the skill</a>
@@ -47,7 +47,7 @@
         <p>
           Support loops. SLA turns red. An agent hits <code>needs_human</code>.
           Health stalls before renewal. Chat notifications hide. Phone doesn’t —
-          if the call is rare, short, and for the right person.
+          if the call is rare, short, and for the right person. We enforce a per-owner call budget so “rare” is policy, not a hope.
         </p>
       </div>
     </section>
@@ -56,17 +56,29 @@
       <div class="wrap">
         <h2>One engine. Four cues.</h2>
         <ol class="flow">
-          <li><strong>Cue</strong> arrives (fixture, stdin event, or webhook-shaped JSON)</li>
-          <li><strong>Call sheet</strong> — owned? severity? house dark?</li>
-          <li><strong>Dress rehearsal</strong> by default — or <strong>curtain up</strong></li>
-          <li><strong>Line reading</strong> 1 / 2 / 3 on the CS phone</li>
-          <li><strong>Prompt book</strong> + show report writeback</li>
+          <li><span><strong>Cue</strong> arrives (fixture, stdin event, or webhook-shaped JSON)</span></li>
+          <li><span><strong>Call sheet</strong> — owned? severity? house dark? owner budget?</span></li>
+          <li><span><strong>Dress rehearsal</strong> by default — or <strong>curtain up</strong></span></li>
+          <li><span><strong>Line reading</strong> 1 / 2 / 3 on the CS phone</span></li>
+          <li><span><strong>Prompt book</strong> + show report writeback</span></li>
         </ol>
         <div class="cues">
-          <article><h3>stuck_support</h3><p>Bot laps. No resolution. Hero / SE / snooze.</p></article>
-          <article><h3>agent_needs_decision</h3><p>Policy gate. Approve A, approve B, or escalate.</p></article>
-          <article><h3>sla_risk</h3><p>Breach window. Own it / page backup / hold.</p></article>
-          <article><h3>health_onboarding</h3><p>Silent stall. Tech rehearsal / wings / producer.</p></article>
+          <article>
+            <h3>stuck_support</h3>
+            <p>Take over in chat now · Assign to SE / specialist · Not now — snooze 2 hours</p>
+          </article>
+          <article>
+            <h3>agent_needs_decision</h3>
+            <p>Approve A — allow the one-time exception · Approve B — require the signed amendment first · Reject — escalate to manager</p>
+          </article>
+          <article>
+            <h3>sla_risk</h3>
+            <p>I own this ticket now · Page backup CS/SE · Acknowledge risk, no action</p>
+          </article>
+          <article>
+            <h3>health_onboarding</h3>
+            <p>Book SE technical session · Mark watchlist — no outreach yet · Flag churn risk for manager</p>
+          </article>
         </div>
       </div>
     </section>
@@ -95,14 +107,16 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES</code></pre>
 
     <section class="band">
       <div class="wrap proven">
-        <h2>Operator-proven live cues</h2>
+        <h2>Operator-proven live ladder</h2>
         <ul>
-          <li><code>stuck_support</code> curtain-up → line reading <strong>1</strong> (take over in chat)</li>
-          <li><code>agent_needs_decision</code> curtain-up → line reading <strong>1</strong> (approve A)</li>
+          <li><code>stuck_support</code> — voicemail → <code>no_answer</code>, then curtain-up → line reading <strong>1</strong> (take over in chat)</li>
+          <li><code>agent_needs_decision</code> — earlier <code>unclear</code> captures, then curtain-up → line reading <strong>1</strong> (approve A)</li>
         </ul>
         <p>
           Callee is always the CS owner. Customer never gets this call.
-          Redacted prompt-book + show-report samples:
+          Full probe table:
+          <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/blob/main/research/calle-api-notes.md">research/calle-api-notes.md</a>.
+          Redacted rows:
           <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/submission/evidence">submission/evidence</a>.
         </p>
       </div>
@@ -117,7 +131,7 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES</code></pre>
       </div>
       <div class="footer__links">
         <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon">Repo</a>
-        <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/1">PR #1</a>
+        <a href="https://assafbar2.github.io/customer-success-voice-signal-hackathon/">Live site</a>
         <a href="https://call-e.devpost.com/">CALL-E hackathon</a>
         <a href="https://dashboard.heycall-e.com/account/api-keys">API keys</a>
       </div>

@@ -1,0 +1,28 @@
+name: skill-ci
+
+on:
+  push:
+    paths:
+      - "skills/customer-success-voice-signal/**"
+      - ".github/workflows/skill-ci.yml"
+  pull_request:
+    paths:
+      - "skills/customer-success-voice-signal/**"
+      - ".github/workflows/skill-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: skills/customer-success-voice-signal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: skills/customer-success-voice-signal/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck

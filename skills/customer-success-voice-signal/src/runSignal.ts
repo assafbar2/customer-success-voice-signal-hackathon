@@ -11,7 +11,7 @@ import {
 import { buildCallIntent } from "./calle/intent.js";
 import { curtainUp } from "./calle/client.js";
 import { previewIntentSummary, toDecision } from "./map/toDecision.js";
-import { loadRecentCueKeys, writeback } from "./writeback/index.js";
+import { loadRecentCueKeys, loadRecentOwnerRingCount, writeback } from "./writeback/index.js";
 import type { AccountEvent, CallIntent, DecisionResult, CsOwner } from "./schemas.js";
 import { CsOwnerSchema } from "./schemas.js";
 
@@ -114,6 +114,14 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
     mode === "curtain_up"
       ? await loadRecentCueKeys(args.env.dataDir, args.env.dedupeMinutes)
       : new Set<string>();
+  const recentOwnerRings =
+    mode === "curtain_up"
+      ? await loadRecentOwnerRingCount(
+          args.env.dataDir,
+          owner.id,
+          args.env.dedupeMinutes,
+        )
+      : 0;
 
   const policy = shouldRing({
     event: { ...event, cs_owner: owner },
@@ -129,6 +137,8 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
     },
     recentCueKeys: recent,
     dedupeMinutes: args.env.dedupeMinutes,
+    recentOwnerRingCount: recentOwnerRings,
+    ownerMaxRings: args.env.ownerMaxRings,
   });
 
   const options = event.option_set ?? pickOptions(event.trigger_id);
@@ -257,6 +267,8 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
       baseUrl: args.env.calleBaseUrl,
       region: args.env.calleRegion,
       locale: args.env.calleLocale,
+      dataDir: args.env.dataDir,
+      onStatus: (msg) => log(msg),
     });
     const result = toDecision({
       event,
