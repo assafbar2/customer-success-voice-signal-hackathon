@@ -53,8 +53,9 @@ npm run signal -- --last
 - House dark enforced on live only (owner/env timezone-aware)  
 - Per-owner call budget (default 2 live dials / window)  
 - Cue-history appends only after a live dial outcome — HOLD never poisons dedupe  
+- Prefer SDK `failureCode` / `completionConfidence`; identity stage-code read-back before 1/2/3  
 
-See [references/safety.md](references/safety.md) · [references/action-intents.md](references/action-intents.md) · [SKILL.md](SKILL.md).
+See [references/safety.md](references/safety.md) · [references/calle-sdk.md](references/calle-sdk.md) · [references/action-intents.md](references/action-intents.md) · [SKILL.md](SKILL.md).
 
 ## Scripts
 

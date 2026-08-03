@@ -36,6 +36,14 @@ export interface SkillEnv {
   calleBaseUrl: string;
   calleRegion: string;
   calleLocale: string;
+  /**
+   * Optional CreateCallInput.webhookUrl — CALL-E POSTs terminal results here.
+   * Curtain-up still defaults to create → persist id → waitForResult unless
+   * calleWait is false.
+   */
+  calleWebhookUrl: string;
+  /** When false + webhook URL set, skip waitForResult (async completion). */
+  calleWait: boolean;
   csOwnerE164: string;
   csOwnerName: string;
   csOwnerId: string;
@@ -54,6 +62,14 @@ export interface SkillEnv {
   githubIssue: string;
 }
 
+function envFlagTrue(raw: string | undefined, defaultTrue: boolean): boolean {
+  if (raw === undefined || raw.trim() === "") return defaultTrue;
+  const v = raw.trim().toLowerCase();
+  if (["0", "false", "no", "off"].includes(v)) return false;
+  if (["1", "true", "yes", "on"].includes(v)) return true;
+  return defaultTrue;
+}
+
 export function readSkillEnv(): SkillEnv {
   const dataDirRaw = process.env.DATA_DIR?.trim();
   return {
@@ -61,6 +77,8 @@ export function readSkillEnv(): SkillEnv {
     calleBaseUrl: process.env.CALLE_BASE_URL?.trim() || "https://api.heycall-e.com",
     calleRegion: process.env.CALLE_REGION?.trim() || "US",
     calleLocale: process.env.CALLE_LOCALE?.trim() || "en-US",
+    calleWebhookUrl: process.env.CALLE_WEBHOOK_URL?.trim() ?? "",
+    calleWait: envFlagTrue(process.env.CALLE_WAIT, true),
     csOwnerE164: process.env.CS_OWNER_E164?.trim() ?? "",
     csOwnerName: process.env.CS_OWNER_NAME?.trim() ?? "",
     csOwnerId: process.env.CS_OWNER_ID?.trim() ?? "",

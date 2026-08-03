@@ -22,6 +22,8 @@ function baseEnv(dataDir: string): SkillEnv {
     calleBaseUrl: "https://api.heycall-e.com",
     calleRegion: "US",
     calleLocale: "en-US",
+    calleWebhookUrl: "",
+    calleWait: true,
     csOwnerE164: "",
     csOwnerName: "",
     csOwnerId: "",

@@ -41,10 +41,11 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 
 ### 3 — Technical Implementation (CALL-E at runtime)
 
-- CALL-E SDK (`@call-e/calle`): `calls.create` → persist call id → `calls.waitForResult`, with idempotency keys.
-- Result mapping prefers `structuredResult`, falls back to gated transcript phrases; voicemail → `no_answer`, never an invented decision.
+- CALL-E SDK (`@call-e/calle`): `calls.create` → persist call id → `calls.waitForResult` (not `createAndWait`), with idempotency keys. Optional `webhookUrl` + `CALLE_WAIT=0` for async completion.
+- Result mapping prefers `failureCode` / `completionConfidence` / `structuredResult`; summary heuristics only when codes are absent. Never invent a decision.
+- **Identity read-back:** spoken 4-digit stage code before a 1/2/3 is logged as the call-sheet owner’s decision.
 - **Safety rails:** dress rehearsal (dry-run) by default; live requires `--live` + `PLACES`; CS owner only; fixture phones rejected on live; per-owner call budget; timezone-aware quiet hours; HOLD/failure never poison cue dedupe; untrusted cue text wrapped before it reaches the prompt.
-- 67 tests + typecheck; webhook-shaped stdin **and** `POST /cue` HTTP listener (not fixtures-only); exit codes 0/2 (HOLD)/3.
+- 85 tests + typecheck; webhook-shaped stdin **and** `POST /cue` HTTP listener; exit codes 0/2 (HOLD)/3.
 - **Operator-proven live ladder,** misses included: voicemail and `unclear` captures logged alongside the two successful curtain-up decisions. Redacted evidence in the repo.
 
 ### 4 — Product Experience & Demo
@@ -58,7 +59,10 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 
 - Zendesk / Salesforce adapter shapes documented at the seam (Slack + GitHub already live).
 - Awesome-list PR once v1 is battle-tested.
-- Deeper CALL-E SDK fields (`failureCode`, `completionConfidence`, async `webhookUrl`) and identity read-back on the line.
+
+### Most Valuable Feedback
+
+See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for the MVF survey (closed-set flakiness, no DTMF, failureCode docs, idempotency retries, identity primitive wishlist).
 
 ---
 
@@ -72,6 +76,7 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 - Judge site: https://assafbar2.github.io/customer-success-voice-signal-hackathon/
 - Skill: `skills/customer-success-voice-signal/`
 - Live evidence (redacted): `submission/evidence/` · full ladder: `research/calle-api-notes.md`
+- MVF: `submission/mvf-feedback.md`
 
 ---
 

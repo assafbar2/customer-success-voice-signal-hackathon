@@ -53,36 +53,52 @@ describe("curtainUp — mocked CALL-E", () => {
       status: "completed",
       summary: null,
       taskCompleted: true,
+      failureCode: null,
+      failureMessage: null,
+      completionConfidence: { score: 0.95, label: "high" },
+      evidence: ["caller said one"],
       structuredResult: {
         option_id: "1",
         decision: "take_over_chat",
         decision_label: "Take over in chat now",
+        stage_code: "4821",
+        identity_confirmed: true,
       },
       recipients: [{ structuredResult: null, summary: null, attempts: [] }],
     });
 
-    const { call, structured } = await curtainUp(intent, {
+    const { call, structured, awaited } = await curtainUp(intent, {
       apiKey: "test_key_not_live",
       region: "US",
       locale: "en-US",
+      webhookUrl: "https://example.com/calle/webhook",
     });
 
+    expect(awaited).toBe(true);
     expect(create).toHaveBeenCalledTimes(1);
     expect(waitForResult).toHaveBeenCalledWith(
       "call_mock_1",
       expect.objectContaining({ timeoutMs: 600_000 }),
     );
     const [payload, opts] = create.mock.calls[0] as [
-      { task: string; recipients: Array<{ phones: string[] }>; metadata: Record<string, unknown> },
+      {
+        task: string;
+        recipients: Array<{ phones: string[] }>;
+        metadata: Record<string, unknown>;
+        webhookUrl?: string;
+      },
       { idempotencyKey: string },
     ];
     expect(payload.task).toMatch(/Stage Manager/);
     expect(payload.task).toMatch(/Say 1, 2, or 3/);
+    expect(payload.task).toMatch(/Stage code/);
     expect(payload.task).not.toMatch(/Press/);
+    expect(payload.webhookUrl).toBe("https://example.com/calle/webhook");
     expect(payload.recipients[0].phones).toEqual(["+14155552671"]);
     expect(payload.metadata).toMatchObject({
       skill: "customer-success-voice-signal",
       never_call_customer: true,
+      stage_code: "4821",
     });
     expect(opts.idempotencyKey).toMatch(/^csvs:stuck_support:acct_acme:/);
     expect(call.id).toBe("call_mock_1");
@@ -95,8 +111,34 @@ describe("curtainUp — mocked CALL-E", () => {
       mode: "curtain_up",
       callRunId: call.id,
       structured,
+      taskCompleted: true,
+      expectedStageCode: "4821",
+      completionConfidence: { score: 0.95, label: "high" },
     });
     expect(decision.option_id).toBe("1");
+  });
+
+  it("skips waitForResult when wait=false (async webhook path)", async () => {
+    const event = normalizeEvent(fixture);
+    const intent = buildCallIntent(event, "+14155552671");
+    create.mockResolvedValue({
+      id: "call_async_1",
+      status: "queued",
+      recipients: [],
+      structuredResult: null,
+      summary: null,
+      taskCompleted: null,
+    });
+
+    const { call, awaited } = await curtainUp(intent, {
+      apiKey: "test_key",
+      webhookUrl: "https://example.com/hook",
+      wait: false,
+    });
+    expect(awaited).toBe(false);
+    expect(call.id).toBe("call_async_1");
+    expect(waitForResult).not.toHaveBeenCalled();
+    expect(create.mock.calls[0][0].webhookUrl).toBe("https://example.com/hook");
   });
 
   it("surfaces wait failures with persisted call id in the message", async () => {

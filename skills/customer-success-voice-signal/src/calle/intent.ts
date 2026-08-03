@@ -2,10 +2,11 @@ import type { AccountEvent, CallIntent, DecisionOption } from "../schemas.js";
 import { CallIntentSchema } from "../schemas.js";
 import { pickOptions } from "../policy/options.js";
 import { formatUntrustedCueBlock } from "./cueContext.js";
+import { stageCodeForEvent } from "./stageCode.js";
 
 const RESULT_SCHEMA = {
   type: "object",
-  required: ["option_id", "decision", "decision_label"],
+  required: ["option_id", "decision", "decision_label", "stage_code", "identity_confirmed"],
   properties: {
     option_id: {
       type: "string",
@@ -20,6 +21,16 @@ const RESULT_SCHEMA = {
       type: "string",
       description: "Human-readable label of the chosen option.",
     },
+    stage_code: {
+      type: "string",
+      description:
+        "The 4-digit stage code the CS owner spoke back for identity read-back (digits only).",
+    },
+    identity_confirmed: {
+      type: "boolean",
+      description:
+        "True only if the spoken stage_code matched the code given on this call.",
+    },
     notes_short: {
       type: "string",
       description: "Optional short note from the CS owner.",
@@ -31,6 +42,7 @@ const RESULT_SCHEMA = {
  * Build a CALL-E task as the Stage Manager.
  * Never instructs a call to the customer — CS owner only.
  * Cue brief/summary/ticket are wrapped as untrusted data.
+ * Includes a spoken stage-code identity read-back before line readings.
  */
 export function buildCallIntent(
   event: AccountEvent,
@@ -42,6 +54,7 @@ export function buildCallIntent(
     throw new Error("Stage Manager requires exactly 3 closed-set line readings (1/2/3).");
   }
 
+  const stageCode = stageCodeForEvent(event);
   const lines = opts
     .map((o) => `${o.option_id}: ${o.decision_label}`)
     .join("\n");
@@ -58,13 +71,15 @@ export function buildCallIntent(
     `Open: "Hi ${event.cs_owner.name}. Stage Manager. You're up for ${event.account.name}."`,
     `One short apology for the interrupt, then paraphrase the cue sheet in your own words (no secret dumps, no internal ids).`,
     cueBlock,
-    `Then say: "Line reading. Say 1, 2, or 3 — or one, two, or three."`,
+    `Identity read-back (required before any decision): say "Stage code — please repeat: ${stageCode.split("").join(" ")}." Wait for them to say the digits.`,
+    `If they cannot or will not repeat the stage code, apologize once, do not offer line readings, hang up. Do not invent a decision.`,
+    `Only after the stage code is confirmed, say: "Line reading. Say 1, 2, or 3 — or one, two, or three."`,
     `Speak ONLY these three options — do not invent options, do not read database field names like decision=…:`,
     lines,
     `If they say anything other than 1, 2, or 3, ask once more for 1, 2, or 3, then hang up if still unclear.`,
     `Confirm the choice in one sentence, say you're logging it to the prompt book, then: "Clear. Break a leg — or just open the ticket." Hang up.`,
     `Voicemail / automated unavailable: brief "Stage Manager will try again," hang up. Do not invent a line reading.`,
-    `Fill structured result option_id ("1"|"2"|"3"), decision, and decision_label to match the chosen line only.`,
+    `Fill structured result: stage_code (digits they spoke), identity_confirmed (true only on match), option_id ("1"|"2"|"3"), decision, and decision_label for the chosen line only.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -85,6 +100,7 @@ export function buildCallIntent(
       event_id: event.event_id,
       ticket_id: event.ticket_id ?? null,
       severity: event.severity,
+      stage_code: stageCode,
     },
   });
 }

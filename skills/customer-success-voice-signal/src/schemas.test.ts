@@ -264,10 +264,13 @@ describe("toDecision mapping", () => {
       mode: "curtain_up",
       callRunId: "call_test",
       taskCompleted: true,
+      expectedStageCode: "9999",
       structured: {
         option_id: "2",
         decision: "page_backup",
         decision_label: "Page backup CS/SE",
+        stage_code: "9999",
+        identity_confirmed: true,
       },
     });
     expect(result.option_id).toBe("2");
@@ -291,6 +294,7 @@ describe("toDecision mapping", () => {
     expect(result.option_id).toBe("1");
     expect(result.decision).toBe("book_se_session");
     expect(result.call_run_id).toBe("dress_rehearsal");
+    expect(result.notes_short).toMatch(/Stage code would be/);
   });
 
   it("HOLD maps to option_id hold", () => {
@@ -311,7 +315,29 @@ describe("toDecision mapping", () => {
     expect(result.decision).toBe("hold");
   });
 
-  it("maps voicemail summary to no_answer", () => {
+  it("maps failureCode voicemail to no_answer (prefer SDK over summary)", () => {
+    const raw = JSON.parse(
+      readFileSync(path.join(fixturesDir, "stuck_support_acme.json"), "utf8"),
+    );
+    const event = normalizeEvent(raw);
+    const options = pickOptions(event.trigger_id);
+    const intent = buildCallIntent(event, event.cs_owner.e164, options);
+    const result = toDecision({
+      event,
+      intent,
+      options,
+      mode: "curtain_up",
+      callRunId: "call_vm",
+      structured: null,
+      failureCodes: ["voicemail"],
+      callSummary: "Something unrelated that does not mention the V-word.",
+      taskCompleted: false,
+    });
+    expect(result.decision).toBe("no_answer");
+    expect(result.option_id).toBe("unknown");
+  });
+
+  it("maps voicemail summary to no_answer when no failureCode", () => {
     const raw = JSON.parse(
       readFileSync(path.join(fixturesDir, "stuck_support_acme.json"), "utf8"),
     );

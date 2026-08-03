@@ -27,6 +27,8 @@ Dress rehearsal does **not** need a key. Curtain-up does.
 | --- | --- |
 | `CALLE_BASE_URL` | Default `https://api.heycall-e.com` |
 | `CALLE_REGION` / `CALLE_LOCALE` | Recipient region/locale |
+| `CALLE_WEBHOOK_URL` | Optional `CreateCallInput.webhookUrl` (terminal POST) |
+| `CALLE_WAIT` | Default true. Set `0` with webhook URL to skip `waitForResult` (async) |
 | `CS_OWNER_NAME` / `CS_OWNER_ID` | Override call sheet identity |
 | `HOUSE_DARK_START` / `HOUSE_DARK_END` | Explicit quiet-hours override (both required; else owner `quiet_hours`) |
 | `HOUSE_DARK_TIMEZONE` | Optional TZ for env override |
@@ -37,6 +39,8 @@ Dress rehearsal does **not** need a key. Curtain-up does.
 | `CUE_WEBHOOK_SECRET` | Optional Bearer / `X-Cue-Secret` for `POST /cue` |
 | `SLACK_WEBHOOK_URL` | Live Slack-shaped adapter |
 | `GITHUB_TOKEN` / `GITHUB_REPO` / `GITHUB_ISSUE` | Live GitHub issue-comment adapter |
+
+SDK mapping + identity read-back: [calle-sdk.md](calle-sdk.md).
 
 ## Rules
 

@@ -33,9 +33,14 @@ Implemented in `src/calle/client.ts` (`curtainUp`) + `src/calle/intent.ts` (`bui
 
 ## Result mapping
 
-Prefer `call.structuredResult`, fall back to `call.recipients[0].structuredResult`, then **gated** transcript phrases (`src/map/toDecision.ts`).
+Prefer SDK fields over prose (see [calle-sdk.md](../skills/customer-success-voice-signal/references/calle-sdk.md)):
 
-If structured result is missing and the summary looks like voicemail / no answer → `decision: no_answer` (never invent a line reading).
+1. `failureCode` (call + attempts) → `no_answer` when voicemail / no_answer / …
+2. `taskCompleted === false` → never a 1/2/3
+3. Low `completionConfidence` → `unclear`
+4. `structuredResult` + **identity read-back** (spoken stage code)
+5. Gated transcript fallback
+6. Summary-string heuristics **only** when no failure codes were supplied
 
 ## Modes
 
@@ -62,3 +67,5 @@ Redacted committed samples: [`../submission/evidence/`](../submission/evidence/)
 
 - https://docs.heycall-e.com/  
 - https://github.com/CALLE-AI/call-e-integrations  
+- Skill SDK notes: [`../skills/customer-success-voice-signal/references/calle-sdk.md`](../skills/customer-success-voice-signal/references/calle-sdk.md)
+- MVF writeup: [`../submission/mvf-feedback.md`](../submission/mvf-feedback.md)

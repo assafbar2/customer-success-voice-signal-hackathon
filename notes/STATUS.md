@@ -8,6 +8,7 @@
 | Hardening PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/3 |
 | Live ladder | `research/calle-api-notes.md` |
 | Evidence | `submission/evidence/` (redacted) |
+| MVF draft | `submission/mvf-feedback.md` |
 
 ## Live outcomes (honest)
 
@@ -20,11 +21,14 @@
 
 - [x] Decision → action intent → Slack / GitHub live adapters (env-gated)
 - [x] HTTP cue listener — `npm run serve-cue` → `POST /cue` (curl → engine → apply-action)
+- [x] SDK depth — `failureCode` / `completionConfidence` / optional `webhookUrl` (create→persist→wait)
+- [x] Identity read-back — spoken stage code before 1/2/3 counts
+- [x] MVF writeup — `submission/mvf-feedback.md`
 
 ## Submit checklist
 
 - [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`) — **after v1 is solid; recurring nudge, do not drop**
-- [ ] Devpost submit + MVF survey (draft text: `submission/devpost.md`)
+- [ ] Devpost submit + MVF survey (drafts: `submission/devpost.md`, `submission/mvf-feedback.md`)
 - [x] GitHub repo homepage → Pages URL
 - [x] Vercel leftover project removed
 - [x] GitHub topics added (call-e, voice-agents, customer-success, hackathon, phone-call-agent)
@@ -34,15 +38,12 @@
 
 **Dated nudge:** `notes/REMINDER-2026-09-01.md`
 
-## Still open (Opus / Fable residual)
+## Still open (residual)
 
 | Item | Status |
 | --- | --- |
-| Slack + GitHub wire-out | Done (Fable) |
-| HTTP `/cue` listener | Done |
-| SDK `failureCode` / `completionConfidence` / `webhookUrl` | Open |
-| Identity read-back + hash-chained prompt book | Open |
+| Hash-chained prompt book | Skipped (hack scope) |
 | Real CS conversations for Real World Impact | Open (operator) |
-| MVF survey writeup | Open |
 | Packaging split (`skills/` → `apps/typescript/…`) | Open (merge risk only) |
 | OG / GIF / evidence dashboard screenshot | Open (operator) |
+| Awesome-list PR + Devpost submit | Open (operator) |

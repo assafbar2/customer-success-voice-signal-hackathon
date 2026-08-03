@@ -21,6 +21,7 @@ When a **named account** hits a high-risk moment, the **Stage Manager** cues CAL
 | **Prompt book** | NDJSON audit (`data/prompt-book.ndjson`). |
 | **Show report** | Markdown writeback (`data/show-report.md`). |
 | **Action intent** | Decision → system handoff JSON (`data/actions/pending/`). Apply with `npm run apply-action`. |
+| **Stage code** | 4-digit identity read-back spoken before a 1/2/3 counts as the owner’s decision. |
 | **House dark** | Quiet hours. Enforced on curtain-up only. |
 | **HOLD** | Policy stop — exit code 2. |
 

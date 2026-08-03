@@ -48,6 +48,8 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES
 
 Callee is the **CS owner only**. Customer is never dialed.
 
+Before a 1/2/3 counts, the owner must speak the **stage code** (identity read-back). Prefer SDK `failureCode` / `completionConfidence` over summary heuristics — see [calle-sdk.md](calle-sdk.md).
+
 ## Policy HOLDs (exit 2)
 
 | Situation | What happens |

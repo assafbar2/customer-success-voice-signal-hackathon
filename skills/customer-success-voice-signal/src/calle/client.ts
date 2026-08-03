@@ -13,6 +13,17 @@ export interface CurtainUpConfig {
   idempotencyKey?: string;
   timeoutMs?: number;
   intervalMs?: number;
+  /**
+   * Optional CALL-E completion webhook (CreateCallInput.webhookUrl).
+   * Terminal results are also POSTed here. We still default to create →
+   * persist id → waitForResult (crash-safe) unless wait=false.
+   */
+  webhookUrl?: string;
+  /**
+   * When false and webhookUrl is set, return after create (async path).
+   * Default true — keep blocking wait for CLI curtain-up.
+   */
+  wait?: boolean;
   /** Optional progress hook (e.g. listEvents narration for demos). */
   onStatus?: (msg: string) => void;
 }
@@ -20,6 +31,8 @@ export interface CurtainUpConfig {
 export interface CurtainUpResult {
   call: Call;
   structured: Record<string, unknown> | null;
+  /** False when returned after create without waitForResult (async webhook path). */
+  awaited: boolean;
 }
 
 async function persistOpenCall(
@@ -41,6 +54,7 @@ async function persistOpenCall(
         account_id: intent.account_id,
         cs_owner_id: intent.cs_owner_id,
         event_id: intent.metadata?.event_id ?? null,
+        stage_code: intent.metadata?.stage_code ?? null,
       },
       null,
       2,
@@ -57,6 +71,7 @@ function defaultIdempotencyKey(intent: CallIntent): string {
 
 /**
  * Curtain-up: create → persist call.id → waitForResult.
+ * Deliberately not createAndWait — crash after dial still has call.id on disk.
  * Dress rehearsal must never invoke this.
  */
 export async function curtainUp(
@@ -73,7 +88,16 @@ export async function curtainUp(
   });
 
   const idempotencyKey = config.idempotencyKey ?? defaultIdempotencyKey(intent);
-  const payload = {
+  const webhookUrl = config.webhookUrl?.trim() || undefined;
+  const shouldWait = config.wait !== false;
+
+  const payload: {
+    task: string;
+    recipients: Array<{ phones: string[]; region: string; locale: string }>;
+    resultSchema: Record<string, unknown>;
+    metadata: Record<string, unknown>;
+    webhookUrl?: string;
+  } = {
     task: intent.task,
     recipients: [
       {
@@ -90,14 +114,39 @@ export async function curtainUp(
       account_id: intent.account_id,
       cs_owner_id: intent.cs_owner_id,
       never_call_customer: true,
+      stage_code: intent.metadata?.stage_code ?? null,
       ...intent.metadata,
     },
   };
+  if (webhookUrl) {
+    payload.webhookUrl = webhookUrl;
+  }
 
   config.onStatus?.(`Creating CALL-E run (idempotency ${idempotencyKey.slice(0, 24)}…).`);
+  if (webhookUrl) {
+    config.onStatus?.(
+      shouldWait
+        ? `webhookUrl set — still waiting (create→persist→wait; crash-safe).`
+        : `webhookUrl set — async path (no waitForResult); completion via webhook.`,
+    );
+  }
+
   const created = await client.calls.create(payload, { idempotencyKey });
   await persistOpenCall(config.dataDir, created.id, intent);
-  config.onStatus?.(`Call id persisted: ${created.id} — waiting for result.`);
+  config.onStatus?.(
+    shouldWait
+      ? `Call id persisted: ${created.id} — waiting for result.`
+      : `Call id persisted: ${created.id} — not waiting (async webhook).`,
+  );
+
+  if (!shouldWait) {
+    return {
+      call: created,
+      structured:
+        (created.structuredResult as Record<string, unknown> | null) ?? null,
+      awaited: false,
+    };
+  }
 
   let call: Call;
   try {
@@ -129,5 +178,5 @@ export async function curtainUp(
     (call.recipients[0]?.structuredResult as Record<string, unknown> | null) ??
     null;
 
-  return { call, structured };
+  return { call, structured, awaited: true };
 }

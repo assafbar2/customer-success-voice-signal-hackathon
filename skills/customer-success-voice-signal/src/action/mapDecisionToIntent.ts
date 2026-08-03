@@ -85,6 +85,7 @@ export function shouldEmitActionIntent(result: DecisionResult): boolean {
   if (result.option_id === "hold" || result.option_id === "unknown") return false;
   if (result.decision === "hold" || result.decision === "failure") return false;
   if (result.decision === "unclear" || result.decision === "no_answer") return false;
+  if (result.decision === "queued") return false;
   return result.option_id === "1" || result.option_id === "2" || result.option_id === "3";
 }
 

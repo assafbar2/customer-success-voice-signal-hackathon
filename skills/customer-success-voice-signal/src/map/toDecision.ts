@@ -6,6 +6,13 @@ import type {
 } from "../schemas.js";
 import { DecisionResultSchema } from "../schemas.js";
 import type { RingMode } from "../policy/shouldRing.js";
+import { checkIdentityReadback } from "../calle/stageCode.js";
+import {
+  failureCodesSuggestNoAnswer,
+  isLowCompletionConfidence,
+  summaryLooksLikeVoicemailOrNoAnswer,
+  type CompletionConfidence,
+} from "./sdkOutcome.js";
 
 export interface ToDecisionInput {
   event: AccountEvent;
@@ -18,8 +25,16 @@ export interface ToDecisionInput {
   /** CALL-E call/recipient summary when structured result is missing */
   callSummary?: string | null;
   taskCompleted?: boolean | null;
-  /** Transcript turns for fallback option parsing */
+  /** Prefer over summary heuristics — call + attempt failureCode values */
+  failureCodes?: string[];
+  failureMessages?: string[];
+  completionConfidence?: CompletionConfidence;
+  /** Evidence snippets from CALL-E (logged in notes when useful) */
+  evidence?: string[];
+  /** Transcript turns for fallback option parsing + identity read-back */
   transcriptTexts?: string[];
+  /** Expected spoken stage code (identity read-back). */
+  expectedStageCode?: string | null;
   /** Dress rehearsal may simulate a choice (default option 1). */
   simulatedOptionId?: "1" | "2" | "3";
   /** Provider failure audit (never a human decision). */
@@ -37,24 +52,6 @@ const WORD_TO_OPTION: Record<string, "1" | "2" | "3"> = {
   three: "3",
   third: "3",
 };
-
-function looksLikeVoicemailOrNoAnswer(summary: string | null | undefined): boolean {
-  if (!summary) return false;
-  const s = summary.toLowerCase();
-  return (
-    s.includes("voicemail") ||
-    s.includes("not available") ||
-    s.includes("no answer") ||
-    s.includes("didn't answer") ||
-    s.includes("did not answer") ||
-    s.includes("unreachable") ||
-    s.includes("did not connect") ||
-    s.includes("didn't connect") ||
-    s.includes("no transcript") ||
-    s.includes("busy or unavailable") ||
-    s.includes("may be busy")
-  );
-}
 
 /** True when a bare digit/word is clearly not a line reading (e.g. "3 other fires"). */
 function isSpuriousDigitContext(text: string, index: number, matched: string): boolean {
@@ -178,14 +175,44 @@ function unclearResult(
   });
 }
 
+function noAnswerResult(input: ToDecisionInput, notes: string | null): DecisionResult {
+  const { event, mode } = input;
+  return DecisionResultSchema.parse({
+    trigger_id: event.trigger_id,
+    account_id: event.account.id,
+    account_name: event.account.name,
+    cs_owner_id: event.cs_owner.id,
+    call_run_id: input.callRunId ?? null,
+    decision: "no_answer",
+    decision_label: "No line reading — voicemail / no answer",
+    option_id: "unknown",
+    notes_short: notes,
+    follow_up_at: null,
+    completed_at: new Date().toISOString(),
+    mode,
+    hold_reason: null,
+  });
+}
+
+function isNoAnswer(input: ToDecisionInput): boolean {
+  if (failureCodesSuggestNoAnswer(...(input.failureCodes ?? []))) return true;
+  // Summary heuristic only when SDK did not supply failure codes
+  if ((input.failureCodes?.length ?? 0) === 0) {
+    return summaryLooksLikeVoicemailOrNoAnswer(input.callSummary);
+  }
+  return false;
+}
+
 /**
  * Map CALL-E structured result (or dress-rehearsal preview) → DecisionResult.
  *
  * Rules:
- * - taskCompleted === true + consistent structured → accept
+ * - Prefer failureCode / completionConfidence over summary-string heuristics
+ * - Identity read-back (stage code) required before accepting 1/2/3 on curtain-up
+ * - taskCompleted === true + consistent structured → accept (if identity + confidence OK)
  * - taskCompleted === false → never a normal 1/2/3 (voicemail→no_answer, else unclear)
  * - contradictory structured fields → unclear
- * - dress rehearsal may simulate option 1
+ * - dress rehearsal may simulate option 1 (identity treated as confirmed)
  */
 export function toDecision(input: ToDecisionInput): DecisionResult {
   const { event, options, mode } = input;
@@ -226,13 +253,19 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
     });
   }
 
-  const vm = looksLikeVoicemailOrNoAnswer(input.callSummary);
+  const vm = isNoAnswer(input);
   const taskFailed = input.taskCompleted === false;
   const taskOk = input.taskCompleted === true;
+  const lowConfidence = isLowCompletionConfidence(input.completionConfidence);
 
   if (mode === "dress_rehearsal") {
     const sim =
       options.find((o) => o.option_id === (input.simulatedOptionId ?? "1")) ?? options[0];
+    const code =
+      input.expectedStageCode ??
+      (typeof input.intent.metadata?.stage_code === "string"
+        ? input.intent.metadata.stage_code
+        : null);
     return DecisionResultSchema.parse({
       trigger_id: event.trigger_id,
       account_id: event.account.id,
@@ -242,7 +275,9 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
       decision: sim.decision,
       decision_label: sim.decision_label,
       option_id: sim.option_id,
-      notes_short: "Dress rehearsal preview — no live ring.",
+      notes_short: code
+        ? `Dress rehearsal preview — no live ring. Stage code would be ${code}.`
+        : "Dress rehearsal preview — no live ring.",
       follow_up_at: null,
       completed_at: new Date().toISOString(),
       mode,
@@ -250,24 +285,23 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
     });
   }
 
+  // SDK said no-answer / voicemail via failureCode — even before taskCompleted
+  if (vm && (taskFailed || input.taskCompleted == null) && !input.structured) {
+    const notes =
+      (input.failureCodes ?? []).join(",") ||
+      (input.failureMessages ?? [])[0] ||
+      (input.callSummary ? input.callSummary.slice(0, 280) : null);
+    return noAnswerResult(input, notes);
+  }
+
   // Incomplete task: never claim a human chose 1/2/3
   if (taskFailed) {
     if (vm) {
-      return DecisionResultSchema.parse({
-        trigger_id: event.trigger_id,
-        account_id: event.account.id,
-        account_name: event.account.name,
-        cs_owner_id: event.cs_owner.id,
-        call_run_id: input.callRunId ?? null,
-        decision: "no_answer",
-        decision_label: "No line reading — voicemail / no answer",
-        option_id: "unknown",
-        notes_short: input.callSummary ? input.callSummary.slice(0, 280) : null,
-        follow_up_at: null,
-        completed_at: new Date().toISOString(),
-        mode,
-        hold_reason: null,
-      });
+      return noAnswerResult(
+        input,
+        (input.failureCodes ?? []).join(",") ||
+          (input.callSummary ? input.callSummary.slice(0, 280) : null),
+      );
     }
     return unclearResult(
       input,
@@ -275,6 +309,17 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
       input.callSummary
         ? input.callSummary.slice(0, 280)
         : "taskCompleted=false; refusing to record a line reading",
+    );
+  }
+
+  if (lowConfidence) {
+    const conf = input.completionConfidence;
+    return unclearResult(
+      input,
+      "Unclear — low completionConfidence",
+      conf
+        ? `completionConfidence score=${conf.score} label=${conf.label}`
+        : "low completionConfidence",
     );
   }
 
@@ -296,18 +341,21 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
   }
 
   if (!matched) {
-    const decision = vm ? "no_answer" : "unclear";
-    const decision_label = vm
-      ? "No line reading — voicemail / no answer"
-      : "Could not map line reading";
+    if (vm) {
+      return noAnswerResult(
+        input,
+        (input.failureCodes ?? []).join(",") ||
+          (input.callSummary ? input.callSummary.slice(0, 280) : null),
+      );
+    }
     return DecisionResultSchema.parse({
       trigger_id: event.trigger_id,
       account_id: event.account.id,
       account_name: event.account.name,
       cs_owner_id: event.cs_owner.id,
       call_run_id: input.callRunId ?? null,
-      decision,
-      decision_label,
+      decision: "unclear",
+      decision_label: "Could not map line reading",
       option_id: "unknown",
       notes_short: input.callSummary
         ? input.callSummary.slice(0, 280)
@@ -321,12 +369,40 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
     });
   }
 
+  // Identity read-back — bind decision to the call-sheet owner, not whoever answered
+  const expectedCode =
+    input.expectedStageCode ??
+    (typeof input.intent.metadata?.stage_code === "string"
+      ? input.intent.metadata.stage_code
+      : null);
+  if (expectedCode) {
+    const idCheck = checkIdentityReadback({
+      expectedStageCode: expectedCode,
+      structured: input.structured,
+      transcriptTexts: input.transcriptTexts,
+      dressRehearsal: false,
+    });
+    if (!idCheck.ok) {
+      return unclearResult(
+        input,
+        "Unclear — identity read-back failed",
+        `stage_code expected; identity check=${idCheck.reason}`,
+      );
+    }
+  }
+
   // taskCompleted must be true to accept a normal decision when SDK provided the flag
   if (input.taskCompleted === true || input.taskCompleted == null) {
-    const notes =
-      input.structured && typeof input.structured.notes_short === "string"
-        ? input.structured.notes_short
-        : null;
+    const notesParts: string[] = [];
+    if (input.structured && typeof input.structured.notes_short === "string") {
+      notesParts.push(input.structured.notes_short);
+    }
+    if (expectedCode) {
+      notesParts.push(`identity:stage_code_ok`);
+    }
+    if (input.evidence?.length) {
+      notesParts.push(`evidence:${input.evidence.slice(0, 2).join("; ").slice(0, 120)}`);
+    }
     return DecisionResultSchema.parse({
       trigger_id: event.trigger_id,
       account_id: event.account.id,
@@ -336,7 +412,7 @@ export function toDecision(input: ToDecisionInput): DecisionResult {
       decision: matched.decision,
       decision_label: matched.decision_label,
       option_id: matched.option_id,
-      notes_short: notes,
+      notes_short: notesParts.length ? notesParts.join(" · ").slice(0, 280) : null,
       follow_up_at: null,
       completed_at: new Date().toISOString(),
       mode,
@@ -351,12 +427,19 @@ export function previewIntentSummary(intent: CallIntent): string {
   const lines = intent.options
     .map((o) => `  ${o.option_id}. ${o.decision_label}`)
     .join("\n");
+  const stage =
+    typeof intent.metadata?.stage_code === "string"
+      ? `Stage code (identity read-back): ${intent.metadata.stage_code}`
+      : null;
   return [
     `Persona: ${intent.persona}`,
     `Cue: ${intent.trigger_id}`,
     `Account: ${intent.account_name} (${intent.account_id})`,
     `Call sheet: ${intent.cs_owner_name} (CS only — never customer)`,
+    stage,
     `Line readings:`,
     lines,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }

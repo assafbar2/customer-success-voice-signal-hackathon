@@ -18,9 +18,13 @@ import { buildCallIntent } from "./calle/intent.js";
 import { curtainUp } from "./calle/client.js";
 import { categorizeCalleError } from "./calle/errors.js";
 import { previewIntentSummary, toDecision } from "./map/toDecision.js";
+import {
+  collectFailureCodes,
+  collectFailureMessages,
+} from "./map/sdkOutcome.js";
 import { loadRecentCueKeys, loadRecentOwnerRingCount, writeback } from "./writeback/index.js";
 import type { AccountEvent, CallIntent, DecisionResult, CsOwner } from "./schemas.js";
-import { CsOwnerSchema } from "./schemas.js";
+import { CsOwnerSchema, DecisionResultSchema } from "./schemas.js";
 
 export type ExitKind = "ok" | "hold" | "failure";
 
@@ -358,14 +362,74 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
 
     log(`Curtain up — cueing CALL-E for ${maskPhone(owner.e164)} (CS owner only).`);
     try {
-      const { call, structured } = await dial(intent, {
+      const webhookUrl = args.env.calleWebhookUrl || undefined;
+      // Async enqueue only when webhook is configured AND CALLE_WAIT=0
+      const asyncEnqueue = Boolean(webhookUrl) && args.env.calleWait === false;
+
+      const { call, structured, awaited } = await dial(intent, {
         apiKey: args.env.calleApiKey,
         baseUrl: args.env.calleBaseUrl,
         region: args.env.calleRegion,
         locale: args.env.calleLocale,
         dataDir: args.env.dataDir,
+        webhookUrl,
+        wait: !asyncEnqueue,
         onStatus: (msg) => log(msg),
       });
+
+      const stageCode =
+        typeof intent.metadata?.stage_code === "string"
+          ? intent.metadata.stage_code
+          : null;
+
+      if (!awaited) {
+        const queued = DecisionResultSchema.parse({
+          trigger_id: event.trigger_id,
+          account_id: event.account.id,
+          account_name: event.account.name,
+          cs_owner_id: event.cs_owner.id,
+          call_run_id: call.id,
+          decision: "queued",
+          decision_label: "Call queued — awaiting CALL-E webhook",
+          option_id: "unknown",
+          notes_short: `call.id=${call.id}; completion via CALLE_WEBHOOK_URL`,
+          follow_up_at: null,
+          completed_at: new Date().toISOString(),
+          mode,
+          hold_reason: "awaiting_webhook",
+        });
+        const paths = await writeback({
+          dataDir: args.env.dataDir,
+          mode,
+          event,
+          intent,
+          result: queued,
+          preview,
+          note: `Async curtain-up — waiting on webhook. call.id ${call.id}.`,
+        });
+        log(
+          [
+            "=== Curtain up (async) ===",
+            `Call run: ${call.id}`,
+            `Status: ${call.status}`,
+            `webhookUrl set; CALLE_WAIT=0 — not blocking on waitForResult`,
+            `Prompt book: ${paths.promptBook}`,
+          ].join("\n"),
+        );
+        return {
+          exit: "ok",
+          mode,
+          event,
+          intent,
+          result: queued,
+          message:
+            "Curtain-up queued — call.id persisted; completion via CALLE_WEBHOOK_URL.",
+        };
+      }
+
+      const failureCodes = collectFailureCodes(call);
+      const failureMessages = collectFailureMessages(call);
+
       const result = toDecision({
         event,
         intent,
@@ -375,6 +439,11 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
         structured,
         callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
         taskCompleted: call.taskCompleted,
+        failureCodes,
+        failureMessages,
+        completionConfidence: call.completionConfidence ?? null,
+        evidence: call.evidence ?? [],
+        expectedStageCode: stageCode,
         transcriptTexts: call.recipients[0]?.attempts?.[0]?.transcriptTurns
           ?.filter((t) => t.speaker === "user")
           .map((t) => t.text ?? "")
@@ -394,6 +463,11 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
           "=== Curtain up ===",
           `Call run: ${call.id}`,
           `Status: ${call.status}`,
+          call.failureCode ? `failureCode: ${call.failureCode}` : null,
+          call.completionConfidence
+            ? `completionConfidence: ${call.completionConfidence.score} (${call.completionConfidence.label})`
+            : null,
+          stageCode ? `Stage code (identity): ${stageCode}` : null,
           `Decision: ${result.option_id} — ${result.decision_label}`,
           `Prompt book: ${paths.promptBook}`,
           `Show report: ${paths.showReport}`,

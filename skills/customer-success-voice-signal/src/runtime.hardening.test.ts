@@ -24,6 +24,8 @@ function baseEnv(dataDir: string, overrides: Partial<SkillEnv> = {}): SkillEnv {
     calleBaseUrl: "https://api.heycall-e.com",
     calleRegion: "US",
     calleLocale: "en-US",
+    calleWebhookUrl: "",
+    calleWait: true,
     csOwnerE164: "+14155552671",
     csOwnerName: "Maya",
     csOwnerId: "cs_maya",
@@ -107,10 +109,16 @@ describe("concurrent cue reservation", () => {
           status: "completed",
           summary: null,
           taskCompleted: true,
+          failureCode: null,
+          failureMessage: null,
+          completionConfidence: { score: 0.9, label: "high" },
+          evidence: ["caller confirmed option 1"],
           structuredResult: {
             option_id: "1",
             decision: "take_over_chat",
             decision_label: "Take over in chat now",
+            stage_code: "4821",
+            identity_confirmed: true,
           },
           recipients: [{ structuredResult: null, summary: null, attempts: [] }],
         },
@@ -118,7 +126,10 @@ describe("concurrent cue reservation", () => {
           option_id: "1",
           decision: "take_over_chat",
           decision_label: "Take over in chat now",
+          stage_code: "4821",
+          identity_confirmed: true,
         },
+        awaited: true,
       };
     });
 
@@ -181,6 +192,7 @@ describe("structured contradictions + taskCompleted", () => {
         decision_label: "Approve B",
       },
       taskCompleted: true,
+      expectedStageCode: "4821",
     });
     expect(result.decision).toBe("unclear");
   });
@@ -199,8 +211,11 @@ describe("structured contradictions + taskCompleted", () => {
         option_id: "1",
         decision: "take_over_chat",
         decision_label: "Take over in chat now",
+        stage_code: "4821",
+        identity_confirmed: true,
       },
       taskCompleted: false,
+      expectedStageCode: "4821",
     });
     expect(result.decision).toBe("unclear");
     expect(result.option_id).toBe("unknown");

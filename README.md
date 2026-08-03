@@ -68,9 +68,9 @@ npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITH
 
 **Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
-**Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
+**Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live · SDK `failureCode`/`completionConfidence` preferred · identity stage-code read-back before 1/2/3.
 
-Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/)
+Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/) · SDK notes: [`skills/customer-success-voice-signal/references/calle-sdk.md`](skills/customer-success-voice-signal/references/calle-sdk.md) · MVF: [`submission/mvf-feedback.md`](submission/mvf-feedback.md)
 
 ## Docs map
 
@@ -80,6 +80,8 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 | [docs/02-prd.md](docs/02-prd.md) | Product decisions |
 | [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | As-built flow |
 | [submission/awesome-list/PACKAGING.md](submission/awesome-list/PACKAGING.md) | Awesome-list PR packaging |
+| [submission/mvf-feedback.md](submission/mvf-feedback.md) | Most Valuable Feedback survey draft |
+| [skills/customer-success-voice-signal/references/calle-sdk.md](skills/customer-success-voice-signal/references/calle-sdk.md) | SDK fields + identity read-back |
 | [notes/STATUS.md](notes/STATUS.md) | Operator status (not a pitch deck) |
 | [LICENSE](LICENSE) | MIT |
 
