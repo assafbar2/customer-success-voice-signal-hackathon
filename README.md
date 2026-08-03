@@ -37,7 +37,7 @@ cd customer-success-voice-signal-hackathon/skills/customer-success-voice-signal
 npm install
 npm test && npm run typecheck
 
-# Dress rehearsal — default, no ring, no CALL-E key
+# Dress rehearsal — no ring, no CALL-E key
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --stdin < events/sample_stuck_support.json
 npm run signal -- --list
@@ -54,7 +54,7 @@ npm run signal -- --list
 | 2 | HOLD (policy / live gate / house dark / owner budget) |
 | 3 | Failure |
 
-**Safety:** CS owner only · dress rehearsal default · per-owner call budget · house dark timezone-aware · HOLD never poisons cue dedupe · fixture phones never dialed live.
+**Safety:** CS owner only · dress rehearsal default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
 
 Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/)
 
