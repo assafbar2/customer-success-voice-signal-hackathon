@@ -8,7 +8,7 @@
 >
 > *PagerDuty phones you to acknowledge an alert. Ack is not a decision.*
 
-When a named account hits a high-risk **cue**, **Stage Manager** rings the **CS owner** (never the customer) with a ~60s closed-set line reading (1/2/3). The decision is **state** in the prompt book — not a chat ack.
+When a named account hits a high-risk **cue**, **Stage Manager** rings the **CS owner** (never the customer) with a ~60s closed-set line reading (1/2/3). The decision is **state** in the prompt book — and an **action intent** for the next system (ticket / CRM / Slack), not a chat ack.
 
 ---
 
@@ -17,8 +17,8 @@ When a named account hits a high-risk **cue**, **Stage Manager** rings the **CS 
 | | PagerDuty / Opsgenie-style page | Stage Manager |
 | --- | --- | --- |
 | Who | On-call engineer | **CS owner** of a named account |
-| Output | Acknowledge / escalate | **Closed-set CS decision** (take over, approve A/B, own ticket…) |
-| Audit | Incident timeline | Prompt book + show report |
+| Output | Acknowledge / escalate | **Closed-set CS decision** + **action intent** |
+| Audit | Incident timeline | Prompt book + show report + `data/actions/` |
 | Default | Live page | **Dress rehearsal** — live needs `--live` + `PLACES` |
 
 Lane check: awesome-list phone agents already cover deploy approvals; **B2B customer success / renewal** is still open.
@@ -37,10 +37,12 @@ cd customer-success-voice-signal-hackathon/skills/customer-success-voice-signal
 npm install
 npm test && npm run typecheck
 
-# Dress rehearsal — no ring, no CALL-E key
-npm run signal -- --fixture stuck_support_acme.json
-npm run signal -- --stdin < events/sample_stuck_support.json
-npm run signal -- --list
+# Inbound seam — webhook-shaped JSON (not fixtures-only)
+npm run signal -- --stdin < events/webhook_stuck_support.json
+
+# Decision → system handoff (POC — local receipt, no live CRM)
+npm run apply-action -- --last --dry-run
+npm run apply-action -- --last
 
 # Curtain-up — operator only
 # https://dashboard.heycall-e.com/account/api-keys
@@ -53,6 +55,8 @@ npm run signal -- --list
 | 0 | Ok |
 | 2 | HOLD (policy / live gate / house dark / owner budget) |
 | 3 | Failure |
+
+**Seam:** cue → phone decision → `data/actions/pending/*.json` → `apply-action` → local receipt. Adapters planned: Zendesk note · Salesforce task · Slack webhook. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
 **Safety:** CS owner only · dress rehearsal default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
 

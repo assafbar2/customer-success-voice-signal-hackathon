@@ -244,6 +244,7 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
         `Simulated line reading: ${result.option_id} — ${result.decision_label}`,
         `Prompt book: ${paths.promptBook}`,
         `Show report: ${paths.showReport}`,
+        paths.actionIntent ? `Action intent: ${paths.actionIntent}` : null,
         policy.note ? `Note: ${policy.note}` : null,
         `Call sheet phone (masked): ${maskPhone(owner.e164)}`,
       ]
@@ -397,6 +398,7 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
           `Prompt book: ${paths.promptBook}`,
           `Show report: ${paths.showReport}`,
           paths.cueHistory ? `Cue history: ${paths.cueHistory}` : null,
+          paths.actionIntent ? `Action intent: ${paths.actionIntent}` : null,
         ]
           .filter(Boolean)
           .join("\n"),

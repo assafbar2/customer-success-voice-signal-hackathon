@@ -4,6 +4,8 @@ import type { CallIntent, DecisionResult } from "../schemas.js";
 import type { RingMode } from "../policy/shouldRing.js";
 import { cueDedupeKey } from "../policy/shouldRing.js";
 import type { AccountEvent } from "../schemas.js";
+import { buildActionIntent } from "../action/mapDecisionToIntent.js";
+import { writeActionIntent } from "../action/store.js";
 
 export interface WritebackPaths {
   dataDir: string;
@@ -59,7 +61,7 @@ export async function appendPromptBook(
 export async function writeShowReport(
   dataDir: string,
   result: DecisionResult,
-  extras?: { preview?: string; note?: string },
+  extras?: { preview?: string; note?: string; actionIntentPath?: string | null },
 ): Promise<string> {
   const paths = resolveWritebackPaths(dataDir);
   await ensureDataDir(dataDir);
@@ -78,6 +80,7 @@ export async function writeShowReport(
     `| Decision | ${result.decision_label} (\`${result.decision}\`) |`,
     `| Call run | ${result.call_run_id ?? "—"} |`,
     `| HOLD | ${result.hold_reason ?? "—"} |`,
+    `| Action intent | ${extras?.actionIntentPath ? `\`${extras.actionIntentPath}\`` : "—"} |`,
     "",
     extras?.preview ? `### Call sheet preview\n\n\`\`\`\n${extras.preview}\n\`\`\`\n` : "",
     extras?.note ? `> ${extras.note}\n` : "",
@@ -176,7 +179,12 @@ export async function writeback(args: {
   result: DecisionResult;
   preview?: string;
   note?: string;
-}): Promise<{ promptBook: string; showReport: string; cueHistory: string | null }> {
+}): Promise<{
+  promptBook: string;
+  showReport: string;
+  cueHistory: string | null;
+  actionIntent: string | null;
+}> {
   const at = new Date().toISOString();
   const promptBook = await appendPromptBook(args.dataDir, {
     at,
@@ -184,9 +192,21 @@ export async function writeback(args: {
     intent: args.intent,
     result: args.result,
   });
+
+  let actionIntent: string | null = null;
+  const mapped = buildActionIntent({
+    event: args.event,
+    result: args.result,
+    mode: args.mode,
+  });
+  if (mapped) {
+    actionIntent = await writeActionIntent(args.dataDir, mapped);
+  }
+
   const showReport = await writeShowReport(args.dataDir, args.result, {
     preview: args.preview,
     note: args.note,
+    actionIntentPath: actionIntent,
   });
   // HOLD and provider failures must not poison dedupe.
   // Only confirmed dial outcomes (including no_answer/unclear after a call) record the cue key.
@@ -197,5 +217,5 @@ export async function writeback(args: {
   const cueHistory = await appendCueHistory(args.dataDir, args.event, args.mode, {
     recordDedupe,
   });
-  return { promptBook, showReport, cueHistory };
+  return { promptBook, showReport, cueHistory, actionIntent };
 }

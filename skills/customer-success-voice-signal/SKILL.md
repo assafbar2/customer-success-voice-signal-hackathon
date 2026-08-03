@@ -20,6 +20,7 @@ When a **named account** hits a high-risk moment, the **Stage Manager** cues CAL
 | **Line readings** | Closed-set options 1 / 2 / 3. |
 | **Prompt book** | NDJSON audit (`data/prompt-book.ndjson`). |
 | **Show report** | Markdown writeback (`data/show-report.md`). |
+| **Action intent** | Decision → system handoff JSON (`data/actions/pending/`). Apply with `npm run apply-action`. |
 | **House dark** | Quiet hours. Enforced on curtain-up only. |
 | **HOLD** | Policy stop — exit code 2. |
 
@@ -32,8 +33,8 @@ npm test && npm run typecheck
 
 # Dress rehearsal (default — no secrets needed for dial)
 npm run signal -- --fixture stuck_support_acme.json
-npm run signal -- --fixture agent_needs_decision_acme.json
-npm run signal -- --stdin < events/sample_stuck_support.json
+npm run signal -- --stdin < events/webhook_stuck_support.json
+npm run apply-action -- --last --dry-run
 npm run signal -- --list
 npm run signal -- --last
 ```
@@ -87,3 +88,4 @@ Read [references/safety.md](references/safety.md).
 - Prompt book: `data/prompt-book.ndjson`  
 - Show report: `data/show-report.md`  
 - Cue history (live dial outcomes only): `data/cue-history.ndjson`  
+- Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))  
