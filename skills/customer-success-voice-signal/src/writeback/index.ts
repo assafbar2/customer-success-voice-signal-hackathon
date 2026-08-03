@@ -97,14 +97,17 @@ export async function writeShowReport(
 /**
  * Append cue-history for dedupe.
  * Dress rehearsal does NOT append (so demos re-run).
- * Curtain-up does.
+ * Curtain-up HOLDs (live gate, house dark, placeholder, etc.) must NOT append —
+ * only dial attempts / completed live cues poison the dedupe key.
  */
 export async function appendCueHistory(
   dataDir: string,
   event: AccountEvent,
   mode: RingMode,
+  opts?: { recordDedupe?: boolean },
 ): Promise<string | null> {
   if (mode !== "curtain_up") return null;
+  if (opts?.recordDedupe === false) return null;
   const paths = resolveWritebackPaths(dataDir);
   await ensureDataDir(dataDir);
   const line = JSON.stringify({
@@ -160,6 +163,11 @@ export async function writeback(args: {
     preview: args.preview,
     note: args.note,
   });
-  const cueHistory = await appendCueHistory(args.dataDir, args.event, args.mode);
+  // HOLD must not poison dedupe — only live dial outcomes record the cue key.
+  const recordDedupe =
+    args.result.option_id !== "hold" && args.result.decision !== "hold";
+  const cueHistory = await appendCueHistory(args.dataDir, args.event, args.mode, {
+    recordDedupe,
+  });
   return { promptBook, showReport, cueHistory };
 }

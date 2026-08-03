@@ -118,15 +118,95 @@ describe("policy matrix", () => {
     expect(result.reason).toBe("already_cued");
   });
 
-  it("enforceHouseDark overnight window", () => {
-    expect(enforceHouseDark(new Date("2026-08-01T23:00:00"), { start: "22:00", end: "07:00" })).toBe(true);
-    expect(enforceHouseDark(new Date("2026-08-01T03:00:00"), { start: "22:00", end: "07:00" })).toBe(true);
-    expect(enforceHouseDark(new Date("2026-08-01T12:00:00"), { start: "22:00", end: "07:00" })).toBe(false);
+  it("enforceHouseDark overnight window (UTC)", () => {
+    expect(
+      enforceHouseDark(new Date("2026-08-01T23:00:00.000Z"), {
+        start: "22:00",
+        end: "07:00",
+        timezone: "UTC",
+      }),
+    ).toBe(true);
+    expect(
+      enforceHouseDark(new Date("2026-08-01T03:00:00.000Z"), {
+        start: "22:00",
+        end: "07:00",
+        timezone: "UTC",
+      }),
+    ).toBe(true);
+    expect(
+      enforceHouseDark(new Date("2026-08-01T12:00:00.000Z"), {
+        start: "22:00",
+        end: "07:00",
+        timezone: "UTC",
+      }),
+    ).toBe(false);
+  });
+
+  it("house dark uses owner timezone, not machine-local", () => {
+    // 06:30 UTC = 23:30 previous evening in America/Los_Angeles (PDT)
+    const utcMorning = new Date("2026-08-02T06:30:00.000Z");
+    const liveLa = shouldRing({
+      event,
+      owner: { ...event.cs_owner, e164: "+14155552671" },
+      mode: "curtain_up",
+      now: utcMorning,
+      houseDark: {
+        start: "22:00",
+        end: "07:00",
+        timezone: "America/Los_Angeles",
+      },
+    });
+    expect(liveLa.hold).toBe(true);
+    expect(liveLa.reason).toBe("house_dark");
+    expect(liveLa.note).toMatch(/America\/Los_Angeles/);
+
+    // Same instant in Tokyo (15:30) is outside 22:00–07:00
+    const liveTokyo = shouldRing({
+      event,
+      owner: { ...event.cs_owner, e164: "+14155552671" },
+      mode: "curtain_up",
+      now: utcMorning,
+      houseDark: {
+        start: "22:00",
+        end: "07:00",
+        timezone: "Asia/Tokyo",
+      },
+    });
+    expect(liveTokyo.ring).toBe(true);
+    expect(liveTokyo.hold).toBe(false);
+  });
+
+  it("invalid house-dark timezone fails closed on curtain-up", () => {
+    const result = shouldRing({
+      event,
+      owner: { ...event.cs_owner, e164: "+14155552671" },
+      mode: "curtain_up",
+      now: new Date("2026-08-01T15:00:00.000Z"),
+      houseDark: {
+        start: "22:00",
+        end: "07:00",
+        timezone: "Not/A_Real_Zone",
+      },
+    });
+    expect(result.hold).toBe(true);
+    expect(result.reason).toBe("house_dark");
   });
 
   it("detects placeholder phones", () => {
     expect(isPlaceholderPhone("+15555550100")).toBe(true);
     expect(isPlaceholderPhone("+14155552671")).toBe(false);
+  });
+});
+
+describe("normalize — stdin event shape", () => {
+  it("accepts AccountEvent JSON without fixture_id", () => {
+    const sample = JSON.parse(
+      readFileSync(path.join(root, "events/sample_stuck_support.json"), "utf8"),
+    );
+    const event = normalizeEvent(sample);
+    expect(event.event_id).toBe("evt_sample_stuck_support_001");
+    expect(event.trigger_id).toBe("stuck_support");
+    expect(event.metadata.source).toBe("stdin_sample");
   });
 });
 

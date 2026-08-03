@@ -122,6 +122,10 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
     houseDark: {
       start: args.env.houseDarkStart,
       end: args.env.houseDarkEnd,
+      timezone:
+        args.env.houseDarkTimezone ||
+        owner.quiet_hours?.timezone ||
+        undefined,
     },
     recentCueKeys: recent,
     dedupeMinutes: args.env.dedupeMinutes,

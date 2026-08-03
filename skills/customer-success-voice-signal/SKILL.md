@@ -33,6 +33,7 @@ npm test && npm run typecheck
 # Dress rehearsal (default — no secrets needed for dial)
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --fixture agent_needs_decision_acme.json
+npm run signal -- --stdin < events/sample_stuck_support.json
 npm run signal -- --list
 npm run signal -- --last
 ```
@@ -54,7 +55,7 @@ Details: [references/auth-and-keys.md](references/auth-and-keys.md).
 | --- | --- |
 | 0 | Ok — dress rehearsal or curtain-up completed |
 | 2 | HOLD — policy / live gate / house dark / placeholder |
-| 3 | Failure — bad fixture, missing key, CALL-E error |
+| 3 | Failure — bad cue, missing key, CALL-E error |
 
 ## When to use
 
@@ -77,11 +78,11 @@ Read [references/safety.md](references/safety.md).
 - Callee is **CS owner only**  
 - Fixture phones (`+15555550100`) rejected on curtain-up  
 - `CS_OWNER_E164` overrides owner phone on live  
-- House dark on curtain-up only  
-- Dress rehearsal does **not** append cue-history  
+- House dark on curtain-up only (timezone-aware)  
+- Cue-history only after a live dial — HOLD does not poison dedupe  
 
 ## Writeback
 
 - Prompt book: `data/prompt-book.ndjson`  
 - Show report: `data/show-report.md`  
-- Cue history (curtain-up only): `data/cue-history.ndjson`  
+- Cue history (live dial outcomes only): `data/cue-history.ndjson`  

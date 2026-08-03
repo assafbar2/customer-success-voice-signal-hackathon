@@ -7,9 +7,19 @@ import {
 } from "../schemas.js";
 
 /**
- * Normalize a raw cue (fixture or webhook payload) into a typed AccountEvent.
+ * Normalize a raw cue (fixture, stdin event, or webhook payload) into a typed AccountEvent.
+ * Accepts either fixture shape (`fixture_id`) or event shape (`event_id`).
  */
 export function normalizeEvent(raw: unknown): AccountEvent {
+  if (raw && typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    if (typeof obj.event_id === "string" && obj.event_id.length > 0 && !obj.fixture_id) {
+      return AccountEventSchema.parse({
+        ...obj,
+        metadata: obj.metadata ?? {},
+      });
+    }
+  }
   const fixture = RawFixtureSchema.parse(raw);
   return toAccountEvent(fixture);
 }

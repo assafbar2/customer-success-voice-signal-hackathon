@@ -43,6 +43,7 @@ export interface SkillEnv {
   signalConfirm: string;
   houseDarkStart: string;
   houseDarkEnd: string;
+  houseDarkTimezone: string;
   dedupeMinutes: number;
   slackWebhookUrl: string;
   dataDir: string;
@@ -62,6 +63,7 @@ export function readSkillEnv(): SkillEnv {
     signalConfirm: process.env.SIGNAL_CONFIRM?.trim() ?? "",
     houseDarkStart: process.env.HOUSE_DARK_START?.trim() || "22:00",
     houseDarkEnd: process.env.HOUSE_DARK_END?.trim() || "07:00",
+    houseDarkTimezone: process.env.HOUSE_DARK_TIMEZONE?.trim() ?? "",
     dedupeMinutes: Number(process.env.DEDUPE_MINUTES ?? "120") || 120,
     slackWebhookUrl: process.env.SLACK_WEBHOOK_URL?.trim() ?? "",
     dataDir: dataDirRaw

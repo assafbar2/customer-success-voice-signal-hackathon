@@ -20,7 +20,7 @@
       <span class="nav__mark">CS Voice Signal</span>
       <div class="nav__links">
         <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon">GitHub</a>
-        <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/cursor/stage-manager-skill-4ac1/skills/customer-success-voice-signal">Skill</a>
+        <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/skills/customer-success-voice-signal">Skill</a>
         <a class="nav__cta" href="#run">Run it</a>
       </div>
     </nav>
@@ -33,7 +33,7 @@
         Sixty seconds. Line reading 1 / 2 / 3. Prompt book updated.
       </p>
       <div class="hero__actions">
-        <a class="btn btn--primary" href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/cursor/stage-manager-skill-4ac1/skills/customer-success-voice-signal">Open the skill</a>
+        <a class="btn btn--primary" href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/skills/customer-success-voice-signal">Open the skill</a>
         <a class="btn btn--ghost" href="#run">Judge quick start</a>
       </div>
     </div>
@@ -56,7 +56,7 @@
       <div class="wrap">
         <h2>One engine. Four cues.</h2>
         <ol class="flow">
-          <li><strong>Cue</strong> arrives (fixture or event)</li>
+          <li><strong>Cue</strong> arrives (fixture, stdin event, or webhook-shaped JSON)</li>
           <li><strong>Call sheet</strong> — owned? severity? house dark?</li>
           <li><strong>Dress rehearsal</strong> by default — or <strong>curtain up</strong></li>
           <li><strong>Line reading</strong> 1 / 2 / 3 on the CS phone</li>
@@ -64,7 +64,7 @@
         </ol>
         <div class="cues">
           <article><h3>stuck_support</h3><p>Bot laps. No resolution. Hero / SE / snooze.</p></article>
-          <article><h3>agent_needs_decision</h3><p>Policy gate. Approve A, B, or kill the scene.</p></article>
+          <article><h3>agent_needs_decision</h3><p>Policy gate. Approve A, approve B, or escalate.</p></article>
           <article><h3>sla_risk</h3><p>Breach window. Own it / page backup / hold.</p></article>
           <article><h3>health_onboarding</h3><p>Silent stall. Tech rehearsal / wings / producer.</p></article>
         </div>
@@ -82,6 +82,7 @@ npm install
 # Dress rehearsal — default, no ring
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --fixture agent_needs_decision_acme.json
+npm run signal -- --stdin &lt; events/sample_stuck_support.json
 npm run signal -- --list
 
 # Curtain up — real CALL-E (operator only)
@@ -94,12 +95,16 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES</code></pre>
 
     <section class="band">
       <div class="wrap proven">
-        <h2>Already rung. Already decided.</h2>
+        <h2>Operator-proven live cues</h2>
         <ul>
-          <li><code>stuck_support</code> live → <strong>1</strong> Take over in chat</li>
-          <li><code>agent_needs_decision</code> live → <strong>1</strong> Approve A (exception)</li>
+          <li><code>stuck_support</code> curtain-up → line reading <strong>1</strong> (take over in chat)</li>
+          <li><code>agent_needs_decision</code> curtain-up → line reading <strong>1</strong> (approve A)</li>
         </ul>
-        <p>Callee is always the CS owner. Customer never gets this call.</p>
+        <p>
+          Callee is always the CS owner. Customer never gets this call.
+          Redacted prompt-book + show-report samples:
+          <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon/tree/main/submission/evidence">submission/evidence</a>.
+        </p>
       </div>
     </section>
   </main>

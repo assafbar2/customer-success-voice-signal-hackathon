@@ -12,6 +12,7 @@ const EXIT_FAILURE = 3;
 interface CliArgs {
   fixture?: string;
   trigger?: string;
+  stdin: boolean;
   live: boolean;
   dryRun: boolean;
   places: boolean;
@@ -29,11 +30,13 @@ Cue the CS owner (never the customer) when a named account hits a high-risk mome
 Usage:
   npm run signal -- --fixture <file> [options]
   npm run signal -- --trigger <id> [options]
+  npm run signal -- --stdin < events/sample_stuck_support.json
   npm run dry-run -- --fixture <file>
 
 Dress rehearsal (default — no ring, no CALLE key):
   npm run signal -- --fixture stuck_support_acme.json
   npm run signal -- --fixture agent_needs_decision_acme.json
+  npm run signal -- --stdin < events/sample_stuck_support.json
   npm run signal -- --list
   npm run signal -- --last
 
@@ -44,6 +47,7 @@ Curtain-up (real phone — needs .env + PLACES):
 Options:
   --fixture <file>   Cue under fixtures/ (e.g. stuck_support_acme.json)
   --trigger <id>     Pick first fixture for this trigger_id
+  --stdin            Read one JSON cue/event from stdin (not fixtures-only)
   --live             Request curtain-up (still needs PLACES)
   --dry-run          Force dress rehearsal
   PLACES             Live gate confirm (or SIGNAL_CONFIRM=PLACES)
@@ -55,16 +59,18 @@ Options:
 Exit codes:
   0  ok (dress rehearsal or curtain-up)
   2  HOLD (policy / live gate / house dark / placeholder phone)
-  3  failure (bad fixture, missing key, CALL-E error)
+  3  failure (bad cue, missing key, CALL-E error)
 
 Modes:
   Dress rehearsal  Default. No ring. Does not append cue-history.
   Curtain up       --live AND PLACES. Rings CS_OWNER_E164 via CALL-E.
+  Cue-history      Appended only after a live dial outcome — HOLD never poisons dedupe.
 `);
 }
 
 function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = {
+    stdin: false,
     live: false,
     dryRun: false,
     places: false,
@@ -81,6 +87,7 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--list") args.list = true;
     else if (a === "--last") args.last = true;
+    else if (a === "--stdin") args.stdin = true;
     else if (a === "--verbose" || a === "-v") args.verbose = true;
     else if (a === "PLACES" || a === "--places") args.places = true;
     else if (a === "--fixture" || a === "-f") {
@@ -144,6 +151,18 @@ async function loadFixture(name: string): Promise<unknown> {
   return JSON.parse(text);
 }
 
+async function readStdinJson(): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  const text = Buffer.concat(chunks).toString("utf8").trim();
+  if (!text) {
+    throw new Error("stdin was empty — pipe a JSON cue/event");
+  }
+  return JSON.parse(text);
+}
+
 async function main(): Promise<void> {
   loadDotEnv();
   const env = readSkillEnv();
@@ -164,37 +183,51 @@ async function main(): Promise<void> {
     process.exit(EXIT_OK);
   }
 
-  if (!args.fixture) {
-    // If --trigger only, pick first matching fixture
-    if (args.trigger) {
-      const dir = path.join(SKILL_ROOT, "fixtures");
-      const files = (await readdir(dir)).filter((f) => f.endsWith(".json"));
-      for (const f of files) {
-        const raw = JSON.parse(await readFile(path.join(dir, f), "utf8")) as {
-          trigger_id?: string;
-        };
-        if (raw.trigger_id === args.trigger) {
-          args.fixture = f;
-          break;
+  let raw: unknown | undefined;
+
+  if (args.stdin) {
+    try {
+      raw = await readStdinJson();
+    } catch (err) {
+      console.error(
+        `Failure: cannot read stdin cue — ${err instanceof Error ? err.message : String(err)}`,
+      );
+      process.exit(EXIT_FAILURE);
+    }
+  } else {
+    if (!args.fixture) {
+      // If --trigger only, pick first matching fixture
+      if (args.trigger) {
+        const dir = path.join(SKILL_ROOT, "fixtures");
+        const files = (await readdir(dir)).filter((f) => f.endsWith(".json"));
+        for (const f of files) {
+          const parsed = JSON.parse(await readFile(path.join(dir, f), "utf8")) as {
+            trigger_id?: string;
+          };
+          if (parsed.trigger_id === args.trigger) {
+            args.fixture = f;
+            break;
+          }
         }
       }
     }
-  }
 
-  if (!args.fixture) {
-    console.error("Stage Manager needs a cue. Pass --fixture <file> or --list.");
-    printHelp();
-    process.exit(EXIT_FAILURE);
-  }
+    if (!args.fixture) {
+      console.error(
+        "Stage Manager needs a cue. Pass --fixture <file>, --stdin, or --list.",
+      );
+      printHelp();
+      process.exit(EXIT_FAILURE);
+    }
 
-  let raw: unknown;
-  try {
-    raw = await loadFixture(args.fixture);
-  } catch (err) {
-    console.error(
-      `Failure: cannot read fixture — ${err instanceof Error ? err.message : String(err)}`,
-    );
-    process.exit(EXIT_FAILURE);
+    try {
+      raw = await loadFixture(args.fixture);
+    } catch (err) {
+      console.error(
+        `Failure: cannot read fixture — ${err instanceof Error ? err.message : String(err)}`,
+      );
+      process.exit(EXIT_FAILURE);
+    }
   }
 
   const outcome = await runSignal({

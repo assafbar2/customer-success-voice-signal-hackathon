@@ -16,8 +16,8 @@ export interface ShouldRingInput {
   owner: CsOwner;
   now?: Date;
   mode: RingMode;
-  /** Curtain-up only: house dark from env (overrides owner quiet hours when set). */
-  houseDark?: { start: string; end: string };
+  /** House dark window (env and/or owner quiet hours). */
+  houseDark?: HouseDarkWindow;
   recentCueKeys?: Set<string>;
   dedupeMinutes?: number;
 }
@@ -59,15 +59,48 @@ export function maskPhone(e164: string): string {
   return `${e164.slice(0, 3)}***${e164.slice(-2)}`;
 }
 
+export interface HouseDarkWindow {
+  start: string;
+  end: string;
+  /** IANA timezone (e.g. America/Los_Angeles). Omit to use process-local time. */
+  timezone?: string;
+}
+
+/**
+ * Minutes since midnight in the given timezone (or local if unset).
+ * Invalid timezone → null (caller should fail closed on curtain-up).
+ */
+export function minutesInTimezone(now: Date, timezone?: string): number | null {
+  if (!timezone) {
+    return now.getHours() * 60 + now.getMinutes();
+  }
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      hour: "numeric",
+      minute: "numeric",
+      hourCycle: "h23",
+    }).formatToParts(now);
+    const hourRaw = Number(parts.find((p) => p.type === "hour")?.value ?? NaN);
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? NaN);
+    if (!Number.isFinite(hourRaw) || !Number.isFinite(minute)) return null;
+    const hour = hourRaw === 24 ? 0 : hourRaw;
+    return hour * 60 + minute;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * House dark = quiet hours. Enforced only on curtain-up.
  * Dress rehearsal may run at night with a note.
+ * When timezone is set, evaluate the window in that zone (not machine-local).
+ * Invalid timezone → treated as house dark (fail closed).
  */
-export function enforceHouseDark(
-  now: Date,
-  window: { start: string; end: string },
-): boolean {
-  const minutes = now.getHours() * 60 + now.getMinutes();
+export function enforceHouseDark(now: Date, window: HouseDarkWindow): boolean {
+  const minutes = minutesInTimezone(now, window.timezone);
+  if (minutes === null) return true;
+
   const [sh, sm] = window.start.split(":").map(Number);
   const [eh, em] = window.end.split(":").map(Number);
   const start = sh * 60 + sm;
@@ -132,15 +165,20 @@ export function shouldRing(input: ShouldRingInput): ShouldRingResult {
     const houseDark =
       input.houseDark ??
       (owner.quiet_hours
-        ? { start: owner.quiet_hours.start, end: owner.quiet_hours.end }
+        ? {
+            start: owner.quiet_hours.start,
+            end: owner.quiet_hours.end,
+            timezone: owner.quiet_hours.timezone,
+          }
         : undefined);
 
     if (houseDark && enforceHouseDark(now, houseDark)) {
+      const tz = houseDark.timezone ? ` ${houseDark.timezone}` : "";
       return {
         ring: false,
         hold: true,
         reason: "house_dark",
-        note: `House dark (${houseDark.start}–${houseDark.end}). HOLD the live cue.`,
+        note: `House dark (${houseDark.start}–${houseDark.end}${tz}). HOLD the live cue.`,
       };
     }
   } else {
@@ -148,13 +186,18 @@ export function shouldRing(input: ShouldRingInput): ShouldRingResult {
     const houseDark =
       input.houseDark ??
       (owner.quiet_hours
-        ? { start: owner.quiet_hours.start, end: owner.quiet_hours.end }
+        ? {
+            start: owner.quiet_hours.start,
+            end: owner.quiet_hours.end,
+            timezone: owner.quiet_hours.timezone,
+          }
         : undefined);
     if (houseDark && enforceHouseDark(now, houseDark)) {
+      const tz = houseDark.timezone ? ` ${houseDark.timezone}` : "";
       return {
         ring: true,
         hold: false,
-        note: `Dress rehearsal during house dark (${houseDark.start}–${houseDark.end}) — no live ring.`,
+        note: `Dress rehearsal during house dark (${houseDark.start}–${houseDark.end}${tz}) — no live ring.`,
       };
     }
   }

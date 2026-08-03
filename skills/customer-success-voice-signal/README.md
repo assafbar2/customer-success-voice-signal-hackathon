@@ -16,6 +16,7 @@ npm test && npm run typecheck
 # Dress rehearsal — no ring, no CALL-E key
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --fixture agent_needs_decision_acme.json
+npm run signal -- --stdin < events/sample_stuck_support.json
 npm run signal -- --list
 npm run signal -- --last
 ```
@@ -34,14 +35,14 @@ npm run signal -- --last
 | --- | --- |
 | 0 | Ok — dress rehearsal or curtain-up completed |
 | 2 | HOLD — policy / live gate / house dark / placeholder phone |
-| 3 | Failure — bad fixture, missing key, CALL-E error |
+| 3 | Failure — bad cue, missing key, CALL-E error |
 
 ### Safety
 
 - CS owner only; fixture phones (`+1555555…`) rejected on live  
 - Curtain-up needs `--live` **and** `PLACES`  
-- House dark enforced on live only  
-- Dress rehearsal does not append cue-history  
+- House dark enforced on live only (owner/env timezone-aware)  
+- Cue-history appends only after a live dial outcome — HOLD never poisons dedupe  
 
 See [references/safety.md](references/safety.md) · [SKILL.md](SKILL.md).
 
@@ -59,6 +60,7 @@ See [references/safety.md](references/safety.md) · [SKILL.md](SKILL.md).
 ```text
 --fixture <file>   Cue under fixtures/
 --trigger <id>     First fixture matching trigger_id
+--stdin            Read one JSON cue/event from stdin
 --live             Request curtain-up (needs PLACES)
 --dry-run          Force dress rehearsal
 PLACES             Live gate (or SIGNAL_CONFIRM=PLACES)
@@ -76,3 +78,7 @@ PLACES             Live gate (or SIGNAL_CONFIRM=PLACES)
 | `agent_needs_decision` | `agent_needs_decision_acme.json` | Second demo cue |
 | `sla_risk` | `sla_risk_globex.json` | First-class |
 | `health_onboarding` | `health_onboarding_initech.json` | First-class |
+
+Sample non-fixture event: `events/sample_stuck_support.json` (pipe with `--stdin`).
+
+Operator-proven redacted evidence: [`submission/evidence/`](../../submission/evidence/).
