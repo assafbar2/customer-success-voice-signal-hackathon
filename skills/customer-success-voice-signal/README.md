@@ -15,8 +15,11 @@ npm test && npm run typecheck
 
 # Dress rehearsal — no ring, no CALL-E key
 npm run signal -- --fixture stuck_support_acme.json
-npm run signal -- --fixture agent_needs_decision_acme.json
-npm run signal -- --stdin < events/sample_stuck_support.json
+npm run signal -- --stdin < events/webhook_stuck_support.json
+
+# Decision → action intent → dry-run apply (no live CRM)
+npm run apply-action -- --last --dry-run
+npm run apply-action -- --last
 npm run signal -- --list
 npm run signal -- --last
 ```
@@ -27,7 +30,7 @@ npm run signal -- --last
 2. API key: **https://dashboard.heycall-e.com/account/api-keys**
 3. Set `CALLE_API_KEY`, `CS_OWNER_E164`, `SIGNAL_CONFIRM=PLACES`
 4. Run: `npm run signal -- --fixture stuck_support_acme.json --live PLACES`
-5. Check `data/prompt-book.ndjson` and `data/show-report.md`
+5. Check `data/prompt-book.ndjson`, `data/show-report.md`, and `data/actions/pending/`
 
 ### Exit codes
 
@@ -45,13 +48,14 @@ npm run signal -- --last
 - Per-owner call budget (default 2 live dials / window)  
 - Cue-history appends only after a live dial outcome — HOLD never poisons dedupe  
 
-See [references/safety.md](references/safety.md) · [SKILL.md](SKILL.md).
+See [references/safety.md](references/safety.md) · [references/action-intents.md](references/action-intents.md) · [SKILL.md](SKILL.md).
 
 ## Scripts
 
 | Script | What |
 | --- | --- |
 | `npm run signal -- …` | Stage Manager CLI |
+| `npm run apply-action -- …` | Apply/dry-run pending action intent (POC) |
 | `npm run dry-run -- …` | Force dress rehearsal |
 | `npm test` | Vitest (no real calls) |
 | `npm run typecheck` | `tsc --noEmit` |
