@@ -115,6 +115,7 @@ export async function appendCueHistory(
     key: cueDedupeKey(event),
     trigger_id: event.trigger_id,
     account_id: event.account.id,
+    cs_owner_id: event.cs_owner.id,
     event_id: event.event_id,
   });
   await appendFile(paths.cueHistory, `${line}\n`, "utf8");
@@ -143,6 +144,30 @@ export async function loadRecentCueKeys(
   return keys;
 }
 
+/** Count live dials to one CS owner inside the dedupe window. */
+export async function loadRecentOwnerRingCount(
+  dataDir: string,
+  csOwnerId: string,
+  dedupeMinutes: number,
+  now = new Date(),
+): Promise<number> {
+  const paths = resolveWritebackPaths(dataDir);
+  const raw = await readFile(paths.cueHistory, "utf8").catch(() => "");
+  const cutoff = now.getTime() - dedupeMinutes * 60_000;
+  let count = 0;
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const row = JSON.parse(line) as { at?: string; cs_owner_id?: string };
+      if (!row.at || row.cs_owner_id !== csOwnerId) continue;
+      if (new Date(row.at).getTime() >= cutoff) count += 1;
+    } catch {
+      // skip bad lines
+    }
+  }
+  return count;
+}
+
 export async function writeback(args: {
   dataDir: string;
   mode: RingMode;
@@ -163,9 +188,12 @@ export async function writeback(args: {
     preview: args.preview,
     note: args.note,
   });
-  // HOLD must not poison dedupe — only live dial outcomes record the cue key.
+  // HOLD and provider failures must not poison dedupe.
+  // Only confirmed dial outcomes (including no_answer/unclear after a call) record the cue key.
   const recordDedupe =
-    args.result.option_id !== "hold" && args.result.decision !== "hold";
+    args.result.option_id !== "hold" &&
+    args.result.decision !== "hold" &&
+    args.result.decision !== "failure";
   const cueHistory = await appendCueHistory(args.dataDir, args.event, args.mode, {
     recordDedupe,
   });

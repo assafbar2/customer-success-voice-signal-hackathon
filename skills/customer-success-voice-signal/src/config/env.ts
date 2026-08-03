@@ -39,13 +39,13 @@ export interface SkillEnv {
   csOwnerE164: string;
   csOwnerName: string;
   csOwnerId: string;
-  liveCall: boolean;
   signalConfirm: string;
+  /** Explicit only — empty means unset (do not treat as default). */
   houseDarkStart: string;
   houseDarkEnd: string;
   houseDarkTimezone: string;
   dedupeMinutes: number;
-  slackWebhookUrl: string;
+  ownerMaxRings: number;
   dataDir: string;
 }
 
@@ -59,13 +59,13 @@ export function readSkillEnv(): SkillEnv {
     csOwnerE164: process.env.CS_OWNER_E164?.trim() ?? "",
     csOwnerName: process.env.CS_OWNER_NAME?.trim() ?? "",
     csOwnerId: process.env.CS_OWNER_ID?.trim() ?? "",
-    liveCall: /^(1|true|yes)$/i.test(process.env.LIVE_CALL?.trim() ?? ""),
     signalConfirm: process.env.SIGNAL_CONFIRM?.trim() ?? "",
-    houseDarkStart: process.env.HOUSE_DARK_START?.trim() || "22:00",
-    houseDarkEnd: process.env.HOUSE_DARK_END?.trim() || "07:00",
+    // Empty string when unset — resolveHouseDarkWindow distinguishes explicit vs default
+    houseDarkStart: process.env.HOUSE_DARK_START?.trim() ?? "",
+    houseDarkEnd: process.env.HOUSE_DARK_END?.trim() ?? "",
     houseDarkTimezone: process.env.HOUSE_DARK_TIMEZONE?.trim() ?? "",
     dedupeMinutes: Number(process.env.DEDUPE_MINUTES ?? "120") || 120,
-    slackWebhookUrl: process.env.SLACK_WEBHOOK_URL?.trim() ?? "",
+    ownerMaxRings: Number(process.env.OWNER_MAX_RINGS ?? "2") || 2,
     dataDir: dataDirRaw
       ? path.isAbsolute(dataDirRaw)
         ? dataDirRaw

@@ -1,22 +1,30 @@
-# Status
+# Status (operator log)
 
 | Field | Value |
 | --- | --- |
-| Last update | 2026-08-01 |
-| Branch | **`main`** (PR #1 merged) |
-| Devpost | Registered |
-| Product | **`customer-success-voice-signal`** — Stage Manager |
-| Live cues | `stuck_support` → 1 · `agent_needs_decision` → 1 |
-| Judge site | GitHub Pages — enable Actions source → https://assafbar2.github.io/customer-success-voice-signal-hackathon/ |
-| Demo reel | `submission/demo-reel/stage-manager-demo.mp4` (~90s, **with AAC audio**) |
-| Video script | Approved — `submission/video-script.md` |
-| Hosting | **GitHub Pages only** (Vercel configs removed; delete any Vercel project in dashboard) |
-| Secrets | Local `.env` only — never commit |
+| Last update | 2026-08-03 |
+| Product | **Stage Manager** — skill id `customer-success-voice-signal` |
+| Judge site | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ (live) |
+| Hardening PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/3 |
+| Live ladder | `research/calle-api-notes.md` |
+| Evidence | `submission/evidence/` (redacted) |
 
-## Next
+## Live outcomes (honest)
 
-- [ ] Settings → Pages → Source: GitHub Actions (if not already)  
-- [ ] Delete accidental Vercel project in vercel.com/dashboard  
-- [ ] Upload demo reel / YouTube for Devpost  
-- [ ] PR to awesome-phone-call-agents  
-- [ ] Devpost submit + MVF survey  
+| Cue | Best curtain-up result | Also observed |
+| --- | --- | --- |
+| `stuck_support` | Decision **1** take over in chat | Prior voicemail → `no_answer` |
+| `agent_needs_decision` | Decision **1** approve A | Prior `unclear` (mapping) |
+
+## Submit checklist
+
+- [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`)
+- [ ] Devpost submit + MVF survey
+- [ ] Set GitHub repo homepage → Pages URL (not Vercel)
+- [ ] Demo video with real call audio (separate track)
+
+**Dated nudge:** `notes/REMINDER-2026-09-01.md`
+
+## Operator chores
+
+- Delete accidental Vercel project if it still exists in the dashboard

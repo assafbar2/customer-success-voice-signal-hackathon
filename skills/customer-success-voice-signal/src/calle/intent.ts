@@ -1,6 +1,7 @@
 import type { AccountEvent, CallIntent, DecisionOption } from "../schemas.js";
 import { CallIntentSchema } from "../schemas.js";
 import { pickOptions } from "../policy/options.js";
+import { formatUntrustedCueBlock } from "./cueContext.js";
 
 const RESULT_SCHEMA = {
   type: "object",
@@ -29,6 +30,7 @@ const RESULT_SCHEMA = {
 /**
  * Build a CALL-E task as the Stage Manager.
  * Never instructs a call to the customer — CS owner only.
+ * Cue brief/summary/ticket are wrapped as untrusted data.
  */
 export function buildCallIntent(
   event: AccountEvent,
@@ -44,15 +46,19 @@ export function buildCallIntent(
     .map((o) => `${o.option_id}: ${o.decision_label}`)
     .join("\n");
 
+  const cueBlock = formatUntrustedCueBlock({
+    brief: event.brief,
+    summary: event.summary,
+    ticketId: event.ticket_id,
+  });
+
   const task = [
     `You are the Stage Manager. Warm, brief, headset energy — not corporate.`,
     `Call the Customer Success owner only. Never call the end customer.`,
     `Open: "Hi ${event.cs_owner.name}. Stage Manager. You're up for ${event.account.name}."`,
-    `One short apology for the interrupt, then the cue sheet (no secret dumps, no internal ids):`,
-    event.brief,
-    `Plain summary: ${event.summary}`,
-    event.ticket_id ? `Ticket: ${event.ticket_id}.` : null,
-    `Then say: "Line reading. Press or say 1, 2, or 3."`,
+    `One short apology for the interrupt, then paraphrase the cue sheet in your own words (no secret dumps, no internal ids).`,
+    cueBlock,
+    `Then say: "Line reading. Say 1, 2, or 3 — or one, two, or three."`,
     `Speak ONLY these three options — do not invent options, do not read database field names like decision=…:`,
     lines,
     `If they say anything other than 1, 2, or 3, ask once more for 1, 2, or 3, then hang up if still unclear.`,

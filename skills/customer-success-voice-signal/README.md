@@ -42,6 +42,7 @@ npm run signal -- --last
 - CS owner only; fixture phones (`+1555555…`) rejected on live  
 - Curtain-up needs `--live` **and** `PLACES`  
 - House dark enforced on live only (owner/env timezone-aware)  
+- Per-owner call budget (default 2 live dials / window)  
 - Cue-history appends only after a live dial outcome — HOLD never poisons dedupe  
 
 See [references/safety.md](references/safety.md) · [SKILL.md](SKILL.md).

@@ -8,6 +8,7 @@ export type HoldReason =
   | "severity_below_threshold"
   | "house_dark"
   | "already_cued"
+  | "owner_budget"
   | "placeholder_phone"
   | "live_gate_missing";
 
@@ -20,6 +21,10 @@ export interface ShouldRingInput {
   houseDark?: HouseDarkWindow;
   recentCueKeys?: Set<string>;
   dedupeMinutes?: number;
+  /** Recent live dials to this CS owner (curtain-up budget). */
+  recentOwnerRingCount?: number;
+  /** Max live dials per owner inside the dedupe window (default 2). */
+  ownerMaxRings?: number;
 }
 
 export interface ShouldRingResult {
@@ -149,6 +154,17 @@ export function shouldRing(input: ShouldRingInput): ShouldRingResult {
       hold: true,
       reason: "already_cued",
       note: "This cue was already rung recently (dedupe).",
+    };
+  }
+
+  const ownerMax = input.ownerMaxRings ?? 2;
+  const ownerRings = input.recentOwnerRingCount ?? 0;
+  if (mode === "curtain_up" && ownerRings >= ownerMax) {
+    return {
+      ring: false,
+      hold: true,
+      reason: "owner_budget",
+      note: `CS owner already received ${ownerRings} live cue(s) in the window (max ${ownerMax}). Keep the phone rare.`,
     };
   }
 

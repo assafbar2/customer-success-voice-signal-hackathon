@@ -7,11 +7,13 @@ import { buildCallIntent } from "./intent.js";
 import { pickOptions } from "../policy/options.js";
 import { toDecision } from "../map/toDecision.js";
 
-const createAndWait = vi.fn();
+const create = vi.fn();
+const waitForResult = vi.fn();
+const listEvents = vi.fn();
 
 vi.mock("@call-e/calle", () => ({
   CalleClient: class {
-    calls = { createAndWait };
+    calls = { create, waitForResult, listEvents };
     constructor(_opts: { apiKey: string; baseUrl?: string }) {
       void _opts;
     }
@@ -27,15 +29,26 @@ const fixture = JSON.parse(
 
 describe("curtainUp — mocked CALL-E", () => {
   beforeEach(() => {
-    createAndWait.mockReset();
+    create.mockReset();
+    waitForResult.mockReset();
+    listEvents.mockReset();
+    listEvents.mockResolvedValue({ object: "list", data: [], nextCursor: null });
   });
 
-  it("sends Stage Manager payload and maps structured result", async () => {
+  it("create → persist path → waitForResult with idempotency", async () => {
     const event = normalizeEvent(fixture);
     const options = pickOptions(event.trigger_id);
     const intent = buildCallIntent(event, "+14155552671", options);
 
-    createAndWait.mockResolvedValue({
+    create.mockResolvedValue({
+      id: "call_mock_1",
+      status: "queued",
+      summary: null,
+      taskCompleted: null,
+      structuredResult: null,
+      recipients: [],
+    });
+    waitForResult.mockResolvedValue({
       id: "call_mock_1",
       status: "completed",
       summary: null,
@@ -45,13 +58,7 @@ describe("curtainUp — mocked CALL-E", () => {
         decision: "take_over_chat",
         decision_label: "Take over in chat now",
       },
-      recipients: [
-        {
-          structuredResult: null,
-          summary: null,
-          attempts: [],
-        },
-      ],
+      recipients: [{ structuredResult: null, summary: null, attempts: [] }],
     });
 
     const { call, structured } = await curtainUp(intent, {
@@ -60,22 +67,24 @@ describe("curtainUp — mocked CALL-E", () => {
       locale: "en-US",
     });
 
-    expect(createAndWait).toHaveBeenCalledTimes(1);
-    const payload = createAndWait.mock.calls[0][0] as {
-      task: string;
-      recipients: Array<{ phones: string[] }>;
-      resultSchema: unknown;
-      metadata: Record<string, unknown>;
-    };
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(waitForResult).toHaveBeenCalledWith(
+      "call_mock_1",
+      expect.objectContaining({ timeoutMs: 600_000 }),
+    );
+    const [payload, opts] = create.mock.calls[0] as [
+      { task: string; recipients: Array<{ phones: string[] }>; metadata: Record<string, unknown> },
+      { idempotencyKey: string },
+    ];
     expect(payload.task).toMatch(/Stage Manager/);
+    expect(payload.task).toMatch(/Say 1, 2, or 3/);
+    expect(payload.task).not.toMatch(/Press/);
     expect(payload.recipients[0].phones).toEqual(["+14155552671"]);
     expect(payload.metadata).toMatchObject({
       skill: "customer-success-voice-signal",
-      persona: "Stage Manager",
       never_call_customer: true,
-      trigger_id: "stuck_support",
     });
-    expect(payload.resultSchema).toBeTruthy();
+    expect(opts.idempotencyKey).toMatch(/^csvs:stuck_support:acct_acme:/);
     expect(call.id).toBe("call_mock_1");
     expect(structured?.option_id).toBe("1");
 
@@ -88,23 +97,30 @@ describe("curtainUp — mocked CALL-E", () => {
       structured,
     });
     expect(decision.option_id).toBe("1");
-    expect(decision.decision).toBe("take_over_chat");
   });
 
-  it("surfaces CALL-E API failures without hanging", async () => {
+  it("surfaces wait failures with persisted call id in the message", async () => {
     const event = normalizeEvent(fixture);
     const intent = buildCallIntent(event, "+14155552671");
-    createAndWait.mockRejectedValue(new Error("CALL-E 401 unauthorized"));
+    create.mockResolvedValue({
+      id: "call_open_99",
+      status: "queued",
+      recipients: [],
+      structuredResult: null,
+      summary: null,
+      taskCompleted: null,
+    });
+    waitForResult.mockRejectedValue(new Error("timeout"));
 
-    await expect(
-      curtainUp(intent, { apiKey: "bad_key" }),
-    ).rejects.toThrow(/CALL-E 401/);
+    await expect(curtainUp(intent, { apiKey: "test_key" })).rejects.toThrow(
+      /call_open_99/,
+    );
   });
 
   it("rejects missing API key before dialing", async () => {
     const event = normalizeEvent(fixture);
     const intent = buildCallIntent(event, "+14155552671");
     await expect(curtainUp(intent, { apiKey: "" })).rejects.toThrow(/CALLE_API_KEY/);
-    expect(createAndWait).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
   });
 });

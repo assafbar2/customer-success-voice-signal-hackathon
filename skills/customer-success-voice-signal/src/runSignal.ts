@@ -8,10 +8,17 @@ import {
   shouldRing,
   type RingMode,
 } from "./policy/shouldRing.js";
+import { resolveHouseDarkWindow } from "./policy/houseDark.js";
+import {
+  releaseCueReservation,
+  reserveCue,
+  type CueReservation,
+} from "./policy/cueLock.js";
 import { buildCallIntent } from "./calle/intent.js";
 import { curtainUp } from "./calle/client.js";
+import { categorizeCalleError } from "./calle/errors.js";
 import { previewIntentSummary, toDecision } from "./map/toDecision.js";
-import { loadRecentCueKeys, writeback } from "./writeback/index.js";
+import { loadRecentCueKeys, loadRecentOwnerRingCount, writeback } from "./writeback/index.js";
 import type { AccountEvent, CallIntent, DecisionResult, CsOwner } from "./schemas.js";
 import { CsOwnerSchema } from "./schemas.js";
 
@@ -25,6 +32,8 @@ export interface RunSignalArgs {
   dryRunFlag: boolean;
   verbose?: boolean;
   log?: (msg: string) => void;
+  /** Injectable curtain-up for tests (defaults to real client). */
+  dial?: typeof curtainUp;
 }
 
 export interface RunSignalOutcome {
@@ -61,6 +70,7 @@ function resolveMode(args: RunSignalArgs): RingMode {
  */
 export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> {
   const log = args.log ?? (() => undefined);
+  const dial = args.dial ?? curtainUp;
   const mode = resolveMode(args);
 
   if (args.liveFlag && !args.dryRunFlag && mode === "dress_rehearsal") {
@@ -114,21 +124,63 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
     mode === "curtain_up"
       ? await loadRecentCueKeys(args.env.dataDir, args.env.dedupeMinutes)
       : new Set<string>();
+  const recentOwnerRings =
+    mode === "curtain_up"
+      ? await loadRecentOwnerRingCount(
+          args.env.dataDir,
+          owner.id,
+          args.env.dedupeMinutes,
+        )
+      : 0;
+
+  const houseResolved = resolveHouseDarkWindow({
+    envStart: args.env.houseDarkStart || undefined,
+    envEnd: args.env.houseDarkEnd || undefined,
+    envTimezone: args.env.houseDarkTimezone || undefined,
+    ownerQuietHours: owner.quiet_hours,
+  });
+
+  if (!houseResolved.ok && mode === "curtain_up") {
+    const options = event.option_set ?? pickOptions(event.trigger_id);
+    const intent = buildCallIntent({ ...event, cs_owner: owner }, owner.e164, options);
+    const preview = previewIntentSummary(intent);
+    const result = toDecision({
+      event,
+      intent,
+      options,
+      mode,
+      holdReason: "house_dark",
+    });
+    await writeback({
+      dataDir: args.env.dataDir,
+      mode,
+      event,
+      intent,
+      result,
+      preview,
+      note: houseResolved.reason,
+    });
+    return {
+      exit: "hold",
+      mode,
+      event,
+      intent,
+      result,
+      message: `HOLD (house_dark): ${houseResolved.reason}`,
+    };
+  }
+
+  const houseDark = houseResolved.ok ? houseResolved.window : undefined;
 
   const policy = shouldRing({
     event: { ...event, cs_owner: owner },
     owner,
     mode,
-    houseDark: {
-      start: args.env.houseDarkStart,
-      end: args.env.houseDarkEnd,
-      timezone:
-        args.env.houseDarkTimezone ||
-        owner.quiet_hours?.timezone ||
-        undefined,
-    },
+    houseDark,
     recentCueKeys: recent,
     dedupeMinutes: args.env.dedupeMinutes,
+    recentOwnerRingCount: recentOwnerRings,
+    ownerMaxRings: args.env.ownerMaxRings,
   });
 
   const options = event.option_set ?? pickOptions(event.trigger_id);
@@ -209,107 +261,182 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
   }
 
   // Curtain-up
+  let reservation: CueReservation | null = null;
   try {
-    requireLivePhone(owner.e164);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const result = toDecision({
-      event,
-      intent,
-      options,
-      mode,
-      holdReason: "placeholder_phone",
-    });
-    await writeback({
-      dataDir: args.env.dataDir,
-      mode,
-      event,
-      intent,
-      result,
-      preview,
-      note: msg,
-    });
-    return {
-      exit: "hold",
-      mode,
-      event,
-      intent,
-      result,
-      message: msg,
-    };
-  }
+    try {
+      requireLivePhone(owner.e164);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const result = toDecision({
+        event,
+        intent,
+        options,
+        mode,
+        holdReason: "placeholder_phone",
+      });
+      await writeback({
+        dataDir: args.env.dataDir,
+        mode,
+        event,
+        intent,
+        result,
+        preview,
+        note: msg,
+      });
+      return {
+        exit: "hold",
+        mode,
+        event,
+        intent,
+        result,
+        message: msg,
+      };
+    }
 
-  if (!args.env.calleApiKey) {
-    return {
-      exit: "failure",
-      mode,
-      event,
-      intent,
-      result: null,
-      message: "Failure: CALLE_API_KEY missing — cannot curtain-up.",
-    };
-  }
+    if (!args.env.calleApiKey) {
+      const result = toDecision({
+        event,
+        intent,
+        options,
+        mode,
+        failure: {
+          category: "authentication",
+          summary: "CALLE_API_KEY missing — cannot curtain-up.",
+        },
+      });
+      await writeback({
+        dataDir: args.env.dataDir,
+        mode,
+        event,
+        intent,
+        result,
+        preview,
+        note: "Pre-dial failure — cue-history not appended.",
+      });
+      return {
+        exit: "failure",
+        mode,
+        event,
+        intent,
+        result,
+        message: "Failure: CALLE_API_KEY missing — cannot curtain-up.",
+      };
+    }
 
-  log(`Curtain up — cueing CALL-E for ${maskPhone(owner.e164)} (CS owner only).`);
-  try {
-    const { call, structured } = await curtainUp(intent, {
-      apiKey: args.env.calleApiKey,
-      baseUrl: args.env.calleBaseUrl,
-      region: args.env.calleRegion,
-      locale: args.env.calleLocale,
-    });
-    const result = toDecision({
-      event,
-      intent,
-      options,
-      mode,
-      callRunId: call.id,
-      structured,
-      callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
-      taskCompleted: call.taskCompleted,
-      transcriptTexts: call.recipients[0]?.attempts?.[0]?.transcriptTurns
-        ?.filter((t) => t.speaker === "user")
-        .map((t) => t.text ?? "")
-        .filter(Boolean),
-    });
-    const paths = await writeback({
+    const reserved = await reserveCue({
       dataDir: args.env.dataDir,
-      mode,
       event,
-      intent,
-      result,
-      preview,
-      note: `Curtain-up complete. Dedupe key ${cueDedupeKey(event)}.`,
     });
-    log(
-      [
-        "=== Curtain up ===",
-        `Call run: ${call.id}`,
-        `Status: ${call.status}`,
-        `Decision: ${result.option_id} — ${result.decision_label}`,
-        `Prompt book: ${paths.promptBook}`,
-        `Show report: ${paths.showReport}`,
-        paths.cueHistory ? `Cue history: ${paths.cueHistory}` : null,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
-    return {
-      exit: "ok",
-      mode,
-      event,
-      intent,
-      result,
-      message: "Curtain-up complete — decision in the prompt book.",
-    };
-  } catch (err) {
-    return {
-      exit: "failure",
-      mode,
-      event,
-      intent,
-      result: null,
-      message: `Failure during curtain-up: ${err instanceof Error ? err.message : String(err)}`,
-    };
+    if (!reserved.ok) {
+      const result = toDecision({
+        event,
+        intent,
+        options,
+        mode,
+        holdReason: "already_cued",
+      });
+      await writeback({
+        dataDir: args.env.dataDir,
+        mode,
+        event,
+        intent,
+        result,
+        preview,
+        note: reserved.reason,
+      });
+      return {
+        exit: "hold",
+        mode,
+        event,
+        intent,
+        result,
+        message: `HOLD (already_cued): ${reserved.reason}`,
+      };
+    }
+    reservation = reserved.reservation;
+
+    log(`Curtain up — cueing CALL-E for ${maskPhone(owner.e164)} (CS owner only).`);
+    try {
+      const { call, structured } = await dial(intent, {
+        apiKey: args.env.calleApiKey,
+        baseUrl: args.env.calleBaseUrl,
+        region: args.env.calleRegion,
+        locale: args.env.calleLocale,
+        dataDir: args.env.dataDir,
+        onStatus: (msg) => log(msg),
+      });
+      const result = toDecision({
+        event,
+        intent,
+        options,
+        mode,
+        callRunId: call.id,
+        structured,
+        callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
+        taskCompleted: call.taskCompleted,
+        transcriptTexts: call.recipients[0]?.attempts?.[0]?.transcriptTurns
+          ?.filter((t) => t.speaker === "user")
+          .map((t) => t.text ?? "")
+          .filter(Boolean),
+      });
+      const paths = await writeback({
+        dataDir: args.env.dataDir,
+        mode,
+        event,
+        intent,
+        result,
+        preview,
+        note: `Curtain-up complete. Dedupe key ${cueDedupeKey(event)}.`,
+      });
+      log(
+        [
+          "=== Curtain up ===",
+          `Call run: ${call.id}`,
+          `Status: ${call.status}`,
+          `Decision: ${result.option_id} — ${result.decision_label}`,
+          `Prompt book: ${paths.promptBook}`,
+          `Show report: ${paths.showReport}`,
+          paths.cueHistory ? `Cue history: ${paths.cueHistory}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+      return {
+        exit: "ok",
+        mode,
+        event,
+        intent,
+        result,
+        message: "Curtain-up complete — decision in the prompt book.",
+      };
+    } catch (err) {
+      const { category, summary } = categorizeCalleError(err);
+      const result = toDecision({
+        event,
+        intent,
+        options,
+        mode,
+        failure: { category, summary },
+      });
+      await writeback({
+        dataDir: args.env.dataDir,
+        mode,
+        event,
+        intent,
+        result,
+        preview,
+        note: `Provider failure (${category}) — cue-history not appended.`,
+      });
+      return {
+        exit: "failure",
+        mode,
+        event,
+        intent,
+        result,
+        message: `Failure during curtain-up (${category}): ${summary}`,
+      };
+    }
+  } finally {
+    await releaseCueReservation(reservation);
   }
 }

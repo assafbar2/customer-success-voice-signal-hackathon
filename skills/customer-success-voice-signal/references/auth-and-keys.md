@@ -28,10 +28,11 @@ Dress rehearsal does **not** need a key. Curtain-up does.
 | `CALLE_BASE_URL` | Default `https://api.heycall-e.com` |
 | `CALLE_REGION` / `CALLE_LOCALE` | Recipient region/locale |
 | `CS_OWNER_NAME` / `CS_OWNER_ID` | Override call sheet identity |
-| `HOUSE_DARK_START` / `HOUSE_DARK_END` | Quiet hours (curtain-up only) |
+| `HOUSE_DARK_START` / `HOUSE_DARK_END` | Explicit quiet-hours override (both required; else owner `quiet_hours`) |
+| `HOUSE_DARK_TIMEZONE` | Optional TZ for env override |
+| `OWNER_MAX_RINGS` | Max live dials per CS owner per window (default 2) |
 | `DEDUPE_MINUTES` | Cue-history window |
 | `DATA_DIR` | Prompt book / show report directory |
-| `SLACK_WEBHOOK_URL` | Reserved for optional writeback |
 
 ## Rules
 

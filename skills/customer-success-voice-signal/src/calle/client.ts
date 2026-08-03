@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { CalleClient, type Call } from "@call-e/calle";
 import type { CallIntent } from "../schemas.js";
 
@@ -6,6 +8,13 @@ export interface CurtainUpConfig {
   baseUrl?: string;
   region?: string;
   locale?: string;
+  /** Persist open call ids here so a crash after dial still has call.id */
+  dataDir?: string;
+  idempotencyKey?: string;
+  timeoutMs?: number;
+  intervalMs?: number;
+  /** Optional progress hook (e.g. listEvents narration for demos). */
+  onStatus?: (msg: string) => void;
 }
 
 export interface CurtainUpResult {
@@ -13,8 +22,41 @@ export interface CurtainUpResult {
   structured: Record<string, unknown> | null;
 }
 
+async function persistOpenCall(
+  dataDir: string | undefined,
+  callId: string,
+  intent: CallIntent,
+): Promise<void> {
+  if (!dataDir) return;
+  const dir = path.join(dataDir, "open-calls");
+  await mkdir(dir, { recursive: true });
+  const file = path.join(dir, `${callId}.json`);
+  await writeFile(
+    file,
+    JSON.stringify(
+      {
+        call_id: callId,
+        at: new Date().toISOString(),
+        trigger_id: intent.trigger_id,
+        account_id: intent.account_id,
+        cs_owner_id: intent.cs_owner_id,
+        event_id: intent.metadata?.event_id ?? null,
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+}
+
+function defaultIdempotencyKey(intent: CallIntent): string {
+  const eventId =
+    typeof intent.metadata?.event_id === "string" ? intent.metadata.event_id : "noevt";
+  return `csvs:${intent.trigger_id}:${intent.account_id}:${eventId}`;
+}
+
 /**
- * Curtain-up: place a real CALL-E call via CalleClient.createAndWait.
+ * Curtain-up: create → persist call.id → waitForResult.
  * Dress rehearsal must never invoke this.
  */
 export async function curtainUp(
@@ -30,7 +72,8 @@ export async function curtainUp(
     baseUrl: config.baseUrl,
   });
 
-  const call = await client.calls.createAndWait({
+  const idempotencyKey = config.idempotencyKey ?? defaultIdempotencyKey(intent);
+  const payload = {
     task: intent.task,
     recipients: [
       {
@@ -49,7 +92,37 @@ export async function curtainUp(
       never_call_customer: true,
       ...intent.metadata,
     },
-  });
+  };
+
+  config.onStatus?.(`Creating CALL-E run (idempotency ${idempotencyKey.slice(0, 24)}…).`);
+  const created = await client.calls.create(payload, { idempotencyKey });
+  await persistOpenCall(config.dataDir, created.id, intent);
+  config.onStatus?.(`Call id persisted: ${created.id} — waiting for result.`);
+
+  let call: Call;
+  try {
+    // Best-effort status narration; never block the wait path on listEvents failure.
+    if (config.onStatus) {
+      try {
+        const events = await client.calls.listEvents(created.id, { limit: 5 });
+        const kinds = events.data
+          .map((e) => ("type" in e ? String((e as { type?: string }).type) : "event"))
+          .slice(0, 3);
+        if (kinds.length) config.onStatus(`Recent events: ${kinds.join(", ")}`);
+      } catch {
+        /* ignore */
+      }
+    }
+    call = await client.calls.waitForResult(created.id, {
+      timeoutMs: config.timeoutMs ?? 600_000,
+      intervalMs: config.intervalMs,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Curtain-up wait failed for ${created.id} (id persisted under data/open-calls/). ${msg}`,
+    );
+  }
 
   const structured =
     (call.structuredResult as Record<string, unknown> | null) ??

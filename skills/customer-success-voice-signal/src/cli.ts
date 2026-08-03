@@ -4,23 +4,12 @@ import path from "node:path";
 import { loadDotEnv, readSkillEnv, SKILL_ROOT } from "./config/env.js";
 import { runSignal } from "./runSignal.js";
 import { resolveWritebackPaths } from "./writeback/index.js";
+import { CliParseError, parseArgs } from "./cli/parseArgs.js";
 
 const EXIT_OK = 0;
 const EXIT_HOLD = 2;
 const EXIT_FAILURE = 3;
-
-interface CliArgs {
-  fixture?: string;
-  trigger?: string;
-  stdin: boolean;
-  live: boolean;
-  dryRun: boolean;
-  places: boolean;
-  list: boolean;
-  last: boolean;
-  verbose: boolean;
-  help: boolean;
-}
+const MAX_STDIN_BYTES = 256 * 1024;
 
 function printHelp(): void {
   console.log(`
@@ -46,7 +35,7 @@ Curtain-up (real phone — needs .env + PLACES):
 
 Options:
   --fixture <file>   Cue under fixtures/ (e.g. stuck_support_acme.json)
-  --trigger <id>     Pick first fixture for this trigger_id
+  --trigger <id>     Pick first fixture for this trigger_id (sorted)
   --stdin            Read one JSON cue/event from stdin (not fixtures-only)
   --live             Request curtain-up (still needs PLACES)
   --dry-run          Force dress rehearsal
@@ -58,51 +47,15 @@ Options:
 
 Exit codes:
   0  ok (dress rehearsal or curtain-up)
-  2  HOLD (policy / live gate / house dark / placeholder phone)
+  2  HOLD (policy / live gate / house dark / placeholder phone / owner budget)
   3  failure (bad cue, missing key, CALL-E error)
 
 Modes:
   Dress rehearsal  Default. No ring. Does not append cue-history.
   Curtain up       --live AND PLACES. Rings CS_OWNER_E164 via CALL-E.
-  Cue-history      Appended only after a live dial outcome — HOLD never poisons dedupe.
+  Cue-history      Appended only after a live dial outcome — HOLD/failure never poison dedupe.
+  Owner budget     Max live dials per CS owner per window (OWNER_MAX_RINGS, default 2).
 `);
-}
-
-function parseArgs(argv: string[]): CliArgs {
-  const args: CliArgs = {
-    stdin: false,
-    live: false,
-    dryRun: false,
-    places: false,
-    list: false,
-    last: false,
-    verbose: false,
-    help: false,
-  };
-
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--help" || a === "-h") args.help = true;
-    else if (a === "--live") args.live = true;
-    else if (a === "--dry-run") args.dryRun = true;
-    else if (a === "--list") args.list = true;
-    else if (a === "--last") args.last = true;
-    else if (a === "--stdin") args.stdin = true;
-    else if (a === "--verbose" || a === "-v") args.verbose = true;
-    else if (a === "PLACES" || a === "--places") args.places = true;
-    else if (a === "--fixture" || a === "-f") {
-      args.fixture = argv[++i];
-    } else if (a.startsWith("--fixture=")) {
-      args.fixture = a.slice("--fixture=".length);
-    } else if (a === "--trigger" || a === "-t") {
-      args.trigger = argv[++i];
-    } else if (a.startsWith("--trigger=")) {
-      args.trigger = a.slice("--trigger=".length);
-    } else if (a.endsWith(".json") && !args.fixture) {
-      args.fixture = a;
-    }
-  }
-  return args;
 }
 
 async function listFixtures(trigger?: string): Promise<void> {
@@ -152,9 +105,20 @@ async function loadFixture(name: string): Promise<unknown> {
 }
 
 async function readStdinJson(): Promise<unknown> {
+  if (process.stdin.isTTY) {
+    throw new Error(
+      "stdin is a terminal — pipe a JSON cue (e.g. --stdin < events/sample_stuck_support.json)",
+    );
+  }
   const chunks: Buffer[] = [];
+  let total = 0;
   for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    total += buf.length;
+    if (total > MAX_STDIN_BYTES) {
+      throw new Error(`stdin exceeds ${MAX_STDIN_BYTES} bytes`);
+    }
+    chunks.push(buf);
   }
   const text = Buffer.concat(chunks).toString("utf8").trim();
   if (!text) {
@@ -166,7 +130,17 @@ async function readStdinJson(): Promise<unknown> {
 async function main(): Promise<void> {
   loadDotEnv();
   const env = readSkillEnv();
-  const args = parseArgs(process.argv.slice(2));
+
+  let args;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    console.error(
+      `Failure: ${err instanceof CliParseError ? err.message : String(err)}`,
+    );
+    printHelp();
+    process.exit(EXIT_FAILURE);
+  }
 
   if (args.help) {
     printHelp();
@@ -188,6 +162,14 @@ async function main(): Promise<void> {
   if (args.stdin) {
     try {
       raw = await readStdinJson();
+      if (raw && typeof raw === "object") {
+        const obj = raw as Record<string, unknown>;
+        const meta =
+          obj.metadata && typeof obj.metadata === "object"
+            ? (obj.metadata as Record<string, unknown>)
+            : {};
+        raw = { ...obj, metadata: { ...meta, source: meta.source ?? "stdin" } };
+      }
     } catch (err) {
       console.error(
         `Failure: cannot read stdin cue — ${err instanceof Error ? err.message : String(err)}`,
@@ -196,10 +178,9 @@ async function main(): Promise<void> {
     }
   } else {
     if (!args.fixture) {
-      // If --trigger only, pick first matching fixture
       if (args.trigger) {
         const dir = path.join(SKILL_ROOT, "fixtures");
-        const files = (await readdir(dir)).filter((f) => f.endsWith(".json"));
+        const files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
         for (const f of files) {
           const parsed = JSON.parse(await readFile(path.join(dir, f), "utf8")) as {
             trigger_id?: string;

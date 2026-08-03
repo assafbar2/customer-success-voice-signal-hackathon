@@ -10,7 +10,7 @@ import {
   shouldRing,
 } from "./policy/shouldRing.js";
 import { buildCallIntent } from "./calle/intent.js";
-import { toDecision } from "./map/toDecision.js";
+import { toDecision, optionFromTranscript } from "./map/toDecision.js";
 import { TriggerIdSchema } from "./schemas.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -116,6 +116,19 @@ describe("policy matrix", () => {
       recentCueKeys: new Set([`stuck_support:${event.account.id}`]),
     });
     expect(result.reason).toBe("already_cued");
+  });
+
+  it("owner_budget HOLD when CS owner already at max live rings", () => {
+    const result = shouldRing({
+      event,
+      owner: { ...event.cs_owner, e164: "+14155552671" },
+      mode: "curtain_up",
+      now: new Date("2026-08-01T15:00:00.000Z"),
+      recentOwnerRingCount: 2,
+      ownerMaxRings: 2,
+    });
+    expect(result.hold).toBe(true);
+    expect(result.reason).toBe("owner_budget");
   });
 
   it("enforceHouseDark overnight window (UTC)", () => {
@@ -250,6 +263,7 @@ describe("toDecision mapping", () => {
       options,
       mode: "curtain_up",
       callRunId: "call_test",
+      taskCompleted: true,
       structured: {
         option_id: "2",
         decision: "page_backup",
@@ -319,4 +333,53 @@ describe("toDecision mapping", () => {
     expect(result.decision_label).toMatch(/voicemail/i);
     expect(result.option_id).toBe("unknown");
   });
+});
+
+describe("optionFromTranscript — gated capture", () => {
+  const options = pickOptions("stuck_support");
+
+  const cases: Array<{ name: string; texts: string[]; expectId: string | null }> = [
+    {
+      name: "rejects embedded count (3 other fires)",
+      texts: ["Sorry, what? I have 3 other fires right now"],
+      expectId: null,
+    },
+    {
+      name: "accepts uh, one",
+      texts: ["uh, one"],
+      expectId: "1",
+    },
+    {
+      name: "accepts two please",
+      texts: ["two please"],
+      expectId: "2",
+    },
+    {
+      name: "accepts the second one",
+      texts: ["I'll take the second one"],
+      expectId: "2",
+    },
+    {
+      name: "accepts option 3",
+      texts: ["option 3"],
+      expectId: "3",
+    },
+    {
+      name: "accepts bare 1",
+      texts: ["1"],
+      expectId: "1",
+    },
+    {
+      name: "prefers last confident hit over earlier noise",
+      texts: ["I have 3 other tickets", "okay one"],
+      expectId: "1",
+    },
+  ];
+
+  for (const c of cases) {
+    it(c.name, () => {
+      const hit = optionFromTranscript(c.texts, options);
+      expect(hit?.option_id ?? null).toBe(c.expectId);
+    });
+  }
 });
