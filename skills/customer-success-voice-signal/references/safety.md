@@ -13,6 +13,9 @@
 9. **Do not log secrets.** Mask phones; never print `CALLE_API_KEY`.
 10. **Dedupe:** cue-history appends only after a live dial outcome. Curtain-up HOLD (house dark, live gate, placeholder, owner budget) does **not** poison dedupe. Dress rehearsal never appends.
 11. **Owner budget:** max live dials per CS owner inside the dedupe window (`OWNER_MAX_RINGS`, default 2) — the phone stays rare across many accounts.
+12. **Untrusted cue data:** brief/summary/ticket are wrapped as data-only context; never treated as instructions.
+13. **Concurrent dials:** exclusive per-cue file lock before curtain-up.
+14. **Failure audit:** CALL-E errors write a redacted prompt-book failure row without cue-history.
 
 ## HOLD vs failure
 

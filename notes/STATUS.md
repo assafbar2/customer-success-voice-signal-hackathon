@@ -3,11 +3,11 @@
 | Field | Value |
 | --- | --- |
 | Last update | 2026-08-03 |
-| Branch | `main` (+ hardening PRs as opened) |
 | Product | **Stage Manager** — skill id `customer-success-voice-signal` |
-| Judge site | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ |
-| Live ladder | See `research/calle-api-notes.md` (VM → unclear → decisions) |
-| Evidence | `submission/evidence/` (redacted prompt-book rows) |
+| Judge site | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ (live) |
+| Hardening PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/3 |
+| Live ladder | `research/calle-api-notes.md` |
+| Evidence | `submission/evidence/` (redacted) |
 
 ## Live outcomes (honest)
 
@@ -18,14 +18,13 @@
 
 ## Submit checklist
 
-- [ ] Awesome-list PR (see `submission/awesome-list/PACKAGING.md`)
+- [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`)
 - [ ] Devpost submit + MVF survey
-- [ ] Set GitHub repo homepage → GitHub Pages URL (not Vercel)
-- [ ] Demo video with real call audio (separate track — not blocking code)
+- [ ] Set GitHub repo homepage → Pages URL (not Vercel)
+- [ ] Demo video with real call audio (separate track)
 
-**Dated nudge:** `notes/REMINDER-2026-09-01.md` (homepage · awesome-list PR · real-call video).
+**Dated nudge:** `notes/REMINDER-2026-09-01.md`
 
-## Operator chores (not for judges)
+## Operator chores
 
 - Delete accidental Vercel project if it still exists in the dashboard
-- Confirm Pages source is GitHub Actions

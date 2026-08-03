@@ -263,6 +263,7 @@ describe("toDecision mapping", () => {
       options,
       mode: "curtain_up",
       callRunId: "call_test",
+      taskCompleted: true,
       structured: {
         option_id: "2",
         decision: "page_backup",

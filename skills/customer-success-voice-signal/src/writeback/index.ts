@@ -188,9 +188,12 @@ export async function writeback(args: {
     preview: args.preview,
     note: args.note,
   });
-  // HOLD must not poison dedupe — only live dial outcomes record the cue key.
+  // HOLD and provider failures must not poison dedupe.
+  // Only confirmed dial outcomes (including no_answer/unclear after a call) record the cue key.
   const recordDedupe =
-    args.result.option_id !== "hold" && args.result.decision !== "hold";
+    args.result.option_id !== "hold" &&
+    args.result.decision !== "hold" &&
+    args.result.decision !== "failure";
   const cueHistory = await appendCueHistory(args.dataDir, args.event, args.mode, {
     recordDedupe,
   });
