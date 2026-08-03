@@ -34,6 +34,10 @@ function baseEnv(dataDir: string, overrides: Partial<SkillEnv> = {}): SkillEnv {
     dedupeMinutes: 120,
     ownerMaxRings: 2,
     dataDir,
+    slackWebhookUrl: "",
+    githubToken: "",
+    githubRepo: "",
+    githubIssue: "",
     ...overrides,
   };
 }

@@ -8,7 +8,7 @@
 >
 > *PagerDuty phones you to acknowledge an alert. Ack is not a decision.*
 
-When a named account hits a high-risk **cue**, **Stage Manager** rings the **CS owner** (never the customer) with a ~60s closed-set line reading (1/2/3). The decision is **state** in the prompt book — and an **action intent** for the next system (ticket / CRM / Slack), not a chat ack.
+When a named account hits a high-risk **cue** (trigger event), **Stage Manager** rings the **CS owner** (never the customer) with a ~60s closed-set line reading — a 1/2/3 decision menu. The decision is **state** in the prompt book (NDJSON audit log) — and an **action intent** for the next system (ticket / CRM / Slack), not a chat ack.
 
 ---
 
@@ -19,7 +19,7 @@ When a named account hits a high-risk **cue**, **Stage Manager** rings the **CS 
 | Who | On-call engineer | **CS owner** of a named account |
 | Output | Acknowledge / escalate | **Closed-set CS decision** + **action intent** |
 | Audit | Incident timeline | Prompt book + show report + `data/actions/` |
-| Default | Live page | **Dress rehearsal** — live needs `--live` + `PLACES` |
+| Default | Live page | **Dress rehearsal** (dry-run) — live needs `--live` + `PLACES` |
 
 Lane check: awesome-list phone agents already cover deploy approvals; **B2B customer success / renewal** is still open.
 
@@ -40,9 +40,13 @@ npm test && npm run typecheck
 # Inbound seam — webhook-shaped JSON (not fixtures-only)
 npm run signal -- --stdin < events/webhook_stuck_support.json
 
-# Decision → system handoff (POC — local receipt, no live CRM)
+# Decision → system handoff (local receipt by default)
 npm run apply-action -- --last --dry-run
 npm run apply-action -- --last
+
+# Live adapters (env-gated; placeholder HOLDs — see .env.example)
+npm run apply-action -- --last --adapter slack     # Slack-shaped webhook POST {text}
+npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITHUB_ISSUE
 
 # Curtain-up — operator only
 # https://dashboard.heycall-e.com/account/api-keys
@@ -53,12 +57,12 @@ npm run apply-action -- --last
 | Exit | Meaning |
 | --- | --- |
 | 0 | Ok |
-| 2 | HOLD (policy / live gate / house dark / owner budget) |
+| 2 | HOLD (policy / live gate / quiet hours / owner budget) |
 | 3 | Failure |
 
-**Seam:** cue → phone decision → `data/actions/pending/*.json` → `apply-action` → local receipt. Adapters planned: Zendesk note · Salesforce task · Slack webhook. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
+**Seam:** cue → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
-**Safety:** CS owner only · dress rehearsal default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
+**Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
 
 Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/)
 
@@ -83,14 +87,19 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 
 ## Submit checklist
 
-- [x] Skill + dress rehearsal + curtain-up path  
-- [x] Judge site on GitHub Pages  
-- [ ] Awesome-list PR (see packaging notes) + Devpost  
-- [ ] Demo video with real call audio (tracked separately)  
+- [x] Skill + dress rehearsal + curtain-up path
+- [x] Judge site on GitHub Pages
+- [ ] Terminal GIF of the dress rehearsal run (README + site) — video before the video
+- [ ] Awesome-list PR (see packaging notes — deliberately after v1 is solid) + Devpost
+- [ ] Demo video with real call audio (tracked separately — notes in `submission/video-script.md`)
 
 ## Judging criteria (Devpost)
 
-1. Real World Impact  
-2. Quality of the Idea  
-3. Technical Implementation (CALL-E at runtime)  
+1. Real World Impact
+2. Quality of the Idea
+3. Technical Implementation (CALL-E at runtime)
 4. Product Experience & Demo (≤3 min video)
+
+---
+
+*No customers were called in the making of this demo.*

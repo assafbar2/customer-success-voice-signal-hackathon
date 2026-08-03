@@ -49,8 +49,8 @@ export const ActionReceiptSchema = z.object({
   at: z.string().datetime(),
   intent_id: z.string().min(1),
   dry_run: z.boolean(),
-  /** Local POC only — never claims a live CRM write */
-  effect: z.literal("local_receipt"),
+  /** "local_receipt" unless a live adapter actually posted */
+  effect: z.enum(["local_receipt", "slack_webhook_posted", "github_comment_posted"]),
   summary: z.string().min(1),
   intent: ActionIntentSchema,
 });

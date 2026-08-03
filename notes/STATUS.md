@@ -18,10 +18,13 @@
 
 ## Submit checklist
 
-- [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`)
-- [ ] Devpost submit + MVF survey
+- [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`) — **after v1 is solid; recurring nudge, do not drop**
+- [ ] Devpost submit + MVF survey (draft text: `submission/devpost.md`)
 - [x] GitHub repo homepage → Pages URL
 - [x] Vercel leftover project removed
-- [ ] Demo video with real call audio (separate track)
+- [x] GitHub topics added (call-e, voice-agents, customer-success, hackathon, phone-call-agent)
+- [ ] Social preview image (repo Settings → Social preview — manual upload; dark stage + "Ack is not a decision.")
+- [ ] Terminal GIF of dress rehearsal (README + site) — cheap "video before the video"
+- [ ] Demo video with real call audio (separate track — review notes in `submission/video-script.md`)
 
 **Dated nudge:** `notes/REMINDER-2026-09-01.md`

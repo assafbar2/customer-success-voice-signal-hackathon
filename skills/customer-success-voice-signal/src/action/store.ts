@@ -78,14 +78,19 @@ export async function loadPendingIntentById(
 }
 
 /**
- * Apply (or dry-run) a pending action intent locally.
- * Never calls Zendesk/Salesforce/Slack — writes a local receipt proving the seam.
+ * Apply (or dry-run) a pending action intent.
+ * Default: local receipt only. When `sent` is provided, a live adapter
+ * (Slack webhook / GitHub comment) already posted — the receipt records it.
  */
 export async function applyActionIntent(args: {
   dataDir: string;
   intent: ActionIntent;
   file: string;
   dryRun: boolean;
+  sent?: {
+    effect: "slack_webhook_posted" | "github_comment_posted";
+    detail: string;
+  };
 }): Promise<{ receipt: ActionReceipt; receiptPath: string; intentPath: string }> {
   await ensureDirs(args.dataDir);
   const now = new Date().toISOString();
@@ -130,8 +135,10 @@ export async function applyActionIntent(args: {
     at: now,
     intent_id: args.intent.intent_id,
     dry_run: false,
-    effect: "local_receipt",
-    summary: `LOCAL EXECUTE: recorded ${args.intent.action} for ${args.intent.account_name}. Adapter ${args.intent.adapter} not called — POC receipt only.`,
+    effect: args.sent?.effect ?? "local_receipt",
+    summary: args.sent
+      ? `SENT via ${args.sent.effect}: ${args.intent.action} for ${args.intent.account_name} (${args.sent.detail}).`
+      : `LOCAL EXECUTE: recorded ${args.intent.action} for ${args.intent.account_name}. Adapter ${args.intent.adapter} not called — POC receipt only.`,
     intent: executed,
   });
   const receiptPath = path.join(

@@ -6,7 +6,7 @@ license: MIT
 
 # customer-success-voice-signal (Stage Manager)
 
-When a **named account** hits a high-risk moment, the **Stage Manager** cues CALL-E to ring the **CS owner only** with a short brief and closed-set line readings (1/2/3). The structured decision lands in the **prompt book** and **show report**.
+When a **named account** hits a high-risk moment, the **Stage Manager** cues CALL-E to ring the **CS owner only** with a short brief and closed-set line readings — a 1/2/3 decision menu. The structured decision lands in the **prompt book** (NDJSON audit log) and **show report** (markdown writeback).
 
 **Not:** a customer dialer. **Never** call the customer in MVP.
 
@@ -88,4 +88,5 @@ Read [references/safety.md](references/safety.md).
 - Prompt book: `data/prompt-book.ndjson`  
 - Show report: `data/show-report.md`  
 - Cue history (live dial outcomes only): `data/cue-history.ndjson`  
-- Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))  
+- Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))
+- Live adapters: `--adapter slack` (webhook `{text}`) · `--adapter github` (issue comment) — env-gated, placeholder HOLDs

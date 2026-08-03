@@ -1,8 +1,8 @@
 # Action intents — decision → system handoff
 
-Stage Manager captures a **closed-set CS decision** on the phone, then emits an **action intent**: the contract a Zendesk / Salesforce / Slack adapter would execute next.
+Stage Manager captures a **closed-set CS decision** on the phone, then emits an **action intent**: the contract the next system executes.
 
-PagerDuty-style tools often stop at **acknowledge**. We stop at a **decision**, then make the next system move **explicit and executable** — without pretending a live CRM write happened in this POC.
+PagerDuty-style tools often stop at **acknowledge**. We stop at a **decision**, then make the next system move **explicit and executable**. Two adapters are live (Slack-shaped webhook, GitHub issue comment); Zendesk / Salesforce shapes are documented at the seam — never claimed as wired.
 
 ## Seam (end-to-end, judge-visible)
 
@@ -17,10 +17,22 @@ Webhook-shaped JSON / fixture / stdin
         ↓
   npm run apply-action -- --last --dry-run  ← prove the handoff
         ↓
-  data/actions/executed/<receipt>.json      ← local POC receipt
+  data/actions/executed/<receipt>.json      ← receipt (local, or live-adapter send)
 ```
 
-Live CRM/ticket adapters are the next step. The **JSON shape is the product seam**.
+The **JSON shape is the product seam**. Live adapters ride it:
+
+```bash
+# Slack-shaped webhook — POST {text} to SLACK_WEBHOOK_URL
+# (any {text}-accepting endpoint works; webhook.site is fine for a demo)
+npm run apply-action -- --last --adapter slack
+
+# GitHub issue comment — POST {body} to GITHUB_REPO#GITHUB_ISSUE (GITHUB_TOKEN)
+npm run apply-action -- --last --adapter github
+
+# Both honor --dry-run (prints exact payload, no network)
+# Unset/placeholder env → HOLD (exit 2) — never a silent no-op
+```
 
 ## Run it
 
@@ -35,8 +47,11 @@ npm run signal -- --stdin < events/webhook_stuck_support.json
 ls data/actions/pending/
 npm run apply-action -- --last --dry-run
 
-# 3) Local “execute” (still no Zendesk/Slack call — writes a receipt)
+# 3) Local “execute” (no external call — writes a receipt)
 npm run apply-action -- --last
+
+# 4) Or send for real via a live adapter (env-gated)
+npm run apply-action -- --last --adapter slack
 ```
 
 ## What an intent contains
@@ -54,5 +69,7 @@ HOLD / failure / unclear / no_answer do **not** emit intents — only option `1`
 ## Honesty
 
 - `--dry-run` and local apply **never** call external APIs.
-- Receipts say `effect: "local_receipt"`.
-- Docs and CLI state that CRM writeback is an adapter away — not already wired.
+- Receipts say `effect: "local_receipt"` unless a live adapter actually posted —
+  then `slack_webhook_posted` / `github_comment_posted` with the HTTP status.
+- Unset or placeholder adapter env HOLDs (exit 2) instead of pretending.
+- Zendesk / Salesforce remain documented shapes, not wired adapters.

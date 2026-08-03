@@ -110,6 +110,25 @@ Clear. Break a leg — or just open the ticket.
 
 
 
+## Review notes to consider before shooting (2026-08-03)
+
+Ideas from repo review — take or leave per beat:
+
+1. **Cold open with the ring.** Instead of 25s of problem VO first, open on the actual
+   phone call: ring → "Hi Maya. Stage Manager. You're up for Acme." (~8s), hard cut to
+   black: *"That call happened because a support ticket looped twice."* Then the problem
+   statement. Real ring audio in the first 10 seconds is the single most convincing asset
+   we own — don't bury it at 1:20.
+2. **Keep the closer.** "Break a leg — or just open the ticket." is the best line in the
+   repo. It stays.
+3. **End card joke** (doubles as the safety differentiator):
+   *"No customers were called in the making of this demo."*
+4. **Adapter beat.** If the Slack-shaped webhook / GitHub-comment adapters are in by shoot
+   time, show the decision landing in the next system (~5s) right after the writeback shot —
+   that's the "Most Practical" money shot.
+5. Metaphor rationing on screen: pair theater terms with plain speech on first use
+   ("dress rehearsal — dry-run", "curtain up — live call"). VO can stay theatrical.
+
 ## Approval
 
 Reply with **approve** (or edit notes). After approval we will:

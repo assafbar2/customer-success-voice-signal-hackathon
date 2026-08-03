@@ -57,10 +57,10 @@
         <h2>One engine. Four cues.</h2>
         <ol class="flow">
           <li><span><strong>Cue</strong> arrives (fixture, stdin, or webhook-shaped JSON)</span></li>
-          <li><span><strong>Call sheet</strong> — owned? severity? house dark? owner budget?</span></li>
-          <li><span><strong>Dress rehearsal</strong> by default — or <strong>curtain up</strong></span></li>
-          <li><span><strong>Line reading</strong> 1 / 2 / 3 on the CS phone</span></li>
-          <li><span><strong>Prompt book</strong> + <strong>action intent</strong> (system handoff)</span></li>
+          <li><span><strong>Call sheet</strong> — owned? severity? quiet hours? owner budget?</span></li>
+          <li><span><strong>Dress rehearsal</strong> (dry-run) by default — or <strong>curtain up</strong> (live call)</span></li>
+          <li><span><strong>Line reading</strong> — a 1 / 2 / 3 decision menu on the CS phone</span></li>
+          <li><span><strong>Prompt book</strong> (audit log) + <strong>action intent</strong> (system handoff)</span></li>
         </ol>
         <div class="cues">
           <article>
@@ -110,6 +110,7 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES</code></pre>
     <section class="band">
       <div class="wrap proven">
         <h2>Operator-proven live ladder</h2>
+        <p class="lede">Real curtain-up calls against CALL-E — logged honestly, misses included.</p>
         <ul>
           <li><code>stuck_support</code> — voicemail → <code>no_answer</code>, then curtain-up → line reading <strong>1</strong> (take over in chat)</li>
           <li><code>agent_needs_decision</code> — earlier <code>unclear</code> captures, then curtain-up → line reading <strong>1</strong> (approve A)</li>
@@ -130,6 +131,7 @@ npm run signal -- --fixture stuck_support_acme.json --live PLACES</code></pre>
       <div>
         <p class="footer__brand">Stage Manager</p>
         <p class="footer__tag">When the account is on fire, we cue the firefighter — not the building.</p>
+        <p class="footer__tag">No customers were called in the making of this demo.</p>
       </div>
       <div class="footer__links">
         <a href="https://github.com/assafbar2/customer-success-voice-signal-hackathon">Repo</a>

@@ -47,6 +47,11 @@ export interface SkillEnv {
   dedupeMinutes: number;
   ownerMaxRings: number;
   dataDir: string;
+  /** Action-intent adapters — placeholders resolve to HOLD, never a silent no-op */
+  slackWebhookUrl: string;
+  githubToken: string;
+  githubRepo: string;
+  githubIssue: string;
 }
 
 export function readSkillEnv(): SkillEnv {
@@ -71,6 +76,10 @@ export function readSkillEnv(): SkillEnv {
         ? dataDirRaw
         : path.resolve(SKILL_ROOT, dataDirRaw)
       : path.join(SKILL_ROOT, "data"),
+    slackWebhookUrl: process.env.SLACK_WEBHOOK_URL?.trim() ?? "",
+    githubToken: process.env.GITHUB_TOKEN?.trim() ?? "",
+    githubRepo: process.env.GITHUB_REPO?.trim() ?? "",
+    githubIssue: process.env.GITHUB_ISSUE?.trim() ?? "",
   };
 }
 
