@@ -23,6 +23,8 @@
 - [ ] Set GitHub repo homepage → GitHub Pages URL (not Vercel)
 - [ ] Demo video with real call audio (separate track — not blocking code)
 
+**Dated nudge:** `notes/REMINDER-2026-09-01.md` (homepage · awesome-list PR · real-call video).
+
 ## Operator chores (not for judges)
 
 - Delete accidental Vercel project if it still exists in the dashboard
