@@ -16,6 +16,11 @@
 | `stuck_support` | Decision **1** take over in chat | Prior voicemail → `no_answer` |
 | `agent_needs_decision` | Decision **1** approve A | Prior `unclear` (mapping) |
 
+## Product loop (closed)
+
+- [x] Decision → action intent → Slack / GitHub live adapters (env-gated)
+- [x] HTTP cue listener — `npm run serve-cue` → `POST /cue` (curl → engine → apply-action)
+
 ## Submit checklist
 
 - [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`) — **after v1 is solid; recurring nudge, do not drop**
@@ -28,3 +33,16 @@
 - [ ] Demo video with real call audio (separate track — review notes in `submission/video-script.md`)
 
 **Dated nudge:** `notes/REMINDER-2026-09-01.md`
+
+## Still open (Opus / Fable residual)
+
+| Item | Status |
+| --- | --- |
+| Slack + GitHub wire-out | Done (Fable) |
+| HTTP `/cue` listener | Done |
+| SDK `failureCode` / `completionConfidence` / `webhookUrl` | Open |
+| Identity read-back + hash-chained prompt book | Open |
+| Real CS conversations for Real World Impact | Open (operator) |
+| MVF survey writeup | Open |
+| Packaging split (`skills/` → `apps/typescript/…`) | Open (merge risk only) |
+| OG / GIF / evidence dashboard screenshot | Open (operator) |

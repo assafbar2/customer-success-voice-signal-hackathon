@@ -17,6 +17,12 @@ npm test && npm run typecheck
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --stdin < events/webhook_stuck_support.json
 
+# Or: HTTP inbound (deployable listener — same engine)
+npm run serve-cue &
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
+
 # Decision → action intent → dry-run apply (no live CRM)
 npm run apply-action -- --last --dry-run
 npm run apply-action -- --last
@@ -55,7 +61,8 @@ See [references/safety.md](references/safety.md) · [references/action-intents.m
 | Script | What |
 | --- | --- |
 | `npm run signal -- …` | Stage Manager CLI |
-| `npm run apply-action -- …` | Apply/dry-run pending action intent (POC) |
+| `npm run serve-cue` | HTTP listener — `POST /cue` → same engine as `--stdin` |
+| `npm run apply-action -- …` | Apply/dry-run pending action intent (Slack/GitHub live) |
 | `npm run dry-run -- …` | Force dress rehearsal |
 | `npm test` | Vitest (no real calls) |
 | `npm run typecheck` | `tsc --noEmit` |

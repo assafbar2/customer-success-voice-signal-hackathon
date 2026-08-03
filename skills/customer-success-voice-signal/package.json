@@ -9,6 +9,7 @@
     "test": "vitest run",
     "dry-run": "tsx src/cli.ts --dry-run",
     "signal": "tsx src/cli.ts",
+    "serve-cue": "tsx src/serveCli.ts",
     "apply-action": "tsx src/applyActionCli.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

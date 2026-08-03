@@ -33,6 +33,10 @@ Dress rehearsal does **not** need a key. Curtain-up does.
 | `OWNER_MAX_RINGS` | Max live dials per CS owner per window (default 2) |
 | `DEDUPE_MINUTES` | Cue-history window |
 | `DATA_DIR` | Prompt book / show report directory |
+| `CUE_HOST` / `CUE_PORT` | HTTP listener bind (`npm run serve-cue`, default `127.0.0.1:8787`) |
+| `CUE_WEBHOOK_SECRET` | Optional Bearer / `X-Cue-Secret` for `POST /cue` |
+| `SLACK_WEBHOOK_URL` | Live Slack-shaped adapter |
+| `GITHUB_TOKEN` / `GITHUB_REPO` / `GITHUB_ISSUE` | Live GitHub issue-comment adapter |
 
 ## Rules
 

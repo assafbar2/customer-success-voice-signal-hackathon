@@ -44,20 +44,21 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 - CALL-E SDK (`@call-e/calle`): `calls.create` → persist call id → `calls.waitForResult`, with idempotency keys.
 - Result mapping prefers `structuredResult`, falls back to gated transcript phrases; voicemail → `no_answer`, never an invented decision.
 - **Safety rails:** dress rehearsal (dry-run) by default; live requires `--live` + `PLACES`; CS owner only; fixture phones rejected on live; per-owner call budget; timezone-aware quiet hours; HOLD/failure never poison cue dedupe; untrusted cue text wrapped before it reaches the prompt.
-- 57 tests + typecheck; webhook-shaped stdin ingestion (not fixtures-only); exit codes 0/2 (HOLD)/3.
+- 67 tests + typecheck; webhook-shaped stdin **and** `POST /cue` HTTP listener (not fixtures-only); exit codes 0/2 (HOLD)/3.
 - **Operator-proven live ladder,** misses included: voicemail and `unclear` captures logged alongside the two successful curtain-up decisions. Redacted evidence in the repo.
 
 ### 4 — Product Experience & Demo
 
 - Judges run the full loop in four commands with **no API key**: dress rehearsal → line readings → action-intent dry-run → local receipt.
+- Deployable inbound: `npm run serve-cue` → `curl POST /cue` → same engine → `apply-action --adapter slack` lands the decision in a real channel.
 - Curtain-up (real ring) is one env file away, gated on purpose.
 - ≤3 min demo video with real call audio: problem → dress rehearsal → live decision → writeback → handoff.
 
 ### What's next
 
-- Slack-shaped webhook + GitHub issue-comment adapters for the action-intent seam (decision lands in the next system, live).
-- Zendesk / Salesforce adapter shapes documented at the seam.
+- Zendesk / Salesforce adapter shapes documented at the seam (Slack + GitHub already live).
 - Awesome-list PR once v1 is battle-tested.
+- Deeper CALL-E SDK fields (`failureCode`, `completionConfidence`, async `webhookUrl`) and identity read-back on the line.
 
 ---
 

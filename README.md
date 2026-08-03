@@ -40,6 +40,12 @@ npm test && npm run typecheck
 # Inbound seam — webhook-shaped JSON (not fixtures-only)
 npm run signal -- --stdin < events/webhook_stuck_support.json
 
+# Or HTTP listener (deployable — same engine)
+npm run serve-cue &
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
+
 # Decision → system handoff (local receipt by default)
 npm run apply-action -- --last --dry-run
 npm run apply-action -- --last
@@ -60,7 +66,7 @@ npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITH
 | 2 | HOLD (policy / live gate / quiet hours / owner budget) |
 | 3 | Failure |
 
-**Seam:** cue → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
+**Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
 **Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live.
 

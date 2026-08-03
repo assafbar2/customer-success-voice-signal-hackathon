@@ -11,11 +11,20 @@ npm install
 # Webhook-shaped inbound cue (not fixtures-only)
 npm run signal -- --stdin < events/webhook_stuck_support.json
 
+# Same cue via HTTP listener (deployable — not file-piped)
+npm run serve-cue &
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
+
 # Decision → action intent → dry-run (no Zendesk/Slack call)
 npm run apply-action -- --last --dry-run
 
 # Local POC receipt (still no external API)
 npm run apply-action -- --last
+
+# Live adapter (env-gated Slack / GitHub)
+npm run apply-action -- --last --adapter slack
 ```
 
 See [action-intents.md](action-intents.md).
@@ -56,7 +65,8 @@ Callee is the **CS owner only**. Customer is never dialed.
 | --- | --- |
 | Dress rehearsal | Local files under `data/` (prompt book, show report, action intents) |
 | Curtain-up | One CALL-E phone call to `CS_OWNER_E164` + local writeback + action intent |
+| `serve-cue` + `POST /cue` | Same as CLI dress rehearsal / curtain-up (query `?live=1&confirm=PLACES`) |
 | `apply-action --dry-run` | Local dry-run receipt only |
 | `apply-action` (no dry-run) | Moves intent to executed + local receipt — **no** live CRM/Slack |
-
+| `apply-action --adapter slack\|github` | Real HTTP send when env is set (else HOLD) |
 Cancel / do not ring: omit `--live`, or do not type `PLACES`. There is no recurring schedule.

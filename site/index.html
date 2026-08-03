@@ -56,7 +56,7 @@
       <div class="wrap">
         <h2>One engine. Four cues.</h2>
         <ol class="flow">
-          <li><span><strong>Cue</strong> arrives (fixture, stdin, or webhook-shaped JSON)</span></li>
+          <li><span><strong>Cue</strong> arrives (fixture, stdin, or <code>POST /cue</code>)</span></li>
           <li><span><strong>Call sheet</strong> — owned? severity? quiet hours? owner budget?</span></li>
           <li><span><strong>Dress rehearsal</strong> (dry-run) by default — or <strong>curtain up</strong> (live call)</span></li>
           <li><span><strong>Line reading</strong> — a 1 / 2 / 3 decision menu on the CS phone</span></li>
@@ -95,9 +95,15 @@ npm install
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --stdin &lt; events/webhook_stuck_support.json
 
-# Decision → system handoff (POC — no live CRM)
+# Or: HTTP inbound (same engine)
+npm run serve-cue &amp;
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
+
+# Decision → system handoff (Slack/GitHub live when env set)
 npm run apply-action -- --last --dry-run
-npm run apply-action -- --last
+npm run apply-action -- --last --adapter slack
 
 # Curtain up — real CALL-E (operator only)
 # Key: https://dashboard.heycall-e.com/account/api-keys

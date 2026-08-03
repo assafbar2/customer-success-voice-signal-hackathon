@@ -34,6 +34,13 @@ npm test && npm run typecheck
 # Dress rehearsal (default — no secrets needed for dial)
 npm run signal -- --fixture stuck_support_acme.json
 npm run signal -- --stdin < events/webhook_stuck_support.json
+
+# HTTP inbound — same engine as --stdin (zero extra deps)
+npm run serve-cue &
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
+
 npm run apply-action -- --last --dry-run
 npm run signal -- --list
 npm run signal -- --last
@@ -90,3 +97,4 @@ Read [references/safety.md](references/safety.md).
 - Cue history (live dial outcomes only): `data/cue-history.ndjson`  
 - Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))
 - Live adapters: `--adapter slack` (webhook `{text}`) · `--adapter github` (issue comment) — env-gated, placeholder HOLDs
+- HTTP cue: `npm run serve-cue` → `POST /cue` (optional `CUE_WEBHOOK_SECRET`)

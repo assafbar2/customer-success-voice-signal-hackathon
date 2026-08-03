@@ -7,7 +7,7 @@ PagerDuty-style tools often stop at **acknowledge**. We stop at a **decision**, 
 ## Seam (end-to-end, judge-visible)
 
 ```text
-Webhook-shaped JSON / fixture / stdin
+Webhook-shaped JSON / fixture / stdin / POST /cue
         ↓
   Stage Manager (policy → dress rehearsal | curtain-up)
         ↓
@@ -40,8 +40,14 @@ npm run apply-action -- --last --adapter github
 cd skills/customer-success-voice-signal
 npm install
 
-# 1) Inbound cue (webhook-shaped — not fixtures-only)
+# 1a) Inbound cue via stdin (webhook-shaped — not fixtures-only)
 npm run signal -- --stdin < events/webhook_stuck_support.json
+
+# 1b) Or inbound via HTTP listener (same engine — deployable)
+npm run serve-cue &
+curl -sS -X POST http://127.0.0.1:8787/cue \
+  -H 'content-type: application/json' \
+  -d @events/webhook_stuck_support.json
 
 # 2) Inspect pending action intent
 ls data/actions/pending/
@@ -54,6 +60,19 @@ npm run apply-action -- --last
 npm run apply-action -- --last --adapter slack
 ```
 
+### HTTP cue listener
+
+`npm run serve-cue` binds `POST /cue` (and `GET /health`) with zero extra deps.
+
+| Query | Effect |
+| --- | --- |
+| (none) | Dress rehearsal (default) |
+| `?dry_run=1` | Force dress rehearsal |
+| `?live=1&confirm=PLACES` | Request curtain-up (still needs `.env` key + `CS_OWNER_E164`) |
+
+Optional `CUE_WEBHOOK_SECRET` → require `Authorization: Bearer …` or `X-Cue-Secret`.
+
+Judge demo story: **curl → (optional ring) → apply-action --adapter slack**.
 ## What an intent contains
 
 | Field | Meaning |
