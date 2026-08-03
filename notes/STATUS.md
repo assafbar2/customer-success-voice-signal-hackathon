@@ -20,11 +20,8 @@
 
 - [ ] Awesome-list PR (`submission/awesome-list/PACKAGING.md`)
 - [ ] Devpost submit + MVF survey
-- [ ] Set GitHub repo homepage → Pages URL (not Vercel)
+- [x] GitHub repo homepage → Pages URL
+- [x] Vercel leftover project removed
 - [ ] Demo video with real call audio (separate track)
 
 **Dated nudge:** `notes/REMINDER-2026-09-01.md`
-
-## Operator chores
-
-- Delete accidental Vercel project if it still exists in the dashboard
