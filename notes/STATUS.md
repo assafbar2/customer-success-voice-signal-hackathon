@@ -40,6 +40,17 @@ Master list: [`submission/PRE-SUBMIT.md`](../submission/PRE-SUBMIT.md)
 - [x] GitHub topics added (call-e, voice-agents, customer-success, hackathon, phone-call-agent)
 - [ ] Social preview image (repo Settings → Social preview)
 
+## Win checklist (repo review, 2026-08-03)
+
+Rubric state: Technical ✓ · Idea ✓ · Impact ✓ · **Demo ✗** — the video is 25% of the
+rubric and 100% of the emotional argument. Everything below serves it.
+
+- [ ] **Video spine = the full loop live:** `curl → serve-cue → phone rings → "one" → apply-action --adapter slack → message lands`. That 30 seconds IS "Most Practical".
+- [ ] **One live curtain-up run of the whole new chain** (listener + adapter, not components separately) → append to the live ladder in `research/calle-api-notes.md`. Do it as the video take — one stone, two birds.
+- [ ] **Fresh-clone judge sanity pass:** clean `git clone → npm install → npm test → curl POST /cue`, exactly as a judge would, before Devpost submit.
+- [ ] Awesome-list PR timing: bar was "v1 solid" — with 67+ tests, live adapters, HTTP listener, green CI, v1 is arguably solid now. Their PR review latency is the one clock we don't control.
+- Operational: two agents (Cursor + Claude Code) commit here — **sync clones before each session** to avoid merge-conflict theater.
+
 **Dated nudge:** `notes/REMINDER-2026-09-01.md`
 
 ## Still open (residual)
