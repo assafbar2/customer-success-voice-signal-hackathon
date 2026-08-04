@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createCueServer, listenCueServer } from "./cueServer.js";
+import { createCueServer, listenCueServer, assertCueBindAllowed } from "./cueServer.js";
 import type { SkillEnv } from "../config/env.js";
 import type { RunSignalArgs, RunSignalOutcome } from "../runSignal.js";
 import { SKILL_ROOT } from "../config/env.js";
@@ -165,7 +165,72 @@ describe("cue HTTP listener", () => {
     }
   });
 
-  it("passes live/places query flags into runSignal", async () => {
+  it("refuses live query without CUE_ALLOW_LIVE (webhook cannot arm itself)", async () => {
+    const dataDir = await mkdtemp(path.join(os.tmpdir(), "sm-cue-"));
+    temps.push(dataDir);
+    let seen: RunSignalArgs | null = null;
+    const stubRun = async (args: RunSignalArgs): Promise<RunSignalOutcome> => {
+      seen = args;
+      return {
+        exit: "ok",
+        mode: "dress_rehearsal",
+        event: {
+          event_id: "e1",
+          trigger_id: "stuck_support",
+          severity: "high",
+          summary: "x",
+          brief: "x",
+          occurred_at: "2026-08-03T00:00:00.000Z",
+          account: { id: "a", name: "A", tier: "standard", health_flags: [] },
+          cs_owner: {
+            id: "o",
+            name: "O",
+            e164: "+15555550100",
+            opt_in_phone: true,
+          },
+          metadata: {},
+        },
+        intent: null,
+        result: null,
+        message: "ok",
+      };
+    };
+
+    const server = createCueServer({
+      env: baseEnv(dataDir),
+      run: stubRun,
+      allowLive: false,
+    });
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", () => {
+        server.off("error", reject);
+        resolve();
+      });
+    });
+
+    try {
+      const addr = server.address();
+      const port = typeof addr === "object" && addr ? addr.port : 0;
+      const res = await fetch(
+        `http://127.0.0.1:${port}/cue?live=1&confirm=PLACES`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ hello: "world" }),
+        },
+      );
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { exit: string; message: string };
+      expect(body.exit).toBe("hold");
+      expect(body.message).toMatch(/CUE_ALLOW_LIVE/);
+      expect(seen).toBeNull();
+    } finally {
+      await new Promise<void>((r) => server.close(() => r()));
+    }
+  });
+
+  it("passes live/places only when allowLive is armed", async () => {
     const dataDir = await mkdtemp(path.join(os.tmpdir(), "sm-cue-"));
     temps.push(dataDir);
     let seen: RunSignalArgs | null = null;
@@ -199,6 +264,7 @@ describe("cue HTTP listener", () => {
     const server = createCueServer({
       env: baseEnv(dataDir),
       run: stubRun,
+      allowLive: true,
     });
     await new Promise<void>((resolve, reject) => {
       server.once("error", reject);
@@ -211,14 +277,11 @@ describe("cue HTTP listener", () => {
     try {
       const addr = server.address();
       const port = typeof addr === "object" && addr ? addr.port : 0;
-      await fetch(
-        `http://127.0.0.1:${port}/cue?live=1&confirm=PLACES`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ hello: "world" }),
-        },
-      );
+      await fetch(`http://127.0.0.1:${port}/cue?live=1&confirm=PLACES`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ hello: "world" }),
+      });
       expect(seen).not.toBeNull();
       expect(seen!.liveFlag).toBe(true);
       expect(seen!.placesTyped).toBe(true);
@@ -226,6 +289,14 @@ describe("cue HTTP listener", () => {
     } finally {
       await new Promise<void>((r) => server.close(() => r()));
     }
+  });
+
+  it("refuses non-loopback bind without a secret", async () => {
+    expect(() => assertCueBindAllowed("0.0.0.0", undefined)).toThrow(
+      /CUE_WEBHOOK_SECRET/,
+    );
+    expect(() => assertCueBindAllowed("0.0.0.0", "sekrit")).not.toThrow();
+    expect(() => assertCueBindAllowed("127.0.0.1", undefined)).not.toThrow();
   });
 
   it("404s unknown paths", async () => {

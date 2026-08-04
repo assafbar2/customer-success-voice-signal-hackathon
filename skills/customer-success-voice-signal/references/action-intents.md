@@ -64,15 +64,15 @@ npm run apply-action -- --last --adapter slack
 
 `npm run serve-cue` binds `POST /cue` (and `GET /health`) with zero extra deps.
 
-| Query | Effect |
+| Query / env | Effect |
 | --- | --- |
 | (none) | Dress rehearsal (default) |
 | `?dry_run=1` | Force dress rehearsal |
-| `?live=1&confirm=PLACES` | Request curtain-up (still needs `.env` key + `CS_OWNER_E164`) |
+| `?live=1&confirm=PLACES` | Curtain-up **only if** `CUE_ALLOW_LIVE=1` is set — otherwise **403 HOLD** (webhook cannot arm itself) |
+| `CUE_WEBHOOK_SECRET` | Required for non-loopback bind; Bearer / `X-Cue-Secret` |
+| `CUE_ALLOW_LIVE=1` | Operator arming switch for HTTP live |
 
-Optional `CUE_WEBHOOK_SECRET` → require `Authorization: Bearer …` or `X-Cue-Secret`.
-
-Judge demo story: **curl → (optional ring) → apply-action --adapter slack**.
+Judge demo story: **curl → dress rehearsal → apply-action --adapter slack**. Live phone still needs a separate human arm (`CUE_ALLOW_LIVE` + CLI/`PLACES` semantics). See [safety.md](safety.md).
 ## What an intent contains
 
 | Field | Meaning |

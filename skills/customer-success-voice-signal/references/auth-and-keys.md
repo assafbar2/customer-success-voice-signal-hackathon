@@ -36,11 +36,12 @@ Dress rehearsal does **not** need a key. Curtain-up does.
 | `DEDUPE_MINUTES` | Cue-history window |
 | `DATA_DIR` | Prompt book / show report directory |
 | `CUE_HOST` / `CUE_PORT` | HTTP listener bind (`npm run serve-cue`, default `127.0.0.1:8787`) |
-| `CUE_WEBHOOK_SECRET` | Optional Bearer / `X-Cue-Secret` for `POST /cue` |
+| `CUE_WEBHOOK_SECRET` | Required for non-loopback bind; Bearer / `X-Cue-Secret` |
+| `CUE_ALLOW_LIVE` | Must be `1` before HTTP `?live=1&confirm=PLACES` can curtain-up (webhook cannot arm itself) |
 | `SLACK_WEBHOOK_URL` | Live Slack-shaped adapter |
 | `GITHUB_TOKEN` / `GITHUB_REPO` / `GITHUB_ISSUE` | Live GitHub issue-comment adapter |
 
-SDK mapping + identity read-back: [calle-sdk.md](calle-sdk.md).
+SDK mapping + identity read-back: [calle-sdk.md](calle-sdk.md). Listener safety: [safety.md](safety.md).
 
 ## Rules
 

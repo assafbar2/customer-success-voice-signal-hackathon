@@ -1,7 +1,14 @@
 /**
  * Minimal inbound cue listener — POST /cue → runSignal.
  * Zero deps (node:http). Makes the inbound path deployable, not just --stdin.
+ *
+ * Safety:
+ * - Default is always dress rehearsal. Curtain-up via HTTP requires CUE_ALLOW_LIVE=1
+ *   (a webhook cannot arm itself with ?live=1&confirm=PLACES alone).
+ * - Non-loopback bind requires CUE_WEBHOOK_SECRET.
+ * - Secret compare uses crypto.timingSafeEqual.
  */
+import { timingSafeEqual } from "node:crypto";
 import http from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import type { SkillEnv } from "../config/env.js";
@@ -13,8 +20,13 @@ export interface CueServerOptions {
   env: SkillEnv;
   host?: string;
   port?: number;
-  /** Optional shared secret — checked against Authorization: Bearer or X-Cue-Secret */
+  /** Shared secret — Authorization: Bearer or X-Cue-Secret. Required for non-loopback. */
   secret?: string;
+  /**
+   * Operator arming switch (CUE_ALLOW_LIVE=1). Without this, ?live=1&confirm=PLACES
+   * is refused — a webhook can never escalate itself to a phone call.
+   */
+  allowLive?: boolean;
   /** Injectable for tests (defaults to runSignal). */
   run?: (args: RunSignalArgs) => Promise<RunSignalOutcome>;
   log?: (msg: string) => void;
@@ -33,6 +45,60 @@ export interface CueHttpResponse {
   intent_pending?: boolean;
 }
 
+export function isLoopbackHost(host: string): boolean {
+  const h = host.trim().toLowerCase();
+  return (
+    h === "127.0.0.1" ||
+    h === "::1" ||
+    h === "localhost" ||
+    h === "0:0:0:0:0:0:0:1"
+  );
+}
+
+/** Refuse non-loopback bind without a shared secret. */
+export function assertCueBindAllowed(
+  host: string,
+  secret: string | undefined,
+): void {
+  if (isLoopbackHost(host)) return;
+  if (secret?.trim()) return;
+  throw new Error(
+    `Non-loopback bind (${host}) requires CUE_WEBHOOK_SECRET. ` +
+      `Refusing to listen — set a secret, or bind 127.0.0.1 for local dress rehearsal.`,
+  );
+}
+
+function secretsEqual(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) {
+    // Constant-ish reject: still compare equal-length buffers to avoid early exit on length alone
+    // leaking via a shorter path in hot loops. Length mismatch is always false.
+    const pad = Buffer.alloc(b.length);
+    a.copy(pad);
+    timingSafeEqual(pad, b);
+    return false;
+  }
+  return timingSafeEqual(a, b);
+}
+
+export function checkSecret(
+  req: IncomingMessage,
+  secret: string | undefined,
+): { ok: true } | { ok: false; reason: string } {
+  if (!secret) return { ok: true };
+  const auth = req.headers.authorization?.trim() ?? "";
+  const bearer = auth.toLowerCase().startsWith("bearer ")
+    ? auth.slice(7).trim()
+    : "";
+  const header =
+    (req.headers["x-cue-secret"] as string | undefined)?.trim() ?? "";
+  if (secretsEqual(bearer, secret) || secretsEqual(header, secret)) {
+    return { ok: true };
+  }
+  return { ok: false, reason: "missing_or_invalid_cue_secret" };
+}
+
 function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -41,7 +107,11 @@ function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
       const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       total += buf.length;
       if (total > limit) {
-        reject(Object.assign(new Error(`body exceeds ${limit} bytes`), { code: "PAYLOAD_TOO_LARGE" }));
+        reject(
+          Object.assign(new Error(`body exceeds ${limit} bytes`), {
+            code: "PAYLOAD_TOO_LARGE",
+          }),
+        );
         req.destroy();
         return;
       }
@@ -69,20 +139,6 @@ function parseQuery(url: string): URLSearchParams {
 function pathOnly(url: string): string {
   const q = url.indexOf("?");
   return q >= 0 ? url.slice(0, q) : url;
-}
-
-function checkSecret(
-  req: IncomingMessage,
-  secret: string | undefined,
-): { ok: true } | { ok: false; reason: string } {
-  if (!secret) return { ok: true };
-  const auth = req.headers.authorization?.trim() ?? "";
-  const bearer = auth.toLowerCase().startsWith("bearer ")
-    ? auth.slice(7).trim()
-    : "";
-  const header = (req.headers["x-cue-secret"] as string | undefined)?.trim() ?? "";
-  if (bearer === secret || header === secret) return { ok: true };
-  return { ok: false, reason: "missing_or_invalid_cue_secret" };
 }
 
 function exitToHttpStatus(exit: RunSignalOutcome["exit"]): number {
@@ -115,6 +171,7 @@ export function createCueServer(opts: CueServerOptions): Server {
   const run = opts.run ?? runSignal;
   const log = opts.log ?? (() => undefined);
   const secret = opts.secret?.trim() || undefined;
+  const allowLive = opts.allowLive === true;
 
   return http.createServer(async (req, res) => {
     const method = (req.method ?? "GET").toUpperCase();
@@ -126,6 +183,7 @@ export function createCueServer(opts: CueServerOptions): Server {
           ok: true,
           service: "stage-manager-cue",
           endpoints: ["GET /health", "POST /cue"],
+          live_armed: allowLive,
         });
         return;
       }
@@ -196,13 +254,31 @@ export function createCueServer(opts: CueServerOptions): Server {
         query.get("dry_run") === "1" ||
         query.get("dry-run") === "1" ||
         query.get("dry_run") === "true";
-      const liveFlag = query.get("live") === "1" || query.get("live") === "true";
-      const placesTyped =
+      const wantsLive =
+        query.get("live") === "1" || query.get("live") === "true";
+      const wantsPlaces =
         (query.get("confirm") ?? "").toUpperCase() === "PLACES" ||
         (query.get("places") ?? "").toUpperCase() === "PLACES";
 
+      // A webhook must never escalate itself. Operator must arm CUE_ALLOW_LIVE=1.
+      if ((wantsLive || wantsPlaces) && !allowLive) {
+        log(
+          "POST /cue refused live escalation — CUE_ALLOW_LIVE not set (webhook cannot arm itself)",
+        );
+        sendJson(res, 403, {
+          exit: "hold",
+          mode: "dress_rehearsal",
+          message:
+            "HOLD: HTTP curtain-up requires CUE_ALLOW_LIVE=1 — a webhook cannot arm a live call. Default remains dress rehearsal.",
+        });
+        return;
+      }
+
+      const liveFlag = wantsLive && allowLive;
+      const placesTyped = wantsPlaces && allowLive;
+
       log(
-        `POST /cue  live=${liveFlag} places=${placesTyped} dry_run=${dryRun}`,
+        `POST /cue  live=${liveFlag} places=${placesTyped} dry_run=${dryRun} allowLive=${allowLive}`,
       );
 
       const outcome = await run({
@@ -233,6 +309,9 @@ export async function listenCueServer(
 ): Promise<{ server: Server; url: string; host: string; port: number }> {
   const host = opts.host ?? "127.0.0.1";
   const port = opts.port ?? 8787;
+  const secret = opts.secret?.trim() || undefined;
+  assertCueBindAllowed(host, secret);
+
   const server = createCueServer(opts);
 
   await new Promise<void>((resolve, reject) => {
@@ -246,7 +325,18 @@ export async function listenCueServer(
   const url = `http://${host}:${port}`;
   opts.log?.(`Stage Manager cue listener on ${url}`);
   opts.log?.(`  GET  ${url}/health`);
-  opts.log?.(`  POST ${url}/cue`);
-  opts.log?.(`  Demo: curl -sS -X POST ${url}/cue -H 'content-type: application/json' -d @events/webhook_stuck_support.json`);
+  opts.log?.(`  POST ${url}/cue  (dress rehearsal by default)`);
+  if (opts.allowLive) {
+    opts.log?.(
+      `  Live armed (CUE_ALLOW_LIVE=1) — ?live=1&confirm=PLACES can curtain-up`,
+    );
+  } else {
+    opts.log?.(
+      `  Live disarmed — webhook cannot escalate; set CUE_ALLOW_LIVE=1 to arm`,
+    );
+  }
+  opts.log?.(
+    `  Demo: curl -sS -X POST ${url}/cue -H 'content-type: application/json' -d @events/webhook_stuck_support.json`,
+  );
   return { server, url, host, port };
 }

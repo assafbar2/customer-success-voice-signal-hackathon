@@ -22,6 +22,7 @@
 
 - [x] Decision → action intent → Slack / GitHub live adapters (env-gated)
 - [x] HTTP cue listener — `npm run serve-cue` → `POST /cue` (curl → engine → apply-action)
+- [x] HTTP live arming — `CUE_ALLOW_LIVE=1` required; non-loopback needs secret; timingSafeEqual
 - [x] SDK depth — `failureCode` / `completionConfidence` / optional `webhookUrl` (create→persist→wait)
 - [x] Identity read-back — spoken stage code before 1/2/3 counts
 - [x] MVF writeup — `submission/mvf-feedback.md`
