@@ -20,3 +20,4 @@ submission/demo-reel/audio/
 submission/demo-reel/frames/
 submission/demo-reel/parts/
 submission/demo-reel/parts.txt
+__pycache__/
