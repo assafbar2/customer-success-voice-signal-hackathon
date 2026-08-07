@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-"""Build an editable PowerPoint heat map of support-adjacent surfaces.
+"""Build an editable PowerPoint treemap of support-adjacent surfaces.
 
-All channel labels use the same font and size; only "Support" is bold.
-Cell fill encodes relative volume (heat). Native shapes + text so PowerPoint
-users can edit colors, copy, and numbers without rebuilding.
+Tile *area* is proportional to volume. All labels share one font/size;
+only "Support" is bold. Native shapes + text for PowerPoint editing.
 """
 
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
-from pptx.util import Emu, Inches, Pt
+from pptx.util import Inches, Pt
 
 OUT = Path(__file__).resolve().parent / "support-channel-heatmap.pptx"
 
-# Volume drives heat. Discord is TBD → treated as unknown (neutral tile).
 CHANNELS: list[dict] = [
     {"label": "Documentation", "value": 300_000, "display": "300,000"},
     {"label": "Help centers total articles views", "value": 152_000, "display": "152,000"},
@@ -28,16 +27,19 @@ CHANNELS: list[dict] = [
     {"label": "Support", "value": 2_500, "display": "2500", "bold": True},
     {"label": "Social channels", "value": 600, "display": "600"},
     {"label": "Feedback systems", "value": 200, "display": "200"},
-    {"label": "Discord & community", "value": None, "display": "[TBD]"},
 ]
 
+DISCORD = {"label": "Discord & community", "value": None, "display": "[TBD]"}
 FOOTNOTE = "We redesigned one of the smallest, clearest surfaces first."
 
-# Light slide + amber→deep-coral heat (classic heat map, PPT-friendly).
 BG = RGBColor(0xF7, 0xF5, 0xF2)
 INK = RGBColor(0x1A, 0x17, 0x14)
 INK_MUTED = RGBColor(0x5C, 0x55, 0x4C)
 TILE_UNKNOWN = RGBColor(0xE4, 0xE0, 0xDA)
+GAP = Inches(0.012)
+
+LABEL_PT = 12
+VALUE_PT = 15
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -45,7 +47,6 @@ def lerp(a: float, b: float, t: float) -> float:
 
 
 def heat_color(t: float) -> RGBColor:
-    """Map 0..1 → pale sand → amber → deep coral."""
     t = max(0.0, min(1.0, t))
     stops = [
         (0.0, (0xF0, 0xE6, 0xD8)),
@@ -58,31 +59,73 @@ def heat_color(t: float) -> RGBColor:
         t1, c1 = stops[i + 1]
         if t <= t1:
             u = 0.0 if t1 == t0 else (t - t0) / (t1 - t0)
-            r = int(lerp(c0[0], c1[0], u))
-            g = int(lerp(c0[1], c1[1], u))
-            b = int(lerp(c0[2], c1[2], u))
-            return RGBColor(r, g, b)
+            return RGBColor(
+                int(lerp(c0[0], c1[0], u)),
+                int(lerp(c0[1], c1[1], u)),
+                int(lerp(c0[2], c1[2], u)),
+            )
     return RGBColor(*stops[-1][1])
 
 
 def contrast_ink(fill: RGBColor) -> RGBColor:
-    # Relative luminance; dark text on pale tiles, light text on hot tiles.
     r, g, b = fill[0] / 255, fill[1] / 255, fill[2] / 255
     lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
     return RGBColor(0xFF, 0xFB, 0xF6) if lum < 0.55 else INK
 
 
-def normalized_heats(items: list[dict]) -> list[float | None]:
-    known = [c["value"] for c in items if c["value"] is not None]
-    # Log scale so Documentation does not flatten everything else.
-    lo = math.log10(min(known))
-    hi = math.log10(max(known))
-    out: list[float | None] = []
-    for c in items:
-        if c["value"] is None:
-            out.append(None)
-        else:
-            out.append((math.log10(c["value"]) - lo) / (hi - lo) if hi > lo else 0.5)
+def heat_for(value: int, lo: float, hi: float) -> float:
+    if hi <= lo:
+        return 0.5
+    return (math.log10(value) - lo) / (hi - lo)
+
+
+@dataclass
+class Rect:
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+def sized_layout(channels: list[dict], x: float, y: float, w: float, h: float) -> list[tuple[dict, Rect]]:
+    """Area-proportional treemap tuned for this extreme volume range.
+
+    1) Documentation = left vertical band (share of total width).
+    2) Help centers = top of the right band (share of right height).
+    3) Remaining surfaces share the bottom-right strip, widths ∝ volume.
+
+    Area stays linear with volume; the bottom strip stays wide enough to read.
+    """
+    by_name = {c["label"]: c for c in channels}
+    total = sum(c["value"] for c in channels)
+
+    doc = by_name["Documentation"]
+    help_ = by_name["Help centers total articles views"]
+    small = [c for c in channels if c["label"] not in (doc["label"], help_["label"])]
+    small = sorted(small, key=lambda c: c["value"], reverse=True)
+
+    doc_w = w * (doc["value"] / total)
+    right_x = x + doc_w
+    right_w = w - doc_w
+
+    right_total = total - doc["value"]
+    help_h = h * (help_["value"] / right_total)
+    small_y = y + help_h
+    small_h = h - help_h
+    small_total = sum(c["value"] for c in small)
+
+    out: list[tuple[dict, Rect]] = [
+        (doc, Rect(x, y, doc_w, h)),
+        (help_, Rect(right_x, y, right_w, help_h)),
+    ]
+    cx = right_x
+    for i, ch in enumerate(small):
+        tw = right_w * (ch["value"] / small_total)
+        # Last tile absorbs float remainder so the strip seals flush.
+        if i == len(small) - 1:
+            tw = right_x + right_w - cx
+        out.append((ch, Rect(cx, small_y, tw, small_h)))
+        cx += tw
     return out
 
 
@@ -95,15 +138,19 @@ def set_run(paragraph, text: str, *, size_pt: float, bold: bool, color: RGBColor
     run.font.color.rgb = color
 
 
-def add_tile(slide, left, top, width, height, channel: dict, heat: float | None) -> None:
+def add_tile(slide, rect: Rect, channel: dict, heat: float | None, *, gap: int) -> None:
+    # Keep a hairline gutter without erasing tiny volume tiles.
+    inset = min(gap // 2, max(int(rect.w) // 8, 0), max(int(rect.h) // 8, 0))
+    left = int(round(rect.x)) + inset
+    top = int(round(rect.y)) + inset
+    width = max(int(round(rect.w)) - 2 * inset, 1)
+    height = max(int(round(rect.h)) - 2 * inset, 1)
+
     shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
-    shape.adjustments[0] = 0.08
+    shape.adjustments[0] = 0.05
     fill = shape.fill
     fill.solid()
-    if heat is None:
-        rgb = TILE_UNKNOWN
-    else:
-        rgb = heat_color(heat)
+    rgb = TILE_UNKNOWN if heat is None else heat_color(heat)
     fill.fore_color.rgb = rgb
     shape.line.fill.background()
 
@@ -112,64 +159,30 @@ def add_tile(slide, left, top, width, height, channel: dict, heat: float | None)
     tf.clear()
     tf.word_wrap = True
     tf.auto_size = None
-    shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
     tf.anchor = MSO_ANCHOR.MIDDLE
 
-    # Same type treatment for every label; Support alone is bold.
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
-    p.space_after = Pt(4)
+    p.space_after = Pt(2)
     set_run(
         p,
         channel["label"],
-        size_pt=14,
+        size_pt=LABEL_PT,
         bold=bool(channel.get("bold")),
         color=ink,
     )
 
     p2 = tf.add_paragraph()
     p2.alignment = PP_ALIGN.CENTER
-    set_run(p2, channel["display"], size_pt=18, bold=False, color=ink)
-
-
-def add_legend(slide, left, top, width, height) -> None:
-    # Continuous strip via thin adjacent rects (still native shapes → editable).
-    n = 24
-    cell_w = width // n
-    for i in range(n):
-        t = i / (n - 1)
-        rect = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE,
-            left + cell_w * i,
-            top,
-            cell_w + Emu(2000),  # slight overlap to avoid hairline gaps
-            height,
-        )
-        rect.fill.solid()
-        rect.fill.fore_color.rgb = heat_color(t)
-        rect.line.fill.background()
-
-    label_w = Inches(1.5)
-    low = slide.shapes.add_textbox(left, top + height + Inches(0.08), label_w, Inches(0.28))
-    p = low.text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.LEFT
-    set_run(p, "Lower volume", size_pt=10, bold=False, color=INK_MUTED)
-
-    high = slide.shapes.add_textbox(
-        left + width - label_w, top + height + Inches(0.08), label_w, Inches(0.28)
-    )
-    p = high.text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.RIGHT
-    set_run(p, "Higher volume", size_pt=10, bold=False, color=INK_MUTED)
+    set_run(p2, channel["display"], size_pt=VALUE_PT, bold=False, color=ink)
 
 
 def build() -> Path:
     prs = Presentation()
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
-    slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
 
-    # Background
     bg = slide.shapes.add_shape(
         MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), prs.slide_width, prs.slide_height
     )
@@ -177,42 +190,46 @@ def build() -> Path:
     bg.fill.fore_color.rgb = BG
     bg.line.fill.background()
 
-    # Title
-    title = slide.shapes.add_textbox(Inches(0.6), Inches(0.35), Inches(12.1), Inches(0.45))
-    p = title.text_frame.paragraphs[0]
-    set_run(p, "Where attention already lives", size_pt=22, bold=False, color=INK)
+    title = slide.shapes.add_textbox(Inches(0.55), Inches(0.28), Inches(12.2), Inches(0.4))
+    set_run(title.text_frame.paragraphs[0], "Where attention already lives", size_pt=22, bold=False, color=INK)
 
-    subtitle = slide.shapes.add_textbox(Inches(0.6), Inches(0.78), Inches(12.1), Inches(0.35))
-    p = subtitle.text_frame.paragraphs[0]
+    subtitle = slide.shapes.add_textbox(Inches(0.55), Inches(0.68), Inches(12.2), Inches(0.32))
     set_run(
-        p,
-        "Heat = relative volume across support-adjacent surfaces. Same type everywhere — Support is bold.",
+        subtitle.text_frame.paragraphs[0],
+        "Tile size = volume (linear). Color reinforces the same scale. Same type everywhere — Support is bold.",
         size_pt=12,
         bold=False,
         color=INK_MUTED,
     )
 
-    heats = normalized_heats(CHANNELS)
-    cols, rows = 4, 2
-    margin_x = Inches(0.6)
-    margin_y = Inches(1.35)
-    gap = Inches(0.14)
-    usable_w = prs.slide_width - margin_x * 2 - gap * (cols - 1)
-    usable_h = Inches(4.15) - gap * (rows - 1)
-    tile_w = usable_w // cols
-    tile_h = usable_h // rows
+    origin_x = float(Inches(0.55))
+    origin_y = float(Inches(1.15))
+    region_w = float(Inches(12.2))
+    region_h = float(Inches(4.85))
+    discord_w = float(Inches(0.72))
+    tree_w = region_w - discord_w - float(GAP)
+    gap_emu = int(GAP)
 
-    for idx, (channel, heat) in enumerate(zip(CHANNELS, heats)):
-        r, c = divmod(idx, cols)
-        left = margin_x + (tile_w + gap) * c
-        top = margin_y + (tile_h + gap) * r
-        add_tile(slide, left, top, tile_w, tile_h, channel, heat)
+    values = [c["value"] for c in CHANNELS]
+    lo, hi = math.log10(min(values)), math.log10(max(values))
 
-    add_legend(slide, Inches(0.6), Inches(5.75), Inches(4.2), Inches(0.22))
+    for channel, rect in sized_layout(CHANNELS, origin_x, origin_y, tree_w, region_h):
+        add_tile(slide, rect, channel, heat_for(channel["value"], lo, hi), gap=gap_emu)
 
-    foot = slide.shapes.add_textbox(Inches(0.6), Inches(6.55), Inches(12.1), Inches(0.45))
-    p = foot.text_frame.paragraphs[0]
-    set_run(p, FOOTNOTE, size_pt=14, bold=False, color=INK)
+    discord_rect = Rect(origin_x + tree_w + float(GAP), origin_y, discord_w, region_h)
+    add_tile(slide, discord_rect, DISCORD, None, gap=gap_emu)
+
+    note = slide.shapes.add_textbox(Inches(0.55), Inches(6.15), Inches(12.2), Inches(0.28))
+    set_run(
+        note.text_frame.paragraphs[0],
+        "Area is linear with volume (Documentation ≈ 1500× Feedback). Discord is unmeasured — not on the size scale.",
+        size_pt=11,
+        bold=False,
+        color=INK_MUTED,
+    )
+
+    foot = slide.shapes.add_textbox(Inches(0.55), Inches(6.55), Inches(12.2), Inches(0.4))
+    set_run(foot.text_frame.paragraphs[0], FOOTNOTE, size_pt=14, bold=False, color=INK)
 
     prs.save(OUT)
     return OUT

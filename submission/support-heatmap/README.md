@@ -13,10 +13,11 @@ Editable PowerPoint slide of relative volume across support-adjacent surfaces.
 
 ## Design rules
 
+- **Tile area is linear with volume** (treemap) — Documentation dominates; Support is visibly small
+- Color reinforces the same volume scale
 - Every channel label uses the same font family and size
 - Only **Support** is bold
-- Tile color = log-scaled volume (Documentation hottest → Feedback coolest)
-- Discord stays neutral (`[TBD]`)
+- Discord is a neutral side rail (`[TBD]`) — not sized as measured volume
 - Footnote: *We redesigned one of the smallest, clearest surfaces first.*
 
 ## Regenerate
