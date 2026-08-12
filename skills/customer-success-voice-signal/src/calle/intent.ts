@@ -110,5 +110,3 @@ export function buildCallIntent(
     },
   });
 }
-
-export { buildResultSchema };
