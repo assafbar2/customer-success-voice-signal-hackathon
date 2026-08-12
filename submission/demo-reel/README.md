@@ -1,30 +1,40 @@
-# Demo reel — how we made a video without a human on camera
+# Demo reel — Stage Manager
 
 ## What you get
 
-[`stage-manager-demo.mp4`](stage-manager-demo.mp4) — ~70s Stage Manager walkthrough with TTS voiceover + still frames (CLI output, call beat, writeback).
+- [`stage-manager-demo.mp4`](stage-manager-demo.mp4) — ~65s
+- [`stage-manager-loop.gif`](stage-manager-loop.gif) — CLI loop for README + site
+
+## What was recorded here (this machine)
+
+1. **Real CLI screen recording** on the cloud desktop (`xfce4-terminal`, JetBrains Mono): `--last` (live prompt book, option 1), dress rehearsal, `--list`, `apply-action --dry-run`.
+2. **Title / value / end cards** with espeak-ng VO from [`../video-script.md`](../video-script.md).
+3. **Call beat** reconstructed from the **2026-08-12 live CALL-E transcript** (Assaf, stage code 4821, “1”). Caption on screen: handset audio lives on the owner’s phone.
+
+Slack does not fire. Customer was never called.
 
 ## Honest limits
 
-- Voice is **espeak-ng** (robotic). Fine for a temporary / placeholder Devpost video; re-record VO with a human mic for the final cut if you care about polish.
-- Curtain-up phone ring is **recreated in frames** (we do not re-dial judges’ phones in the reel). Live calls were already proven separately.
-- No talking-head. That’s intentional for “agent can ship a first cut.”
+- Voice is **espeak-ng** (robotic). Swap in a human mic later if you want polish — the CLI take does not need to be re-shot.
+- The physical phone ring / earpiece audio cannot be captured from this VM. The live call already happened; this reel uses that transcript instead of pretending we held the handset.
+- No talking-head. Intentional.
 
 ## Rebuild
 
+Needs: `espeak-ng`, `ffmpeg`, `python3-pillow`, plus the CLI recording at `/opt/cursor/artifacts/stage-manager-cli-demo.mp4` (or re-run `record_cli.sh` on a desktop with `DISPLAY`).
+
 ```bash
-# deps: espeak-ng, ffmpeg, python3-pillow
-sudo apt-get install -y espeak-ng ffmpeg
-pip install pillow
 bash submission/demo-reel/build.sh
 ```
 
-## Better VO later (optional)
+On-camera CLI (fullscreen terminal):
 
-1. Record human VO matching [`../video-script.md`](../video-script.md) as WAV segments `01.wav`…`07.wav` in `audio/`.  
-2. Re-run `python3 submission/demo-reel/build_reel.py` (or splice with CapCut / Descript).  
-3. Or screen-record the live [`site/`](../../site/) + real terminal with QuickTime / OBS and lay VO under.
+```bash
+DISPLAY=:1 xfce4-terminal --fullscreen --hide-menubar --font="JetBrains Mono 18" \
+  --color-bg="#0c0a08" --color-text="#f4efe6" \
+  --command="bash submission/demo-reel/record_cli.sh"
+```
 
 ## Pre-submit
 
-When the final video ships, tick it on [`../PRE-SUBMIT.md`](../PRE-SUBMIT.md) **together with** the MVF survey ([`../mvf-feedback.md`](../mvf-feedback.md)), terminal GIF, and awesome-list PR. MVF is not part of the reel — it’s the Devpost feedback form filled the same day.
+Tick video + GIF on [`../PRE-SUBMIT.md`](../PRE-SUBMIT.md) **together with** the MVF survey. MVF is not part of the reel.
