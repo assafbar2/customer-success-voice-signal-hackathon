@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Build ≤3min Stage Manager demo reel from espeak VO + still frames (with audio)."""
+"""Build ≤3min Stage Manager demo reel from espeak VO + still frames.
+
+First-cut for Devpost: real CLI captures + reconstructed call beat.
+Does NOT include a live CALL-E ring (no key/phone in this environment).
+"""
 from __future__ import annotations
 
 import json
@@ -14,35 +18,35 @@ AUDIO = REEL / "audio"
 PARTS = REEL / "parts"
 W, H = 1920, 1080
 
-# Approved script VO (submission/video-script.md)
+# Winning spine, compressed: ring → why → curl → dress → decision → Slack → closer
 LINES = [
     (
         "01",
-        "Customer Success owns the revenue relationship. Slack owns the noise. When a named account is stuck — looping support, red S L A, agent blocked, health going quiet — the alert hides under everything else.",
+        "Hi Maya. Stage Manager. You're up for Acme. That call happened because a support ticket looped twice.",
     ),
     (
         "02",
-        "Phone still cuts through. We don't dial the customer. We cue the firefighter. Stage Manager. Headset on. Places, please — your account is on.",
+        "Customer Success owns the revenue relationship. Slack owns the noise. PagerDuty phones you to acknowledge an alert. Ack is not a decision.",
     ),
     (
         "03",
-        "Dress rehearsal first — default, no ring, no keys required for judges. Preview the cue. Update the prompt book without touching a phone.",
+        "Judges: curl a cue into Stage Manager. No API key. Dress rehearsal — dry-run — by default. A webhook cannot arm a live call.",
     ),
     (
         "04",
-        "Four cues, one engine: stuck support, S L A risk, agent needs a decision, health or onboarding stall.",
+        "Four cues, one engine. Stuck support, S L A risk, agent needs a decision, onboarding stall. CS owner only — never the customer.",
     ),
     (
         "05",
-        "Curtain up. Live gate: live and places. Hi Maya. Stage Manager. You're up for Acme. Line reading — one, two, or three. Maya says one. Take over in chat. Logging to the prompt book. Clear.",
+        "Curtain up. Stage code four eight two one. Line reading. One, two, or three. Maya says one. Take over in chat. Clear. Break a leg — or just open the ticket.",
     ),
     (
         "06",
-        "Decision one — take over in chat. Structured writeback. Auditable. The kind of trail you can hand a manager, not another Slack shrug. Same path when an agent hits needs-human — we ran that live too.",
+        "Decision one lands as an action intent. Apply-action posts it to Slack. Phone rings, you say one, a message lands in the next system.",
     ),
     (
         "07",
-        "When the account is on fire, we cue the firefighter — not the building. Stage Manager. Call E.",
+        "When the account is on fire, we cue the firefighter — not the building. Stage Manager. Call E. No customers were called in the making of this demo.",
     ),
 ]
 
@@ -78,11 +82,11 @@ def centered(draw, text, y, f, fill=(244, 239, 230)):
 
 
 def draw_term(d, lines, title):
-    d.text((200, 120), title, font=font(54, True), fill=(255, 208, 137))
-    y = 220
-    for ln in lines[:16]:
-        d.text((200, y), ln[:90], font=font(28), fill=(244, 239, 230))
-        y += 42
+    d.text((200, 100), title, font=font(48, True), fill=(255, 208, 137))
+    y = 190
+    for ln in lines[:18]:
+        d.text((200, y), ln[:92], font=font(26), fill=(244, 239, 230))
+        y += 40
 
 
 def wav_duration(path: Path) -> float:
@@ -103,6 +107,19 @@ def wav_duration(path: Path) -> float:
     )
 
 
+def clean_lines(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    out = []
+    for ln in path.read_text().splitlines():
+        if ln.startswith(">") or ln.startswith("npm "):
+            continue
+        ln = ln.replace("/workspace/skills/customer-success-voice-signal/", "")
+        if ln.strip():
+            out.append(ln)
+    return out
+
+
 def main() -> None:
     FRAMES.mkdir(parents=True, exist_ok=True)
     AUDIO.mkdir(parents=True, exist_ok=True)
@@ -111,109 +128,111 @@ def main() -> None:
     for sid, text in LINES:
         wav = AUDIO / f"{sid}.wav"
         subprocess.check_call(
-            ["espeak-ng", "-v", "en-us+m3", "-s", "138", "-p", "38", "-w", str(wav), text]
+            ["espeak-ng", "-v", "en-us+m3", "-s", "142", "-p", "38", "-w", str(wav), text]
         )
 
-    Fb, Fh, Fs = font(96, True), font(54, True), font(24)
+    Fb, Fh, Fs = font(96, True), font(48, True), font(24)
     SPOT = (255, 208, 137)
     DIM = (183, 174, 160)
 
     img, d = bg()
-    centered(d, "STAGE MANAGER", 340, Fb, SPOT)
-    centered(d, "The alert hides under Slack.", 470, Fh)
-    centered(d, "Problem · phone interrupt · CS owner only", 560, Fs, DIM)
-    img.save(FRAMES / "01_title.png")
+    centered(d, "STAGE MANAGER", 300, Fb, SPOT)
+    centered(d, "Hi Maya. You're up for Acme.", 450, Fh)
+    centered(d, "Cold open · CS owner only · never the customer", 560, Fs, DIM)
+    img.save(FRAMES / "01_open.png")
 
     img, d = bg()
-    centered(d, "Places, please —", 380, Fh)
-    centered(d, "your account is on.", 460, Fh, SPOT)
-    centered(d, "We cue the firefighter — not the building.", 560, Fs, DIM)
-    img.save(FRAMES / "02_value.png")
+    centered(d, "Ack is not a decision.", 380, Fb, SPOT)
+    centered(d, "PagerDuty phones you to acknowledge.", 520, Fh)
+    centered(d, "We capture a closed-set 1 / 2 / 3.", 600, Fs, DIM)
+    img.save(FRAMES / "02_ack.png")
 
-    dress = (
-        (REEL / "dress-rehearsal.txt").read_text().splitlines()
-        if (REEL / "dress-rehearsal.txt").exists()
-        else []
-    )
-    dress = [
-        ln.replace("/workspace/skills/customer-success-voice-signal/", "") for ln in dress
+    curl = [
+        "$ curl -X POST http://127.0.0.1:8787/cue \\",
+        "    -H 'content-type: application/json' \\",
+        "    -d @events/webhook_stuck_support.json",
+        "",
+        'exit: ok   mode: dress_rehearsal',
+        "trigger: stuck_support   option: 1   take_over_chat",
+        "intent_pending: true",
+        "",
+        "Live query without CUE_ALLOW_LIVE → HTTP 403 HOLD",
+        "A webhook cannot arm a live call.",
     ]
     img, d = bg()
-    draw_term(d, dress, "Dress rehearsal · no ring")
-    img.save(FRAMES / "03_dress.png")
+    draw_term(d, curl, "POST /cue · dress rehearsal")
+    img.save(FRAMES / "03_curl.png")
+
+    dress = clean_lines(REEL / "dress-rehearsal.txt")
+    img, d = bg()
+    draw_term(d, dress[:16] or [
+        "Persona: Stage Manager",
+        "Cue: stuck_support",
+        "Call sheet: Maya Chen (CS only)",
+        "Stage code: 4821",
+        "1. Take over in chat now",
+        "2. Assign to SE / specialist",
+        "3. Not now — snooze 2 hours",
+        "Simulated line reading: 1",
+    ], "Dress rehearsal · no ring")
+    img.save(FRAMES / "04_dress.png")
 
     img, d = bg()
     draw_term(
         d,
         [
-            "Four cues · one engine",
-            "",
-            "  stuck_support",
-            "  sla_risk",
-            "  agent_needs_decision",
-            "  health_onboarding",
-            "",
-            "Same pipeline. CS owner only.",
-        ],
-        "Cue sheet",
-    )
-    img.save(FRAMES / "04_cues.png")
-
-    img, d = bg()
-    draw_term(
-        d,
-        [
-            "Curtain up — live CALL-E",
+            "Curtain up — live CALL-E  (reconstructed beat)",
             "",
             "Hi Maya. Stage Manager. You're up for Acme.",
+            "Stage code — please repeat: 4 8 2 1.",
             "Ticket 4821 looping. Two bot handoffs.",
-            "Line reading. Press or say 1, 2, or 3.",
+            "Line reading. Say 1, 2, or 3.",
             "",
-            "Maya: One.",
+            "Maya: Four eight two one. One.",
             "",
             "Confirming option 1 — take over in chat.",
             "Logging to the prompt book. Clear.",
+            "Break a leg — or just open the ticket.",
         ],
-        "Live line reading",
+        "Identity + line reading",
     )
     img.save(FRAMES / "05_call.png")
 
+    slack = [
+        "$ npm run apply-action -- --last --adapter slack",
+        "",
+        "Stage Manager — decision for Acme Corp",
+        "Cue: stuck_support · Ticket 4821",
+        "Line reading 1: Take over in chat now",
+        "",
+        "Phone rings → you say one → Slack gets the decision.",
+        "That's the product. Not an ack. A handoff.",
+    ]
     img, d = bg()
-    draw_term(
-        d,
-        [
-            "Business value — writeback",
-            "",
-            "stuck_support        → 1  Take over in chat",
-            "agent_needs_decision → 1  Approve A (exception)",
-            "",
-            "Right person · faster decision · audit trail",
-            "Safe by default · one engine",
-        ],
-        "Prompt book / show report",
-    )
-    img.save(FRAMES / "06_writeback.png")
+    draw_term(d, slack, "Action intent → Slack")
+    img.save(FRAMES / "06_slack.png")
 
     img, d = bg()
-    centered(d, "When the account is on fire,", 340, Fh)
-    centered(d, "we cue the firefighter — not the building.", 420, Fh, SPOT)
-    centered(d, "Stage Manager · customer-success-voice-signal", 540, Fs, DIM)
+    centered(d, "When the account is on fire,", 300, Fh)
+    centered(d, "we cue the firefighter — not the building.", 380, Fh, SPOT)
+    centered(d, "No customers were called in the making of this demo.", 500, Fs, DIM)
+    centered(d, "Stage Manager · skills/customer-success-voice-signal/", 600, Fs, DIM)
     centered(
         d,
         "github.com/assafbar2/customer-success-voice-signal-hackathon",
-        620,
+        660,
         Fs,
         DIM,
     )
     img.save(FRAMES / "07_end.png")
 
     frame_names = [
-        "01_title",
-        "02_value",
-        "03_dress",
-        "04_cues",
+        "01_open",
+        "02_ack",
+        "03_curl",
+        "04_dress",
         "05_call",
-        "06_writeback",
+        "06_slack",
         "07_end",
     ]
 
@@ -224,7 +243,6 @@ def main() -> None:
         frame = FRAMES / f"{frame_names[i]}.png"
         dur = wav_duration(wav)
         part = PARTS / f"{i:02d}.mp4"
-        # Explicit AAC audio — previous -c copy concat dropped the track
         subprocess.check_call(
             [
                 "ffmpeg",
@@ -259,7 +277,6 @@ def main() -> None:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        # verify audio present
         probe = subprocess.check_output(
             [
                 "ffprobe",
@@ -287,7 +304,6 @@ def main() -> None:
     artifact = Path("/opt/cursor/artifacts/demo/stage-manager-demo.mp4")
     artifact.parent.mkdir(parents=True, exist_ok=True)
 
-    # Re-encode concat so audio survives
     subprocess.check_call(
         [
             "ffmpeg",
@@ -315,25 +331,8 @@ def main() -> None:
     )
     artifact.write_bytes(out.read_bytes())
     (REEL / "timeline.json").write_text(json.dumps(segs, indent=2))
-
-    astreams = subprocess.check_output(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-select_streams",
-            "a",
-            "-show_entries",
-            "stream=codec_name,channels,sample_rate",
-            "-of",
-            "json",
-            str(out),
-        ],
-        text=True,
-    )
     total = sum(s["approx_seconds"] for s in segs)
     print(f"wrote {out} ({out.stat().st_size} bytes) ~{total:.1f}s")
-    print("audio streams:", astreams)
 
 
 if __name__ == "__main__":

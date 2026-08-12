@@ -1,0 +1,15 @@
+
+> customer-success-voice-signal@0.1.0 apply-action
+> tsx src/applyActionCli.ts --last --dry-run
+
+=== Action dry-run ===
+Intent: act_stuck_support_acct_acme_1786552704872
+Action: assign_owner_to_ticket_and_post_note
+Adapter: zendesk_ticket_note
+Account: Acme Corp (acct_acme)
+Decision: 1 — Take over in chat now
+Adapters planned: zendesk_ticket_note, salesforce_task, slack_webhook, internal_queue
+
+DRY-RUN: would assign_owner_to_ticket_and_post_note via zendesk_ticket_note for Acme Corp (acct_acme). No external system called.
+Intent file: /workspace/skills/customer-success-voice-signal/data/actions/pending/act_stuck_support_acct_acme_1786552704872.json
+Receipt: /workspace/skills/customer-success-voice-signal/data/actions/executed/rcpt_act_stuck_support_acct_acme_1786552704872_1786552705148.dry-run.json

@@ -1,0 +1,2 @@
+{"exit":"hold","mode":"dress_rehearsal","message":"HOLD: HTTP curtain-up requires CUE_ALLOW_LIVE=1 — a webhook cannot arm a live call. Default remains dress rehearsal."}
+HTTP:403

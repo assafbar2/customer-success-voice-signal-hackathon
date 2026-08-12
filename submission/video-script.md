@@ -1,6 +1,6 @@
 # Demo video script — Stage Manager (≤3:00)
 
-**Status:** APPROVED — regenerating reel with audio.  
+**Status:** FIRST-CUT SHIPPED — TTS reel at `demo-reel/stage-manager-demo.mp4` (~76s). Live ring take still open.  
 **Problem framing:** Customer Success and other customer-facing teams.
 
 **Goal:** Problem → why phone → product → dress rehearsal → live decision → writeback → business value → end.  

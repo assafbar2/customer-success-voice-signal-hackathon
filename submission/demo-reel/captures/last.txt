@@ -1,0 +1,32 @@
+
+> customer-success-voice-signal@0.1.0 signal
+> tsx src/cli.ts --last
+
+Last prompt-book entry:
+{"at":"2026-08-12T16:38:24.869Z","mode":"dress_rehearsal","trigger_id":"stuck_support","account_id":"acct_acme","account_name":"Acme Corp","cs_owner_id":"cs_maya","persona":"Stage Manager","decision":"take_over_chat","decision_label":"Take over in chat now","option_id":"1","call_run_id":"dress_rehearsal","hold_reason":null}
+
+Show report (head):
+## Cue — 2026-08-12T16:38:24.869Z
+
+| Field | Value |
+| --- | --- |
+| Mode | Dress rehearsal |
+| Trigger | `stuck_support` |
+| Account | Acme Corp (`acct_acme`) |
+| CS owner | `cs_maya` |
+| Option | 1 |
+| Decision | Take over in chat now (`take_over_chat`) |
+| Call run | dress_rehearsal |
+| HOLD | — |
+| Action intent | `/workspace/skills/customer-success-voice-signal/data/actions/pending/act_stuck_support_acct_acme_1786552704872.json` |
+
+### Call sheet preview
+
+```
+Persona: Stage Manager
+Cue: stuck_support
+Account: Acme Corp (acct_acme)
+Call sheet: Maya Chen (CS only — never customer)
+Stage code (identity read-back): 4821
+Line readings:
+  1. Take over in chat now

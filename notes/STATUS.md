@@ -32,8 +32,9 @@
 Master list: [`submission/PRE-SUBMIT.md`](../submission/PRE-SUBMIT.md)
 
 - [ ] **MVF survey** — paste `submission/mvf-feedback.md` on Devpost (same session as video/Devpost)
-- [ ] Demo video — `submission/video-script.md`
-- [ ] Terminal GIF — `submission/gif-notes.md` → README + site
+- [x] Demo video **first-cut** (TTS + reconstructed ring) — `submission/demo-reel/stage-manager-demo.mp4`
+- [ ] Demo video **live take** — real ring + Slack land (operator; this is still the win shot)
+- [x] Terminal GIF — `submission/demo-reel/stage-manager-loop.gif` (README + site)
 - [ ] Awesome-list PR — `submission/awesome-list/PACKAGING.md` (MVF is a gate on that checklist)
 - [ ] Devpost form — `submission/devpost.md`
 - [x] GitHub repo homepage → Pages URL

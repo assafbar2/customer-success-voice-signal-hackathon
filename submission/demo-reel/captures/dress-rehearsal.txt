@@ -1,3 +1,7 @@
+
+> customer-success-voice-signal@0.1.0 signal
+> tsx src/cli.ts --fixture stuck_support_acme.json --dry-run
+
 === Dress rehearsal (no ring) ===
 Persona: Stage Manager
 Cue: stuck_support
@@ -9,8 +13,8 @@ Line readings:
   2. Assign to SE / specialist
   3. Not now — snooze 2 hours
 Simulated line reading: 1 — Take over in chat now
-Prompt book: data/prompt-book.ndjson
-Show report: data/show-report.md
-Action intent: data/actions/pending/act_stuck_support_acct_acme_1786552703095.json
+Prompt book: /workspace/skills/customer-success-voice-signal/data/prompt-book.ndjson
+Show report: /workspace/skills/customer-success-voice-signal/data/show-report.md
+Action intent: /workspace/skills/customer-success-voice-signal/data/actions/pending/act_stuck_support_acct_acme_1786552703095.json
 Call sheet phone (masked): +15***00
 Dress rehearsal complete — house ready, no live ring.

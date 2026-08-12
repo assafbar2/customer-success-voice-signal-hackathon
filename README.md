@@ -68,6 +68,10 @@ npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITH
 
 **Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
+![Dress rehearsal / POST /cue](submission/demo-reel/stage-manager-loop.gif)
+
+First-cut demo reel (~76s, TTS): [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) — reconstructed call beat, not a live ring.
+
 **Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live · SDK `failureCode`/`completionConfidence` preferred · identity stage-code read-back before 1/2/3.
 
 Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/) · SDK notes: [`skills/customer-success-voice-signal/references/calle-sdk.md`](skills/customer-success-voice-signal/references/calle-sdk.md) · MVF: [`submission/mvf-feedback.md`](submission/mvf-feedback.md)
@@ -102,9 +106,10 @@ Master pre-submit (video · GIF · awesome-list · **MVF** · Devpost):
 
 - [x] Skill + dress rehearsal + curtain-up path
 - [x] Judge site on GitHub Pages
-- [ ] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md)
+- [x] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md) / [`submission/demo-reel/stage-manager-loop.gif`](submission/demo-reel/stage-manager-loop.gif)
 - [ ] Awesome-list PR — [`submission/awesome-list/PACKAGING.md`](submission/awesome-list/PACKAGING.md) (MVF is a gate)
-- [ ] Demo video — [`submission/video-script.md`](submission/video-script.md)
+- [x] Demo video first-cut (TTS, reconstructed ring) — [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4)
+- [ ] Demo video **live take** (real CALL-E ring + Slack land) — still the win shot
 - [ ] **MVF survey** — paste [`submission/mvf-feedback.md`](submission/mvf-feedback.md) on Devpost
 - [ ] Devpost form — [`submission/devpost.md`](submission/devpost.md)
 

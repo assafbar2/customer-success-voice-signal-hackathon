@@ -1,14 +1,15 @@
-# Demo reel — how we made a video without a human on camera
+# Demo reel — Stage Manager
 
 ## What you get
 
-[`stage-manager-demo.mp4`](stage-manager-demo.mp4) — ~70s Stage Manager walkthrough with TTS voiceover + still frames (CLI output, call beat, writeback).
+- [`stage-manager-demo.mp4`](stage-manager-demo.mp4) — ~76s first-cut (TTS + stills, real CLI captures)
+- [`stage-manager-loop.gif`](stage-manager-loop.gif) — README / site loop (`POST /cue` + dress rehearsal)
 
 ## Honest limits
 
-- Voice is **espeak-ng** (robotic). Fine for a temporary / placeholder Devpost video; re-record VO with a human mic for the final cut if you care about polish.
-- Curtain-up phone ring is **recreated in frames** (we do not re-dial judges’ phones in the reel). Live calls were already proven separately.
-- No talking-head. That’s intentional for “agent can ship a first cut.”
+- Voice is **espeak-ng** (robotic). Fine as a Devpost placeholder; re-record VO for polish.
+- Curtain-up phone ring is **reconstructed in frames**. This environment has no `CALLE_API_KEY` / real CS phone / Slack webhook, so we cannot capture `curl → ring → one → Slack lands`.
+- Live ladder (real rings, including voicemail/unclear) remains in [`../../research/calle-api-notes.md`](../../research/calle-api-notes.md).
 
 ## Rebuild
 
@@ -19,12 +20,8 @@ pip install pillow
 bash submission/demo-reel/build.sh
 ```
 
-## Better VO later (optional)
+## Winning take (operator — not this VM)
 
-1. Record human VO matching [`../video-script.md`](../video-script.md) as WAV segments `01.wav`…`07.wav` in `audio/`.  
-2. Re-run `python3 submission/demo-reel/build_reel.py` (or splice with CapCut / Descript).  
-3. Or screen-record the live [`site/`](../../site/) + real terminal with QuickTime / OBS and lay VO under.
+Needs: `CALLE_API_KEY`, `CS_OWNER_E164`, `SIGNAL_CONFIRM=PLACES`, `CUE_ALLOW_LIVE=1`, `SLACK_WEBHOOK_URL`, screen + call audio.
 
-## Pre-submit
-
-When the final video ships, tick it on [`../PRE-SUBMIT.md`](../PRE-SUBMIT.md) **together with** the MVF survey ([`../mvf-feedback.md`](../mvf-feedback.md)), terminal GIF, and awesome-list PR. MVF is not part of the reel — it’s the Devpost feedback form filled the same day.
+Spine: `curl POST /cue?live=1&confirm=PLACES` → phone rings → stage code → “one” → `apply-action --adapter slack`.

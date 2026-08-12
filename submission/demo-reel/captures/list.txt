@@ -1,0 +1,9 @@
+
+> customer-success-voice-signal@0.1.0 signal
+> tsx src/cli.ts --list
+
+Call sheet — fixtures:
+  agent_needs_decision_acme.json  cue=agent_needs_decision  account=Acme Corp  id=agent_needs_decision_acme
+  health_onboarding_initech.json  cue=health_onboarding  account=Initech  id=health_onboarding_initech
+  sla_risk_globex.json  cue=sla_risk  account=Globex  id=sla_risk_globex
+  stuck_support_acme.json  cue=stuck_support  account=Acme Corp  id=stuck_support_acme
