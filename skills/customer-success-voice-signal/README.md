@@ -38,6 +38,8 @@ npm run signal -- --last
 4. Run: `npm run signal -- --fixture stuck_support_acme.json --live PLACES`
 5. Check `data/prompt-book.ndjson`, `data/show-report.md`, and `data/actions/pending/`
 
+Crash recovery / remap (no new ring): `npm run signal -- --fixture stuck_support_acme.json --from-call call_xxx`
+
 ### Exit codes
 
 | Code | Meaning |
@@ -79,6 +81,7 @@ See [references/safety.md](references/safety.md) · [references/calle-sdk.md](re
 PLACES             Live gate (or SIGNAL_CONFIRM=PLACES)
 --list             List fixtures
 --last             Tail prompt book / show report
+--from-call <id>   Map an existing CALL-E run (no new ring)
 --verbose          Full call sheet preview
 --help
 ```

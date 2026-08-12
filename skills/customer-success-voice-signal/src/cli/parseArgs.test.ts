@@ -24,4 +24,16 @@ describe("parseArgs", () => {
   it("accepts --stdin alone", () => {
     expect(parseArgs(["--stdin"]).stdin).toBe(true);
   });
+
+  it("accepts --from-call", () => {
+    const a = parseArgs(["--fixture", "stuck.json", "--from-call", "call_abc"]);
+    expect(a.fromCall).toBe("call_abc");
+    expect(a.live).toBe(false);
+  });
+
+  it("rejects --from-call with --dry-run", () => {
+    expect(() =>
+      parseArgs(["--fixture", "x.json", "--from-call", "call_x", "--dry-run"]),
+    ).toThrow(/Conflicting/);
+  });
 });

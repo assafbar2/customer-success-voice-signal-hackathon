@@ -179,6 +179,8 @@ export async function writeback(args: {
   result: DecisionResult;
   preview?: string;
   note?: string;
+  /** When false, skip cue-history (remap / crash recovery of an already-recorded dial). */
+  recordDedupe?: boolean;
 }): Promise<{
   promptBook: string;
   showReport: string;
@@ -211,6 +213,7 @@ export async function writeback(args: {
   // HOLD and provider failures must not poison dedupe.
   // Only confirmed dial outcomes (including no_answer/unclear after a call) record the cue key.
   const recordDedupe =
+    args.recordDedupe !== false &&
     args.result.option_id !== "hold" &&
     args.result.decision !== "hold" &&
     args.result.decision !== "failure";

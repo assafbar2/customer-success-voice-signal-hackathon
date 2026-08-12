@@ -33,6 +33,9 @@ Curtain-up (real phone — needs .env + PLACES):
   npm run signal -- --fixture stuck_support_acme.json --live PLACES
   API keys: https://dashboard.heycall-e.com/account/api-keys
 
+Remap existing CALL-E run (no new ring — crash recovery):
+  npm run signal -- --fixture stuck_support_acme.json --from-call call_xxx
+
 Options:
   --fixture <file>   Cue under fixtures/ (e.g. stuck_support_acme.json)
   --trigger <id>     Pick first fixture for this trigger_id (sorted)
@@ -42,6 +45,7 @@ Options:
   PLACES             Live gate confirm (or SIGNAL_CONFIRM=PLACES)
   --list             List fixtures on the call sheet
   --last             Tail prompt book / show report
+  --from-call <id>   Map an existing CALL-E run (crash recovery / remap — no new ring)
   --verbose          Full call sheet preview
   --help             This cue sheet
 
@@ -53,6 +57,7 @@ Exit codes:
 Modes:
   Dress rehearsal  Default. No ring. Does not append cue-history.
   Curtain up       --live AND PLACES. Rings CS_OWNER_E164 via CALL-E.
+  Remap            --from-call <id>. Fetches an existing run; no ring; cue-history not appended.
   Cue-history      Appended only after a live dial outcome — HOLD/failure never poison dedupe.
   Owner budget     Max live dials per CS owner per window (OWNER_MAX_RINGS, default 2).
 `);
@@ -218,6 +223,7 @@ async function main(): Promise<void> {
     placesTyped: args.places,
     dryRunFlag: args.dryRun,
     verbose: args.verbose,
+    fromCallId: args.fromCall,
     log: (msg) => console.log(msg),
   });
 

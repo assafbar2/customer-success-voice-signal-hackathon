@@ -121,7 +121,10 @@ type StructuredParse =
   | { kind: "none" };
 
 /**
- * Prefer option_id. If decision/label disagree with that option → contradiction (unclear).
+ * Prefer option_id. Contradiction only when another field resolves to a
+ * *different* closed-set option. CALL-E often paraphrases `decision`
+ * (e.g. "takeover" vs "take_over_chat") — that is not a cross-option conflict.
+ * Do not trust decision/label alone when option_id is missing.
  */
 export function parseStructuredOption(
   options: DecisionOption[],
@@ -129,24 +132,33 @@ export function parseStructuredOption(
 ): StructuredParse {
   if (!structured || Object.keys(structured).length === 0) return { kind: "none" };
 
-  const optionId = String(structured.option_id ?? "");
+  const optionId = String(structured.option_id ?? "").trim();
   const byId = options.find((o) => o.option_id === optionId);
   if (!byId) {
-    // No usable option_id — do not silently trust mismatched decision/label alone for live
+    // No usable option_id — do not silently trust decision/label alone for live
     return { kind: "none" };
   }
 
-  const decision =
+  const decisionRaw =
     structured.decision !== undefined && structured.decision !== null
-      ? String(structured.decision)
-      : null;
-  const label =
+      ? String(structured.decision).trim()
+      : "";
+  const labelRaw =
     structured.decision_label !== undefined && structured.decision_label !== null
-      ? String(structured.decision_label)
-      : null;
+      ? String(structured.decision_label).trim()
+      : "";
 
-  if (decision && decision !== byId.decision) return { kind: "contradiction" };
-  if (label && label.toLowerCase() !== byId.decision_label.toLowerCase()) {
+  const byDecision = decisionRaw
+    ? options.find((o) => o.decision === decisionRaw)
+    : undefined;
+  const byLabel = labelRaw
+    ? options.find((o) => o.decision_label.toLowerCase() === labelRaw.toLowerCase())
+    : undefined;
+
+  if (byDecision && byDecision.option_id !== byId.option_id) {
+    return { kind: "contradiction" };
+  }
+  if (byLabel && byLabel.option_id !== byId.option_id) {
     return { kind: "contradiction" };
   }
   return { kind: "ok", option: byId };
@@ -211,7 +223,8 @@ function isNoAnswer(input: ToDecisionInput): boolean {
  * - Identity read-back (stage code) required before accepting 1/2/3 on curtain-up
  * - taskCompleted === true + consistent structured → accept (if identity + confidence OK)
  * - taskCompleted === false → never a normal 1/2/3 (voicemail→no_answer, else unclear)
- * - contradictory structured fields → unclear
+ * - structured fields that point at *different* options → unclear
+ *   (paraphrased decision ids that match no option are ignored)
  * - dress rehearsal may simulate option 1 (identity treated as confirmed)
  */
 export function toDecision(input: ToDecisionInput): DecisionResult {

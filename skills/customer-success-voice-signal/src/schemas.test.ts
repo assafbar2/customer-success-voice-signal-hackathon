@@ -239,6 +239,17 @@ describe("intent — Stage Manager language", () => {
     expect(intent.result_schema).toMatchObject({
       required: expect.arrayContaining(["option_id", "decision", "decision_label"]),
     });
+    const decisionProp = (
+      intent.result_schema as {
+        properties?: { decision?: { enum?: string[] } };
+      }
+    ).properties?.decision;
+    expect(decisionProp?.enum).toEqual([
+      "take_over_chat",
+      "assign_se",
+      "snooze_2h",
+    ]);
+    expect(intent.task).toMatch(/take_over_chat \| assign_se \| snooze_2h/);
   });
 
   it("pickOptions covers all triggers", () => {

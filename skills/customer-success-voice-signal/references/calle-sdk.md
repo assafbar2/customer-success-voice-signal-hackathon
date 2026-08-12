@@ -12,7 +12,13 @@ persist call.id → data/open-calls/<id>.json
 calls.waitForResult(id)     ← default
 ```
 
-We **do not** use `createAndWait`. If the process dies after dial, the open-call file still has `call.id` for recovery.
+We **do not** use `createAndWait`. If the process dies after dial, the open-call file still has `call.id` for recovery:
+
+```bash
+npm run signal -- --fixture stuck_support_acme.json --from-call call_xxx
+```
+
+`--from-call` fetches the existing run (no new ring), maps it, and writes the prompt book. It does not append cue-history (the original dial already did).
 
 ### Optional `webhookUrl`
 
@@ -30,7 +36,7 @@ Prefer platform fields, in order:
 1. **`failureCode`** (call + attempt) → `no_answer` when codes look like voicemail / no_answer / unreachable / busy  
 2. **`taskCompleted === false`** → never a 1/2/3  
 3. **`completionConfidence` low** (score &lt; 0.45 or label `low`) → `unclear`  
-4. **`structuredResult`** (consistent `option_id` / decision / label)  
+4. **`structuredResult`** — trust `option_id` when other fields do not resolve to a *different* option (CALL-E may paraphrase `decision`, e.g. `takeover` vs `take_over_chat`). Cross-option conflicts → `unclear`. Result schema enums the stable decision ids. 
 5. Gated transcript phrases (last resort for option only)  
 6. **Summary-string heuristics** — only when **no** failure codes were supplied  
 

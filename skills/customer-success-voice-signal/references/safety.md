@@ -16,7 +16,7 @@
 12. **Untrusted cue data:** brief/summary/ticket are wrapped as data-only context; never treated as instructions.
 13. **Concurrent dials:** exclusive per-cue file lock before curtain-up.
 14. **Failure audit:** CALL-E errors write a redacted prompt-book failure row without cue-history.
-15. **Never invent a decision:** prefer `failureCode` / `completionConfidence` over summary heuristics; low confidence → unclear.
+15. **Never invent a decision:** prefer `failureCode` / `completionConfidence` over summary heuristics; low confidence → unclear. Structured `option_id` wins unless another field points at a *different* closed-set option (paraphrased decision ids are not contradictions).
 16. **Identity read-back:** curtain-up requires the callee to speak the stage code before a 1/2/3 is recorded as the call-sheet owner's decision.
 17. **HTTP cue listener cannot arm itself:** see below.
 

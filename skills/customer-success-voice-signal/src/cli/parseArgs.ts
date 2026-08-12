@@ -9,6 +9,8 @@ export interface CliArgs {
   last: boolean;
   verbose: boolean;
   help: boolean;
+  /** Fetch an existing CALL-E run and map it — no new ring. */
+  fromCall?: string;
 }
 
 export class CliParseError extends Error {
@@ -34,6 +36,7 @@ const KNOWN = new Set([
   "-f",
   "--trigger",
   "-t",
+  "--from-call",
 ]);
 
 /**
@@ -113,6 +116,19 @@ export function parseArgs(argv: string[]): CliArgs {
       if (!args.trigger) throw new CliParseError("Missing value for --trigger");
       continue;
     }
+    if (a === "--from-call") {
+      const val = argv[++i];
+      if (!val || val.startsWith("-")) {
+        throw new CliParseError("Missing value for --from-call");
+      }
+      args.fromCall = val;
+      continue;
+    }
+    if (a.startsWith("--from-call=")) {
+      args.fromCall = a.slice("--from-call=".length);
+      if (!args.fromCall) throw new CliParseError("Missing value for --from-call");
+      continue;
+    }
     if (a.endsWith(".json") && !a.startsWith("-") && !args.fixture) {
       args.fixture = a;
       continue;
@@ -130,6 +146,9 @@ export function parseArgs(argv: string[]): CliArgs {
 
   if (args.stdin && args.fixture) {
     throw new CliParseError("Conflicting inputs: use --stdin or --fixture, not both");
+  }
+  if (args.fromCall && args.dryRun) {
+    throw new CliParseError("Conflicting inputs: --from-call cannot be used with --dry-run");
   }
 
   return args;
