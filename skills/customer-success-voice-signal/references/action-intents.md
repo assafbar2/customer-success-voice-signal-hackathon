@@ -2,7 +2,7 @@
 
 Stage Manager captures a **closed-set CS decision** on the phone, then emits an **action intent**: the contract the next system executes.
 
-PagerDuty-style tools often stop at **acknowledge**. We stop at a **decision**, then make the next system move **explicit and executable**. Two adapters are live (Slack-shaped webhook, GitHub issue comment); Zendesk / Salesforce shapes are documented at the seam — never claimed as wired.
+PagerDuty-style tools often stop at **acknowledge**. We stop at a **decision**, then make the next system move **explicit and executable**. The **JSON action intent** is the in-scope seam. Slack-shaped webhook and GitHub issue-comment adapters are a **stab** (code exists to show the handoff is possible) — **out of MVP; do not fire**. Zendesk / Salesforce shapes are documented at the seam — never claimed as wired.
 
 ## Seam (end-to-end, judge-visible)
 
@@ -20,18 +20,17 @@ Webhook-shaped JSON / fixture / stdin / POST /cue
   data/actions/executed/<receipt>.json      ← receipt (local, or live-adapter send)
 ```
 
-The **JSON shape is the product seam**. Live adapters ride it:
+The **JSON shape is the product seam**. Slack/GitHub adapters ride it as a **stab only** — `--dry-run` prints the payload. Live POST is **out of MVP scope** (do not set the webhook to fire a real channel):
 
 ```bash
-# Slack-shaped webhook — POST {text} to SLACK_WEBHOOK_URL
-# (any {text}-accepting endpoint works; webhook.site is fine for a demo)
-npm run apply-action -- --last --adapter slack
+# Slack-shaped webhook — STAB only. Dry-run prints {text}. Do not fire.
+npm run apply-action -- --last --adapter slack --dry-run
 
-# GitHub issue comment — POST {body} to GITHUB_REPO#GITHUB_ISSUE (GITHUB_TOKEN)
-npm run apply-action -- --last --adapter github
+# GitHub issue comment — same stab
+npm run apply-action -- --last --adapter github --dry-run
 
 # Both honor --dry-run (prints exact payload, no network)
-# Unset/placeholder env → HOLD (exit 2) — never a silent no-op
+# Live HTTP send is out of MVP (CLI HOLDs). Unset env also HOLDs — never a silent no-op
 ```
 
 ## Run it
@@ -56,8 +55,8 @@ npm run apply-action -- --last --dry-run
 # 3) Local “execute” (no external call — writes a receipt)
 npm run apply-action -- --last
 
-# 4) Or send for real via a live adapter (env-gated)
-npm run apply-action -- --last --adapter slack
+# Stab only (out of MVP — do not fire): dry-run shows the Slack-shaped payload
+npm run apply-action -- --last --adapter slack --dry-run
 ```
 
 ### HTTP cue listener
@@ -72,7 +71,7 @@ npm run apply-action -- --last --adapter slack
 | `CUE_WEBHOOK_SECRET` | Required for non-loopback bind; Bearer / `X-Cue-Secret` |
 | `CUE_ALLOW_LIVE=1` | Operator arming switch for HTTP live |
 
-Judge demo story: **curl → dress rehearsal → apply-action --adapter slack**. Live phone still needs a separate human arm (`CUE_ALLOW_LIVE` + CLI/`PLACES` semantics). See [safety.md](safety.md).
+Judge demo story: **curl → dress rehearsal → apply-action --dry-run**. Live phone still needs a separate human arm (`CUE_ALLOW_LIVE` + CLI/`PLACES` semantics). Slack live send is out of MVP. See [safety.md](safety.md).
 ## What an intent contains
 
 | Field | Meaning |
@@ -88,7 +87,7 @@ HOLD / failure / unclear / no_answer do **not** emit intents — only option `1`
 ## Honesty
 
 - `--dry-run` and local apply **never** call external APIs.
-- Receipts say `effect: "local_receipt"` unless a live adapter actually posted —
-  then `slack_webhook_posted` / `github_comment_posted` with the HTTP status.
+- Receipts say `effect: "local_receipt"` from the CLI. `sendToSlack` / `sendToGithubIssue` exist as a **stab** (unit-tested) — the CLI HOLDs live send (out of MVP).
 - Unset or placeholder adapter env HOLDs (exit 2) instead of pretending.
 - Zendesk / Salesforce remain documented shapes, not wired adapters.
+- Slack / GitHub HTTP send is a **stab** — out of MVP. Do not fire a real channel.

@@ -51,13 +51,13 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 ### 4 — Product Experience & Demo
 
 - Judges run the full loop in four commands with **no API key**: dress rehearsal → line readings → action-intent dry-run → local receipt.
-- Deployable inbound: `npm run serve-cue` → `curl POST /cue` → same engine → `apply-action --adapter slack` lands the decision in a real channel.
+- Deployable inbound: `npm run serve-cue` → `curl POST /cue` → same engine → `apply-action --dry-run` shows the action-intent seam (Slack/GitHub live send is a stab, out of MVP — we do not fire a channel).
 - Curtain-up (real ring) is one env file away, gated on purpose.
 - ≤3 min demo video with real call audio: problem → dress rehearsal → live decision → writeback → handoff.
 
 ### What's next
 
-- Zendesk / Salesforce adapter shapes documented at the seam (Slack + GitHub already live).
+- Zendesk / Salesforce adapter shapes documented at the seam. Slack + GitHub HTTP send is a **stab** (out of MVP — do not fire).
 - Awesome-list PR once v1 is battle-tested.
 
 ### Most Valuable Feedback

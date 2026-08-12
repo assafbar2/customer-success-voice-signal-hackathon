@@ -1,11 +1,20 @@
 /**
- * Live adapters for the action-intent seam.
- * Slack-shaped webhook (POST {text}) and GitHub issue comment (POST {body}).
+ * Action-intent adapters — STAB only (out of MVP).
+ * Slack-shaped webhook (POST {text}) and GitHub issue comment (POST {body})
+ * exist to show the handoff is possible. Do not fire a real channel.
  * Placeholder / missing env resolves to HOLD — never a silent no-op.
  */
 import type { ActionIntent } from "./types.js";
 
 const PLACEHOLDER = /replace|placeholder|your[_-]/i;
+
+/** Live Slack/GitHub HTTP send is a stab, out of MVP. CLI HOLDs unless --dry-run. */
+export function mustHoldLiveAdapterSend(
+  adapter: string | undefined,
+  dryRun: boolean,
+): boolean {
+  return Boolean(adapter) && !dryRun;
+}
 
 export function formatAdapterText(intent: ActionIntent): string {
   return [

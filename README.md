@@ -46,13 +46,9 @@ curl -sS -X POST http://127.0.0.1:8787/cue \
   -H 'content-type: application/json' \
   -d @events/webhook_stuck_support.json
 
-# Decision → system handoff (local receipt by default)
+# Decision → system handoff (local receipt; Slack/GitHub are a stab — do not fire)
 npm run apply-action -- --last --dry-run
 npm run apply-action -- --last
-
-# Live adapters (env-gated; placeholder HOLDs — see .env.example)
-npm run apply-action -- --last --adapter slack     # Slack-shaped webhook POST {text}
-npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITHUB_ISSUE
 
 # Curtain-up — operator only
 # https://dashboard.heycall-e.com/account/api-keys
@@ -66,7 +62,7 @@ npm run apply-action -- --last --adapter github    # comment on GITHUB_REPO#GITH
 | 2 | HOLD (policy / live gate / quiet hours / owner budget) |
 | 3 | Failure |
 
-**Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action` → receipt. **Live adapters:** Slack-shaped webhook (`--adapter slack`) · GitHub issue comment (`--adapter github`) — env-gated, placeholder values HOLD. Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
+**Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action --dry-run` → local receipt. Slack/GitHub adapters are a **stab** (out of MVP — do not fire). Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
 
 **Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live · SDK `failureCode`/`completionConfidence` preferred · identity stage-code read-back before 1/2/3.
 

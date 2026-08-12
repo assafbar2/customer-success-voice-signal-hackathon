@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Apply (or dry-run) the latest pending action intent.
- * Default: local receipt only. --adapter slack|github posts for real
- * (Slack incoming webhook / GitHub issue comment) — env-gated, HOLD on placeholder.
+ * Default: local receipt only.
+ * --adapter slack|github is a stab (out of MVP). Prefer --dry-run to show
+ * the payload. Do not fire a real Slack channel or GitHub issue.
  */
 import { loadDotEnv, readSkillEnv } from "./config/env.js";
 import {
@@ -12,10 +13,9 @@ import {
 } from "./action/store.js";
 import {
   formatAdapterText,
+  mustHoldLiveAdapterSend,
   resolveGithubTarget,
   resolveSlackTarget,
-  sendToGithubIssue,
-  sendToSlack,
 } from "./action/adapters.js";
 
 function printHelp(): void {
@@ -26,21 +26,22 @@ Turn a closed-set CS decision into a system handoff (POC).
 Usage:
   npm run apply-action -- --last --dry-run
   npm run apply-action -- --last
-  npm run apply-action -- --last --adapter slack
-  npm run apply-action -- --last --adapter github
+  npm run apply-action -- --last --adapter slack --dry-run
+  npm run apply-action -- --last --adapter github --dry-run
   npm run apply-action -- --id <intent_id> --dry-run
 
 Flags:
   --last            Use most recent pending action intent
   --id <id>         Use a specific pending intent_id
   --dry-run         Print/record what would be sent — no "executed_local", no network
-  --adapter <name>  slack (SLACK_WEBHOOK_URL) or github (GITHUB_TOKEN/REPO/ISSUE)
+  --adapter <name>  slack | github — STAB only (out of MVP). Use with --dry-run.
+                    Do not fire a real channel.
   --help
 
 Seam:
   Decision → data/actions/pending/*.json → apply-action → data/actions/executed/*
-  Live adapters: slack (incoming webhook) · github (issue comment) — env-gated,
-  placeholder values HOLD (exit 2). Zendesk / Salesforce shapes documented at the seam.
+  Live adapters: slack / github are a **stab** (out of MVP — do not fire).
+  Prefer --dry-run. Zendesk / Salesforce shapes documented at the seam.
 `);
 }
 
@@ -98,6 +99,13 @@ async function main(): Promise<void> {
     process.exit(args.help ? 0 : 3);
   }
 
+  if (mustHoldLiveAdapterSend(args.adapter, args.dryRun)) {
+    console.error(
+      "HOLD: Slack/GitHub live send is a stab, out of MVP scope. Use --adapter slack --dry-run (or github) to show the payload — do not fire a real channel.",
+    );
+    process.exit(2);
+  }
+
   const loaded = args.id
     ? await loadPendingIntentById(env.dataDir, args.id)
     : await loadLastPendingIntent(env.dataDir);
@@ -109,29 +117,14 @@ async function main(): Promise<void> {
     process.exit(3);
   }
 
-  let sent: { effect: "slack_webhook_posted" | "github_comment_posted"; detail: string } | undefined;
-
   if (args.adapter === "slack") {
     const target = resolveSlackTarget(env.slackWebhookUrl);
     if ("hold" in target) {
-      if (args.dryRun) {
-        console.log(`Adapter dry-run (slack): would POST once SLACK_WEBHOOK_URL is set (HOLD: ${target.hold}).`);
-        console.log(`--- payload.text ---\n${formatAdapterText(loaded.intent)}\n---`);
-      } else {
-        console.error(`HOLD: ${target.hold} — set SLACK_WEBHOOK_URL in .env (see .env.example).`);
-        process.exit(2);
-      }
-    } else if (args.dryRun) {
-      console.log("Adapter dry-run (slack): target configured — no network call in dry-run.");
-      console.log(`--- payload.text ---\n${formatAdapterText(loaded.intent)}\n---`);
+      console.log(`Adapter dry-run (slack): would POST once SLACK_WEBHOOK_URL is set (HOLD: ${target.hold}).`);
     } else {
-      const res = await sendToSlack(loaded.intent, target.url);
-      if (!res.ok) {
-        console.error(`Failure: Slack webhook returned HTTP ${res.status}.`);
-        process.exit(3);
-      }
-      sent = { effect: "slack_webhook_posted", detail: `HTTP ${res.status}` };
+      console.log("Adapter dry-run (slack): target configured — no network call in dry-run.");
     }
+    console.log(`--- payload.text ---\n${formatAdapterText(loaded.intent)}\n---`);
   } else if (args.adapter === "github") {
     const target = resolveGithubTarget({
       token: env.githubToken,
@@ -139,24 +132,11 @@ async function main(): Promise<void> {
       issue: env.githubIssue,
     });
     if ("hold" in target) {
-      if (args.dryRun) {
-        console.log(`Adapter dry-run (github): would comment once GITHUB_TOKEN/GITHUB_REPO/GITHUB_ISSUE are set (HOLD: ${target.hold}).`);
-        console.log(`--- comment body ---\n${formatAdapterText(loaded.intent)}\n---`);
-      } else {
-        console.error(`HOLD: ${target.hold} — set GITHUB_TOKEN, GITHUB_REPO, GITHUB_ISSUE in .env (see .env.example).`);
-        process.exit(2);
-      }
-    } else if (args.dryRun) {
-      console.log(`Adapter dry-run (github): would comment on ${target.repo}#${target.issue} — no network call in dry-run.`);
-      console.log(`--- comment body ---\n${formatAdapterText(loaded.intent)}\n---`);
+      console.log(`Adapter dry-run (github): would comment once GITHUB_TOKEN/GITHUB_REPO/GITHUB_ISSUE are set (HOLD: ${target.hold}).`);
     } else {
-      const res = await sendToGithubIssue(loaded.intent, target);
-      if (!res.ok) {
-        console.error(`Failure: GitHub API returned HTTP ${res.status}.`);
-        process.exit(3);
-      }
-      sent = { effect: "github_comment_posted", detail: `${target.repo}#${target.issue} HTTP ${res.status}` };
+      console.log(`Adapter dry-run (github): would comment on ${target.repo}#${target.issue} — no network call in dry-run.`);
     }
+    console.log(`--- comment body ---\n${formatAdapterText(loaded.intent)}\n---`);
   }
 
   const { receipt, receiptPath, intentPath } = await applyActionIntent({
@@ -164,16 +144,13 @@ async function main(): Promise<void> {
     intent: loaded.intent,
     file: loaded.file,
     dryRun: args.dryRun,
-    sent,
   });
 
   console.log(
     [
       args.dryRun
         ? "=== Action dry-run ==="
-        : sent
-          ? `=== Action applied (${sent.effect}) ===`
-          : "=== Action applied (local POC) ===",
+        : "=== Action applied (local POC) ===",
       `Intent: ${loaded.intent.intent_id}`,
       `Action: ${loaded.intent.action}`,
       `Adapter: ${loaded.intent.adapter}`,

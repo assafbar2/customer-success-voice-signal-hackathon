@@ -19,7 +19,7 @@ Script: [`video-script.md`](video-script.md) · reel notes: [`demo-reel/README.m
 
 - [ ] Shoot/edit per script (cold open on ring preferred)
 - [ ] Stage code + line reading visible on live beat
-- [ ] Decision → prompt book → Slack/GitHub adapter beat
+- [ ] Decision → prompt book (action-intent dry-run optional; Slack/GitHub live send is out of scope)
 - [ ] End card: repo + skill path + *“No customers were called…”*
 - [ ] **Before upload:** paste MVF from [`mvf-feedback.md`](mvf-feedback.md) into the Devpost MVF survey (same submit session as the video)
 
@@ -28,7 +28,7 @@ Script: [`video-script.md`](video-script.md) · reel notes: [`demo-reel/README.m
 Cheap social/README asset — dress rehearsal loop judges can see without pressing play.
 
 - [ ] Capture: `npm run signal -- --fixture stuck_support_acme.json` (large terminal font)
-- [ ] Optional second loop: `serve-cue` + `curl POST /cue` or `apply-action --last --dry-run`
+- [ ] Optional second loop: `serve-cue` + `curl POST /cue` or `apply-action --last --dry-run` (do **not** live-send Slack)
 - [ ] Drop into README + site
 - [ ] Caption / alt text mentions **Most Practical** demo; README link to [`mvf-feedback.md`](mvf-feedback.md) so MVF isn’t invisible next to the GIF
 

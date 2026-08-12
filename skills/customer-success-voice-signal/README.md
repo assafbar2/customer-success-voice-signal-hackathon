@@ -23,7 +23,7 @@ curl -sS -X POST http://127.0.0.1:8787/cue \
   -H 'content-type: application/json' \
   -d @events/webhook_stuck_support.json
 
-# Decision → action intent → dry-run apply (no live CRM)
+# Decision → action intent → dry-run apply (no live CRM / Slack)
 npm run apply-action -- --last --dry-run
 npm run apply-action -- --last
 npm run signal -- --list
@@ -63,7 +63,7 @@ See [references/safety.md](references/safety.md) · [references/calle-sdk.md](re
 | --- | --- |
 | `npm run signal -- …` | Stage Manager CLI |
 | `npm run serve-cue` | HTTP listener — `POST /cue` → same engine as `--stdin` |
-| `npm run apply-action -- …` | Apply/dry-run pending action intent (Slack/GitHub live) |
+| `npm run apply-action -- …` | Apply/dry-run pending action intent (local receipt; Slack/GitHub stab is out of MVP) |
 | `npm run dry-run -- …` | Force dress rehearsal |
 | `npm test` | Vitest (no real calls) |
 | `npm run typecheck` | `tsc --noEmit` |
