@@ -9,7 +9,7 @@ from sentrants.db import DEFAULT_DB, load_people, save_people
 from sentrants.floor import write_floor
 from sentrants.hatch import hatch
 from sentrants.mix import mix_report
-from sentrants.physics import pick_camp, score_seer_auto
+from sentrants.physics import MOVES, pick_camp
 from sentrants.slices import slices_report
 
 
@@ -53,11 +53,12 @@ def cmd_slices(_: argparse.Namespace) -> None:
     print(slices_report(load_people()))
 
 
-def cmd_walk(_: argparse.Namespace) -> None:
+def cmd_walk(args: argparse.Namespace) -> None:
     people = load_people()
-    camps = Counter(pick_camp(score_seer_auto(p)) for p in people)
+    spec = MOVES[args.target]
+    camps = Counter(pick_camp(spec["score"](p)) for p in people)
     n = len(people)
-    print("move: ship seer.auto  (Autofix opens PRs on its own)")
+    print(f"move: {spec['kind']} {args.target}  ({spec['title']})")
     for k, v in camps.most_common():
         print(f"  {k:18} {v:5}  {100.0 * v / n:5.1f}%")
 
@@ -92,7 +93,9 @@ def main() -> None:
     sub.add_parser("mix", help="print the live mix").set_defaults(func=cmd_mix)
     sub.add_parser("slices", help="covering map + audience callouts").set_defaults(func=cmd_slices)
     sub.add_parser("floor", help="rewrite data/floor.html").set_defaults(func=cmd_floor)
-    sub.add_parser("walk", help="score ship seer.auto").set_defaults(func=cmd_walk)
+    w = sub.add_parser("walk", help="score a move (does not save)")
+    w.add_argument("--target", default="seer.auto")
+    w.set_defaults(func=cmd_walk)
 
     j = sub.add_parser("jump", help="jump time (a month later)")
     j.add_argument("--days", type=int, default=30)

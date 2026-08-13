@@ -4,7 +4,14 @@ from collections import Counter
 from datetime import datetime, timezone
 from random import Random
 
-from sentrants.layout import LIFE, SEER_AUTO, SEER_AUTO_LABELS, place_stable
+from sentrants.layout import (
+    LIFE,
+    OUTAGE,
+    OUTAGE_LABELS,
+    SEER_AUTO,
+    SEER_AUTO_LABELS,
+    place_stable,
+)
 
 
 def score_seer_auto(p: dict) -> dict[str, float]:
@@ -47,6 +54,56 @@ def pick_camp(scores: dict[str, float]) -> str:
     return max(scores, key=scores.get)
 
 
+def score_sentry_down(p: dict) -> dict[str, float]:
+    """Camps for: Sentry SaaS has been down for 90 minutes."""
+    h, s, t, life = p["human"], p["sentry"], p["temperament"], p["life"]
+    scores = {
+        "wait_it_out": 0.4,
+        "we_were_blind": 0.5,
+        "also_datadog": 0.15,
+        "not_me": 0.1,
+        "leaving": 0.08,
+    }
+    if s.get("deployment") == "self_hosted":
+        return {"not_me": 4.0, "wait_it_out": 0, "we_were_blind": 0, "also_datadog": 0.1, "leaving": 0}
+    if life["stage"] == "gone":
+        return {"not_me": 2.4, "leaving": 0.6, "wait_it_out": 0, "we_were_blind": 0, "also_datadog": 0.3}
+
+    if life["stage"] == "trying":
+        scores["leaving"] += 0.8
+        scores["wait_it_out"] -= 0.2
+    if life["stage"] == "pissed":
+        scores["leaving"] += 1.4
+        scores["we_were_blind"] += 0.6
+        scores["wait_it_out"] -= 0.3
+    if life["stage"] == "in":
+        scores["wait_it_out"] += 0.6
+
+    if h["seat"] == "coder":
+        scores["we_were_blind"] += 1.3
+    if h["seat"] in ("founder", "boss"):
+        scores["we_were_blind"] += 0.7
+        scores["leaving"] += 0.25
+    if t["loyalty"] > 0.65:
+        scores["wait_it_out"] += 1.2
+        scores["leaving"] -= 0.3
+    if t["loyalty"] < 0.4:
+        scores["leaving"] += 0.7
+    if t["loud"] > 0.65:
+        scores["we_were_blind"] += 0.4
+        scores["leaving"] += 0.2
+    frame = s.get("competitive_frame") or "sentry_only"
+    if frame in ("also_datadog", "also_newrelic", "evaluating_exit", "self_rolled"):
+        scores["also_datadog"] += 1.8
+        scores["leaving"] += 0.3
+    if s.get("plan") in ("business", "enterprise") and t["loyalty"] > 0.5:
+        scores["wait_it_out"] += 0.5
+    if h["shop"] == "hobby" or s.get("plan") == "developer":
+        scores["wait_it_out"] += 0.3
+        scores["we_were_blind"] -= 0.2
+    return scores
+
+
 MOVES = {
     "seer.auto": {
         "kind": "ship",
@@ -54,7 +111,14 @@ MOVES = {
         "score": score_seer_auto,
         "camps": SEER_AUTO,
         "labels": SEER_AUTO_LABELS,
-    }
+    },
+    "sentry.down": {
+        "kind": "break",
+        "title": "Sentry SaaS has been down for 90 minutes",
+        "score": score_sentry_down,
+        "camps": OUTAGE,
+        "labels": OUTAGE_LABELS,
+    },
 }
 
 
@@ -78,11 +142,7 @@ def apply_move(people: list[dict], *, target: str = "seer.auto", remember: bool 
                     "quote": None,
                 }
             )
-            if camp == "leaving":
-                p["life"]["stage"] = "pissed" if p["life"]["stage"] != "gone" else "gone"
-                p["life"]["sentiment"] = min(p["life"]["sentiment"], -0.4)
-            elif camp == "hell_no":
-                p["life"]["sentiment"] = max(-1.0, p["life"]["sentiment"] - 0.12)
+            _remember_hurt(p, camp, target)
     return {
         "target": target,
         "title": spec["title"],
@@ -91,6 +151,26 @@ def apply_move(people: list[dict], *, target: str = "seer.auto", remember: bool 
         "counts": dict(counts),
         "camps": {k: list(v) for k, v in spec["camps"].items()},
     }
+
+
+def _remember_hurt(p: dict, camp: str, _target: str) -> None:
+    life, s = p["life"], p["sentry"]
+    if camp == "leaving":
+        if life["stage"] == "trying" or (life["stage"] == "pissed" and p["temperament"]["loyalty"] < 0.45):
+            life["stage"] = "gone"
+            life["usage"] = 0.0
+        elif life["stage"] != "gone":
+            life["stage"] = "pissed"
+        life["sentiment"] = min(life["sentiment"], -0.4)
+    elif camp in ("hell_no", "we_were_blind"):
+        life["sentiment"] = max(-1.0, life["sentiment"] - 0.18)
+        if camp == "we_were_blind" and life["stage"] == "in" and life["sentiment"] < -0.35:
+            life["stage"] = "pissed"
+    elif camp == "also_datadog":
+        s["competitive_frame"] = "also_datadog"
+        life["sentiment"] = max(-1.0, life["sentiment"] - 0.1)
+    elif camp == "wait_it_out":
+        life["sentiment"] = max(-1.0, life["sentiment"] - 0.05)
 
 
 def to_life_floor(people: list[dict]) -> None:

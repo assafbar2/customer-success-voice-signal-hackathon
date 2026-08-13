@@ -36,6 +36,7 @@
   <h1>Sentrants</h1>
   <button id="btn-life">Life</button>
   <button id="btn-move">Move: Seer auto</button>
+  <button id="btn-down">Sentry down 90m</button>
   <label class="happened"><input type="checkbox" id="happened"> this happened</label>
   <button id="btn-jump">Jump in time</button>
   <span id="day"></span>
@@ -71,9 +72,10 @@ function applyPayload(data, quotes) {
   mode = data.mode || mode;
   camps = data.camps || camps;
   labels = data.labels || labels;
-  document.getElementById("day").textContent = "day " + (data.day ?? 0) + " · " + mode;
+  document.getElementById("day").textContent = (data.title ? data.title + " · " : "") + "day " + (data.day ?? 0);
   document.getElementById("btn-life").className = mode === "life" ? "on" : "";
-  document.getElementById("btn-move").className = mode === "move" ? "on" : "";
+  document.getElementById("btn-move").className = (mode === "move" && (data.target || "") === "seer.auto") ? "on" : "";
+  document.getElementById("btn-down").className = (mode === "move" && (data.target || "") === "sentry.down") ? "on" : "";
   const incoming = data.swarm || [];
   const byId = Object.fromEntries(swarm.map(p => [p.id, p]));
   swarm = incoming.map(n => {
@@ -110,6 +112,10 @@ document.getElementById("btn-life").onclick = () => post("/life");
 document.getElementById("btn-move").onclick = () => post("/move", {
   target: "seer.auto",
   remember: document.getElementById("happened").checked,
+});
+document.getElementById("btn-down").onclick = () => post("/move", {
+  target: "sentry.down",
+  remember: true,
 });
 document.getElementById("btn-jump").onclick = () => post("/jump", { days: 30 });
 

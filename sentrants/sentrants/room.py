@@ -23,11 +23,28 @@ LINES = {
         "I don't use Seer.",
         "Not my stack.",
         "I just wanted errors.",
+        "Self-hosted. We were up.",
+        "We left. Not my outage.",
     ],
     "leaving": [
         "I'm done.",
         "This is how we leave.",
         "We'll look at Datadog.",
+    ],
+    "wait_it_out": [
+        "Status page says 90 minutes. I'm waiting.",
+        "It'll come back. It always does.",
+        "Don't tweet. Just wait.",
+    ],
+    "we_were_blind": [
+        "Prod is on fire and I can't see it.",
+        "Ninety minutes with no issues. That's the issue.",
+        "We flew blind the whole morning.",
+    ],
+    "also_datadog": [
+        "This is why we still pay Datadog.",
+        "Dual-run exists for mornings like this.",
+        "Sentry's dark. The other one isn't.",
     ],
     "trying": ["Still figuring it out.", "It's on. I haven't opened it much."],
     "in": ["This is how we debug.", "Don't break the SDK."],

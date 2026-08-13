@@ -1,0 +1,29 @@
+# Something that happened. Hits a portfolio / platform id.
+
+id: sentry_saas_down_90m
+kind: break # ask | tell | price | ship | break | take
+target: sentry.down
+remember: true
+
+hat: eng
+
+what:
+  title: "Sentry SaaS has been down for 90 minutes"
+  body: |
+    Cloud Sentry is dark. Status page. Ninety minutes.
+    Self-hosted people were up. SaaS people were not.
+
+who:
+  exclude_deployment: [self_hosted]
+
+camps:
+  - id: wait_it_out
+    label: Status page. Waiting.
+  - id: we_were_blind
+    label: We were blind
+  - id: also_datadog
+    label: This is why we dual-run
+  - id: not_me
+    label: Not my Sentry
+  - id: leaving
+    label: I'm done
