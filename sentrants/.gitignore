@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.DS_Store
+data/*.sqlite
+data/*.sqlite-journal
+data/floor.html
+data/swarm.json
+*.pyc
+node_modules/
+dist/
+*.egg-info/

@@ -14,6 +14,8 @@ data/**
 !data/.gitkeep
 skills/**/data/**
 !skills/**/data/.gitkeep
+sentrants/data/**
+!sentrants/data/.gitkeep
 skills/**/node_modules/
 skills/**/dist/
 submission/demo-reel/audio/
