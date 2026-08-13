@@ -2,15 +2,23 @@
 
 ## Cursor Cloud specific instructions
 
-This repo is a single-product hackathon submission. The only runnable application is the
-**Stage Manager** CLI at `skills/customer-success-voice-signal/` (TypeScript, Node >= 20, npm).
-The `site/` and `submission/demo-reel/` directories are presentation assets, not services.
+This repo has two runnable products:
+
+1. **Stage Manager** (CALL-E hackathon) at `skills/customer-success-voice-signal/`
+   (TypeScript, Node >= 20, npm). `site/` and `submission/demo-reel/` are presentation
+   assets, not services.
+2. **Sentrants** (living swarm of synthetic Sentry customers) at `sentrants/`
+   (Python 3.12, FastAPI CLI). Not the CALL-E product. Dress rehearsal: hatch + serve,
+   no LLM. Do not run live model calls unless asked.
 
 ### Working directory
 
-All app commands (`npm test`, `npm run typecheck`, `npm run signal`) must be run from
+Stage Manager commands (`npm test`, `npm run typecheck`, `npm run signal`) must be run from
 `skills/customer-success-voice-signal/`, not the repo root. The startup update script installs
 dependencies there automatically.
+
+Sentrants commands (`python3 -m pip install -e '.[dev]'`, `python3 -m pytest`,
+`python3 -m sentrants hatch`, `python3 -m sentrants serve`) must be run from `sentrants/`.
 
 ### Lint / test / build / run
 

@@ -1,0 +1,212 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Sentrants</title>
+<style>
+  html, body { margin: 0; background: #0b0d10; color: #d6d8db; font: 13px/1.4 ui-sans-serif, system-ui; }
+  canvas { display: block; }
+  #bar {
+    position: absolute; left: 16px; top: 12px; z-index: 2;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  h1 { font-size: 14px; font-weight: 600; margin: 0 12px 0 0; letter-spacing: .04em; }
+  button {
+    background: #1c222b; color: #e5e7eb; border: 1px solid #2a313c;
+    padding: 6px 10px; border-radius: 4px; cursor: pointer;
+  }
+  button:hover { border-color: #6ee7b7; }
+  button.on { border-color: #fbbf24; color: #fbbf24; }
+  label.happened { opacity: .75; font-size: 12px; }
+  #day { opacity: .6; margin-left: 6px; }
+  #card {
+    display: none; position: absolute; right: 16px; top: 16px; width: 320px;
+    background: #161a20; border: 1px solid #2a313c; padding: 14px 16px; z-index: 2;
+    max-height: 48vh; overflow: auto;
+  }
+  #card b { color: #fff; }
+  #card .muted { color: #8b919a; }
+  #room {
+    position: absolute; right: 16px; bottom: 16px; width: 340px; max-height: 38vh;
+    overflow: auto; background: #161a20cc; border: 1px solid #2a313c; padding: 10px 12px; z-index: 2;
+  }
+  #room h2 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px; color: #8b919a; }
+  #room .q { margin: 0 0 8px; font-size: 12px; }
+  #room .who { color: #8b919a; font-size: 11px; }
+</style>
+<div id="bar">
+  <h1>Sentrants</h1>
+  <button id="btn-life">Life</button>
+  <button id="btn-move">Move: Seer auto</button>
+  <label class="happened"><input type="checkbox" id="happened"> this happened</label>
+  <button id="btn-jump">Jump in time</button>
+  <span id="day"></span>
+</div>
+<div id="card"></div>
+<div id="room"></div>
+<canvas id="c"></canvas>
+<script>
+const geoColor = {
+  us: "#6ee7b7", europe: "#93c5fd", india: "#fbbf24",
+  latam: "#f9a8d4", east_asia: "#c4b5fd",
+};
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const card = document.getElementById("card");
+const roomEl = document.getElementById("room");
+let W, H, hover = null, pinned = null, swarm = [], camps = {}, labels = {}, mode = "life";
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function resize() {
+  W = canvas.width = Math.max(1200, window.innerWidth);
+  H = canvas.height = Math.max(720, window.innerHeight);
+}
+window.onresize = resize;
+resize();
+
+function applyPayload(data, quotes) {
+  mode = data.mode || mode;
+  camps = data.camps || camps;
+  labels = data.labels || labels;
+  document.getElementById("day").textContent = "day " + (data.day ?? 0) + " · " + mode;
+  document.getElementById("btn-life").className = mode === "life" ? "on" : "";
+  document.getElementById("btn-move").className = mode === "move" ? "on" : "";
+  const incoming = data.swarm || [];
+  const byId = Object.fromEntries(swarm.map(p => [p.id, p]));
+  swarm = incoming.map(n => {
+    const o = byId[n.id];
+    return o ? Object.assign(o, { tx: n.x, ty: n.y, ...n, x: o.x, y: o.y }) : { ...n, tx: n.x, ty: n.y, vx: 0, vy: 0 };
+  });
+  if (quotes) renderQuotes(quotes);
+  else renderQuotes(swarm.filter(p => p.quote).slice(0, 40).map(p => ({
+    name: p.name, camp: p.camp, geo: p.geo, text: p.quote
+  })));
+}
+
+function renderQuotes(quotes) {
+  if (!quotes || !quotes.length) { roomEl.innerHTML = ""; return; }
+  roomEl.innerHTML = "<h2>the room</h2>" + quotes.slice(0, 36).map(q =>
+    `<div class="q"><div class="who">${esc(q.name)} · ${esc(q.geo)} · ${esc(q.camp)}</div>${esc(q.text)}</div>`
+  ).join("");
+}
+
+async function loadSwarm() {
+  const data = await fetch("/swarm").then(r => r.json());
+  applyPayload(data);
+}
+async function post(url, body) {
+  const data = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body || {}),
+  }).then(r => r.json());
+  applyPayload(data, data.quotes);
+}
+
+document.getElementById("btn-life").onclick = () => post("/life");
+document.getElementById("btn-move").onclick = () => post("/move", {
+  target: "seer.auto",
+  remember: document.getElementById("happened").checked,
+});
+document.getElementById("btn-jump").onclick = () => post("/jump", { days: 30 });
+
+function clampFidget(p) {
+  const c = camps[p.camp];
+  if (!c) return;
+  const [x,y,w,h] = c;
+  const pad = 10;
+  if (p.x < x+pad) p.vx = Math.abs(p.vx);
+  if (p.y < y+pad) p.vy = Math.abs(p.vy);
+  if (p.x > x+w-pad) p.vx = -Math.abs(p.vx);
+  if (p.y > y+h-pad) p.vy = -Math.abs(p.vy);
+}
+
+function tick() {
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = "#1f2630";
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "11px ui-sans-serif";
+  for (const [id, rect] of Object.entries(camps)) {
+    const [x,y,w,h] = rect;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillText(labels[id] || id, x + 10, y + 18);
+  }
+  for (const p of swarm) {
+    if (p.tx != null) {
+      p.x += (p.tx - p.x) * 0.12;
+      p.y += (p.ty - p.y) * 0.12;
+      if (Math.abs(p.tx - p.x) < 0.8 && Math.abs(p.ty - p.y) < 0.8) {
+        p.x = p.tx; p.y = p.ty; p.tx = p.ty = null;
+      }
+    } else {
+      p.vx = (p.vx || 0) + (Math.random() - .5) * .04;
+      p.vy = (p.vy || 0) + (Math.random() - .5) * .04;
+      p.vx *= 0.96; p.vy *= 0.96;
+      p.x += p.vx; p.y += p.vy;
+      clampFidget(p);
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, hover === p || pinned === p ? 4.5 : 2.2, 0, Math.PI*2);
+    ctx.fillStyle = geoColor[p.geo] || "#fff";
+    ctx.globalAlpha = (hover || pinned) && hover !== p && pinned !== p ? 0.22 : 0.9;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(tick);
+}
+tick();
+loadSwarm();
+
+function hoverCard(p) {
+  card.style.display = "block";
+  card.innerHTML = `<b>${esc(p.name)}</b><div class="muted">${esc(p.age)} · ${esc(p.seat)} · ${esc(p.shop)} · ${esc(p.geo)}</div>
+    <div>${esc(p.framework)} · ${esc(p.plan)} · ${esc(p.stage)}</div>
+    <div class="muted" style="margin-top:8px">${esc(p.origin || "")}</div>
+    ${p.quote ? `<div style="margin-top:8px">“${esc(p.quote)}”</div>` : ""}
+    <div class="muted" style="margin-top:8px">click for the full card</div>`;
+}
+
+canvas.onmousemove = (e) => {
+  if (pinned) return;
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  hover = null;
+  let best = 64;
+  for (const p of swarm) {
+    const d = (p.x-x)**2 + (p.y-y)**2;
+    if (d < best) { best = d; hover = p; }
+  }
+  if (!hover) { card.style.display = "none"; return; }
+  hoverCard(hover);
+};
+
+canvas.onclick = async (e) => {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  let hit = null, best = 64;
+  for (const p of swarm) {
+    const d = (p.x-x)**2 + (p.y-y)**2;
+    if (d < best) { best = d; hit = p; }
+  }
+  if (!hit) { pinned = null; hover = null; card.style.display = "none"; return; }
+  pinned = hit;
+  hover = hit;
+  const p = await fetch("/person/" + hit.id).then(r => r.json());
+  const caps = (p.sentry?.using?.capabilities || []).join(", ") || "none";
+  const mem = (p.life?.memory || []).slice(-3).map(m =>
+    `<div class="muted">${esc(m.kind)} ${esc(m.target)} → ${esc(m.camp)}</div>`
+  ).join("");
+  card.style.display = "block";
+  card.innerHTML = `<b>${esc(p.name)}</b>
+    <div class="muted">${esc(p.human.age)} · ${esc(p.human.seat)} · ${esc(p.human.shop)} · ${esc(p.human.geo)}</div>
+    <div>${esc(p.human.frameworks[0])} · ${esc(p.sentry.plan)} · ${esc(p.life.stage)}</div>
+    <div class="muted" style="margin-top:8px">${esc(p.origin || "")}</div>
+    <div style="margin-top:8px">${esc(p.voice || "")}</div>
+    <div class="muted" style="margin-top:8px">using ${esc(caps)}</div>
+    ${p.quote ? `<div style="margin-top:8px">“${esc(p.quote)}”</div>` : ""}
+    ${mem ? `<div style="margin-top:8px">${mem}</div>` : ""}`;
+};
+</script>
