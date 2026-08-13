@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sentrants.local/schema/agent.json",
+  "title": "Sentrant",
+  "type": "object",
+  "required": ["id", "schema_version", "display_name", "origin", "voice", "human", "sentry", "temperament", "life"],
+  "properties": {
+    "id": { "type": "string" },
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "display_name": {
+      "type": "string",
+      "description": "Fictional. Never a real customer name."
+    },
+    "origin": {
+      "type": "string",
+      "description": "One sentence: how they got to Sentry."
+    },
+    "voice": {
+      "type": "string",
+      "description": "Compiled grain. The model plays this; it does not invent who they are."
+    },
+    "human": {
+      "type": "object",
+      "required": ["age", "seniority", "education", "geo", "shop", "frameworks", "seat"],
+      "properties": {
+        "age": { "enum": [23, 30, 40, 55] },
+        "seniority": { "enum": ["junior", "mid", "senior", "staff"] },
+        "education": { "enum": ["bootcamp", "self_taught", "cs_degree", "other"] },
+        "geo": { "enum": ["us", "europe", "india", "latam", "east_asia"] },
+        "shop": { "enum": ["hobby", "startup", "corporate", "agency"] },
+        "frameworks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "react",
+              "next",
+              "vue",
+              "django",
+              "fastapi",
+              "flask",
+              "rails",
+              "laravel",
+              "spring",
+              "express",
+              "flutter",
+              "unity"
+            ]
+          }
+        },
+        "seat": { "enum": ["coder", "founder", "boss"] }
+      }
+    },
+    "sentry": {
+      "type": "object",
+      "required": [
+        "plan",
+        "motion",
+        "deployment",
+        "tenure_months",
+        "quota_posture",
+        "competitive_frame",
+        "platforms",
+        "sdk_hygiene",
+        "using",
+        "alert_noise",
+        "data_residency"
+      ],
+      "properties": {
+        "plan": { "enum": ["developer", "team", "business", "enterprise"] },
+        "motion": { "enum": ["self_serve", "sales_assisted"] },
+        "deployment": { "enum": ["saas", "self_hosted"] },
+        "tenure_months": { "type": "integer", "minimum": 0 },
+        "renewal_in_days": { "type": ["integer", "null"] },
+        "arr_band": { "enum": ["0", "1k", "10k", "50k", "150k_plus"] },
+        "quota_posture": { "enum": ["headroom", "near_limit", "spiked_recently"] },
+        "competitive_frame": {
+          "enum": [
+            "sentry_only",
+            "also_datadog",
+            "also_newrelic",
+            "self_rolled",
+            "evaluating_exit"
+          ]
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "javascript",
+              "nextjs",
+              "python",
+              "react_native",
+              "ios",
+              "android",
+              "dotnet",
+              "go",
+              "ruby",
+              "php",
+              "java",
+              "unity",
+              "electron"
+            ]
+          }
+        },
+        "sdk_hygiene": { "enum": ["current", "one_behind", "pinned_old"] },
+        "using": {
+          "type": "object",
+          "description": "Portfolio ids from schema/portfolio.md. Not a brand list.",
+          "required": ["signals", "capabilities"],
+          "properties": {
+            "signals": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "alert_noise": { "enum": ["low", "moderate", "drowning"] },
+        "data_residency": { "enum": ["us", "eu"] }
+      }
+    },
+    "temperament": {
+      "type": "object",
+      "required": [
+        "noise_tolerance",
+        "price_sensitivity",
+        "change_appetite",
+        "trust",
+        "loud",
+        "loyalty"
+      ],
+      "properties": {
+        "noise_tolerance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "price_sensitivity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "change_appetite": { "type": "number", "minimum": 0, "maximum": 1 },
+        "trust": { "type": "number", "minimum": 0, "maximum": 1 },
+        "loud": { "type": "number", "minimum": 0, "maximum": 1 },
+        "loyalty": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "life": {
+      "type": "object",
+      "required": ["stage", "sentiment", "usage", "memory"],
+      "properties": {
+        "stage": { "enum": ["trying", "in", "pissed", "gone"] },
+        "sentiment": { "type": "number", "minimum": -1, "maximum": 1 },
+        "usage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "memory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["at", "kind", "remember", "camp"],
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "kind": {
+                "enum": ["ask", "tell", "price", "ship", "break", "take", "wait", "rewrite"]
+              },
+              "target": { "type": ["string", "null"], "description": "portfolio id" },
+              "remember": { "type": "boolean" },
+              "camp": { "type": "string" },
+              "quote": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
