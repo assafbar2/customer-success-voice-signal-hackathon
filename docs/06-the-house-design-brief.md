@@ -1,304 +1,248 @@
 # The House — design brief (review before build)
 
 **Status:** proposal. Not a PRD. Not an implementation plan.  
-**Audience:** Assaf — lock the story, then we answer “how / attributes / N / mass-management.”  
-**Company:** Sentry (this is Sentry-shaped *and* Sentry-named; unlike Stage Manager, this brief does not hide the employer).  
-**Related:** Stage Manager ([`02-prd.md`](./02-prd.md)) is the interrupt when a *named account* is already in trouble. This is the rehearsal *before* we put many accounts in trouble.
+**Correction:** the swarm is not a survey panel. It is a **living crowd of Sentry customers**. Polls, emails, launches, and breaking changes are things that happen *to them*. They keep living afterward.  
+**Company:** Sentry.  
+**Sibling:** Stage Manager ([`02-prd.md`](./02-prd.md)) is the phone interrupt when a *named* account is already on fire. The House is the installed base that account came from.
 
 ---
 
-## 1. What you are actually trying to build
+## The primitive
 
-You are not trying to build “a lot of chatbots with demographics.”
+**There is a swarm of Sentry customers.**
 
-You are trying to build a **preflight chamber for irreversible customer-facing decisions**.
+They are live. Each one is a customer-chatbot with a body: identity, personality, a relationship to Sentry, a memory, and a trajectory. They do not reset when you close the tab.
 
-The job:
+Later — and the architecture assumes this from day one — they grow. They instrument a second SDK. They buy Performance. They hit quota. They upgrade. They ignore Seer. They open a ticket. They churn. Personality is the bias on all of that, not a bio pasted into a prompt.
 
-> Before we change the show — a policy, a mass email, a feature launch, a breaking SDK, a quota or pricing move — we run it in front of a **sampled twin of Sentry’s installed base**. We watch who moves, where they move, and what they would actually *do*. We HOLD or we proceed. We can explain the HOLD with a segment, not a vibe.
-
-That is closer to:
-
-- a **dress rehearsal for the audience**, not a survey tool
-- **dynamic sampling** for customers, not “N live agents always on”
-- a **human spectrogram** (people walk to corners of the room), not a yes/no poll
-- a **census you can retune** (15% not 17%), not a spreadsheet of 10,000 persona cards
-
-The ants are the *instrument*. The product is the *decision to ship or HOLD*.
-
----
-
-## 2. Why the first framing will fail if we ship it as stated
-
-These are the traps in the original ask. If we don’t kill them now, we will build an expensive toy that agrees with us.
-
-| Trap | What it looks like | Why it dies at Sentry |
-| --- | --- | --- |
-| **Demographic roleplay** | “Senior Python dev in Germany, 8 years experience” | Sentry customers do not react as *resumes*. They react as *quota tightness, SDK pin, plan, self-hosted vs SaaS, on-call noise, TAM relationship*. A German PM and a German on-call engineer will vote opposite ways on the same email. |
-| **Always-on live agents** | Thousands of persistent LLM loops “being” customers | Cost, drift, and no operator affordance. The House should be **standing and idle**, then **cast** for a rehearsal. Persistence belongs to a small **Cabinet**, not the swarm. |
-| **Person as the only unit** | One agent = one human | Sentry’s unit of pain is layered: **org** (plan, contract, residency) × **project/SDK** (what a breaking change hits) × **role** (who reads the email). A pricing note hits billing admins. A Python SDK break hits instrumenting engineers. Seer/AI policy hits security + legal. |
-| **Binary yes/no floor** | Ants walk to Yes or No | Almost no Sentry decision is binary. Real stations are *upgrade this sprint / pin and wait / open a ticket / threaten churn / ignore because this isn’t my platform / post on HN*. |
-| **Confirmation bias** | Prompted agents who sound like Product | Worthless unless the House can **hurt you**. The angry self-hosted admin, the hobbyist on Developer plan, the enterprise security reviewer, the org that already evaluated Datadog — those voices are the point. |
-| **% without a denominator** | “Make type A 15% not 17%” | 15% of *orgs* ≠ 15% of *ARR* ≠ 15% of *event volume* ≠ 15% of *GitHub issue authors*. Self-hosted can be small in org-count and huge in vocality. The census must name the weight. |
-
----
-
-## 3. The better story
-
-**Working name: The House.**  
-Theater: Stage Manager cues the CS owner. **The House is the audience.** Before curtain-up on a customer-facing change, we dim the lights and watch the House react.
-
-**Sentry metaphor (do not bury this):** Sentry already refuses to store every event. It **samples** so the remaining set still represents the error population. The House is that idea pointed at *people and orgs*. We do not interview the installed base. We keep a **census**, we **sample**, we watch the **issue** (grouped reaction) instead of 10,000 identical paraphrases.
-
-**One-liner**
-
-> The House is a versioned, sampleable twin of Sentry’s installed base. You pose a stimulus. A cast of the House walks to reaction stations. You inspect who moved and why. You retune the mix in the census, not by poking ants. Dress rehearsal is the default; sending the email / shipping the break is curtain-up.
-
-**Sequel to Stage Manager (optional, not v1)**
+Everything else in the original ask is an *operation on that swarm*:
 
 ```text
-The House rehearses a change  →  HOLD?  →  Stage Manager rings the CS owner
-                                         →  prompt book records both
+THE SWARM  (persistent customers — the product)
+    │
+    ├── time ticks     →  usage, noise, renewals, organic adopt / expand / churn
+    │
+    └── a Sentry role does something
+            ├── probe     ask; don't write to their life
+            ├── touch     they experience it (poll, email, in-app)
+            ├── ship      feature / break / policy / price lands in their world
+            └── god-mode  rewrite the mix (“15% not 17%”)
+                    │
+                    ▼
+          lives update  →  the floor walks  →  prompt book
 ```
 
-v1 does not need a phone. v1 needs an honest audience.
+The poll is a scene. **The simulation is the product.**
 
 ---
 
-## 4. Product objects (the design)
+## One-liner
 
-Four objects. If we add a fifth too early, we will drown.
+> The House is a living installed base: a crowd of Sentry customer agents who remember what we did to them and keep going — adopting, expanding, stalling, churning. Every role can poll them and can change their lives. The spectrogram is how you watch them move.
 
-```text
-┌─────────────┐     ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   Census    │────►│   Stimulus  │────►│    Sample    │────►│   Stations  │
-│  the mix    │     │  the change │     │  the House   │     │  where they │
-│  (versioned)│     │  (typed)    │     │  (cast now)  │     │  walk       │
-└─────────────┘     └─────────────┘     └──────┬───────┘     └─────────────┘
-                                               │
-                                               ▼
-                                        ┌─────────────┐
-                                        │   Cabinet   │
-                                        │  named      │
-                                        │  voices     │
-                                        └─────────────┘
-```
+---
 
-### 4.1 Census — the mix you edit
+## What “live” means (and does not)
 
-A **recipe**, not a roster. Versioned. Diffable. “It’s 15% not 17%” is a census commit.
+**Live means persistent beings**, not a fresh cast per question.
 
-Independent dimensions (quotas that sum to 100% *per dimension*), plus a **weighting mode**:
+Each member of the House has:
 
-| Weight | Question it answers |
+| Layer | What it is |
 | --- | --- |
-| Org count | “What does the typical customer think?” |
-| ARR | “What does revenue think?” |
-| Event volume | “What does the installed runtime think?” |
-| Vocality | “What will we *hear* on GitHub / support / HN?” |
+| **Identity** | Sentry-shaped facts: plan, deployment, SDKs, product surface, quota posture, role, region |
+| **Personality** | Stable reaction function: noise tolerance, price sensitivity, change appetite (pin vs adopt), trust in Sentry, vocality, loyalty vs wandering |
+| **Life** | Current relationship: products in use, usage, health, sentiment, contract clock, ticket load |
+| **Memory** | What already happened to *them*: the quota email, the Python break, the Seer launch they ignored |
+| **Trajectory** | Expanding / stable / noisy / at-risk / churning — and, later, actually churned |
 
-Operators pick a weight **per rehearsal**. The same census, four different houses. That is how you stop arguing past each other in a launch review.
+**Live does not mean** 10,000 LLM sockets left open. They are always alive *as state*. They *think* when the clock ticks or when someone touches them. Same as any simulation: the Sims are not fully rendered when you’re in another room. If we confuse “alive” with “always chatting,” we will build a cost bomb and call it a world.
 
-You do **not** edit 200 agents. You edit the recipe; the next cast is regenerated. Individual ants are disposable.
+**Two clocks, both real:**
 
-### 4.2 Cabinet — the named voices that persist
+1. **World clock** — time passes. Quotas get hit. Renewals arrive. Noise accumulates. People adopt or don’t. The mix changes *because they lived*.  
+2. **Operator clock** — someone at Sentry polls or ships. The House reacts *now*, remembers it, and the next tick starts from the new lives.
 
-~12–24 high-fidelity seats, not 10,000.
+---
 
-These are the people CS already has in their head: the self-hosted platform lead who files SDK issues, the TAM’d enterprise security reviewer, the Next.js startup that lives on quotas, the mobile org that only cares about crashes, the billing admin who never opens the product.
+## Every role uses the same House
 
-The Cabinet:
+Not a CS toy. Not a Product toy. A shared world.
 
-- has memory across rehearsals (“last time you shortened the deprecation window I said we would pin”)
-- is quotable in a launch review
-- is **not** statistically representative — that is the Sample’s job
-- can be seeded from real (redacted) CS notes / forum archetypes, then fictionalized
+| Role | Polls to learn | Touches / ships to change |
+| --- | --- | --- |
+| Product | Will you adopt this? What’s missing? | Launch it into their lives; watch who actually turns it on over ticks |
+| Eng | Does this break you? | Ship the SDK/API change to the affected platforms |
+| CS | How does this email / policy land? | Send it; watch tickets, TAM pings, churn risk |
+| Marketing | Does this campaign move anyone? | Run it |
+| Pricing | Who pays, who stalls, who leaves? | Change the menu |
+| Support | Does this deflection help or enrage? | Change the queue |
+| Leadership | How is the base, really? | All of the above |
 
-If the swarm is the spectrogram, the Cabinet is the people you call on after the room has walked.
+A poll can **impact behaviour**. In real life, “we’re thinking of deprecating X” is already a touch. So every operator action is typed:
 
-### 4.3 Stimulus — what you are testing (this is half the product)
+| Verb | Writes to their life? |
+| --- | --- |
+| **Probe** | No. Lab question. Counterfactual. |
+| **Touch** | Yes. They received this (survey, email, in-app, TAM rumour). |
+| **Ship** | Yes. The product/policy/price is now in their world. |
+| **God-mode** | Yes, but *you* rewrote reality (recalibrate the mix to match real Sentry, or run a counterfactual population). |
 
-The original ask listed attributes of *customers* and under-specified the *question*. At Sentry the stimulus type **chooses who gets cast**.
+Without that distinction, every “just asking” permanently scars the base, and you cannot try two email drafts.
 
-| Type | Cast this layer | Example |
+---
+
+## Trunk and branch (how a living world stays usable)
+
+One House that remembers everything, plus forks:
+
+```text
+trunk   = the canonical living House (history accumulates)
+branch  = fork, try the email / the break / the price, watch them walk
+commit  = merge the branch into trunk  (“curtain-up” inside the sim)
+abandon = throw the branch away       (“dress rehearsal”)
+```
+
+- **Dress rehearsal** = branch. The crowd still *lives on the branch*. They grow and churn in that universe. Trunk is unharmed.  
+- **Curtain-up (sim)** = commit to trunk. This is still not a real customer email. It means “this is now what happened to our digital base.”  
+- **God-mode on trunk** = we looked at real Sentry and the House had drifted; we retune (15% → 17%) and record the rewrite.
+
+This is how “they continue living” and “we still get to try things” coexist.
+
+---
+
+## How the mix changes
+
+Two different operations. Do not collapse them.
+
+**God-mode (census).** An operator says the House is wrong against reality, or wants a counterfactual: self-hosted is 12% of orgs, not 8%. That is a versioned, diffable rewrite. “15% not 17%” is a census commit. You name the **denominator** (orgs / ARR / event volume / vocality) or the number is meaningless.
+
+**Life.** Nobody dragged a slider. Team-plan ants hit quota, some upgraded to Business, some churned. The live mix moved because they lived. Personality biases who does which.
+
+Census is the **initial conditions** and the **recalibration lever**. Life is the **simulation**. If we regenerate disposable ants from a recipe every poll, there is no one left to grow.
+
+The Cabinet is not a second population. It is **named members of the same swarm** you can follow across years of sim time — Lars the self-hosted platform lead, the near-quota Next.js shop, the TAM’d security reviewer. Same physics. Higher fidelity. Quotable.
+
+---
+
+## What you do to them (typed stimuli)
+
+The original ask listed customer attributes and under-specified the question. At Sentry the **stimulus type chooses who feels it**. Asking mobile-only orgs about a Python SDK break and calling that “the customer base” is a lie.
+
+| Type | Hits this layer | Example |
 | --- | --- | --- |
 | Breaking change | Project / SDK owners on the affected platforms | Python SDK init deprecation |
-| Mass comms | Who would actually receive it (role + plan + locale) | Quota / spike-protection email |
-| Feature launch | Orgs that could adopt it, including ones that will ignore it | Seer, Logs, Size Analysis |
-| Policy | Security, legal-adjacent, self-hosted, residency-sensitive | AI training / data retention / FSL |
-| Pricing / packaging | Billing admins + economic buyers, weighted by ARR | PAYG default, reserved volume, plan gate |
-| Support policy | Whoever files issues + whoever owns the TAM relationship | SLA, chatbot deflection, office hours |
+| Mass comms | Who would actually receive it | Quota / spike-protection email |
+| Feature launch | Orgs that could adopt it — including those who will ignore it | Seer, Logs, Size Analysis |
+| Policy | Security, self-hosted, residency-sensitive | AI training, retention, FSL |
+| Pricing | Billing admins + economic buyers | PAYG, reserved volume, plan gates |
+| Support policy | Whoever files issues + whoever owns the TAM relationship | SLA, chatbot deflection |
 
-A stimulus is not a prompt. It is a **typed object**:
+A stimulus is not a prompt. It is an object: the artifact, who it reaches, the **stations** they may walk to, and whether it is probe / touch / ship.
 
-- the artifact (email draft, changelog, pricing table, ToS delta, migration window)
-- the **audience filter** (who would see this in real life — do not ask mobile-only orgs about a Python SDK break and call it “the customer base”)
-- the **stations** (closed set of reactions, scenario-specific)
-- the **behavior we care about** (not just opinion): ignore / adopt / delay / open ticket / ping TAM / churn / go public
-
-Closed-set stations are the same design move as Stage Manager’s line readings. Free-text comes *after* the walk, as quotes, not as the vote.
-
-### 4.4 Sample — the ants
-
-Cast **for a run**, from the census, filtered by the stimulus.
-
-Suggested sizes (lock later; this is the shape):
-
-| Layer | N | Job |
-| --- | --- | --- |
-| Visual swarm | ~80–200 | Readable motion. The ants. |
-| Statistical read | ~300–800 | Percentages you can defend in a review (± a few points). |
-| Featured quotes | ~8–16 | Click an ant, read a card. |
-| Cabinet | ~12–24 | Persistent, named, remembered. |
-
-**“Live”** means: the House *exists* as a census + cabinet, and a dashboard can look inhabited. It does **not** mean thousands of LLM sessions idling. Inference happens on rehearsal. Between rehearsals they are dots on a map, not conversations.
+Stations are closed-set and scenario-specific — the same discipline as Stage Manager’s line readings. Not yes/no. After they walk, you read quotes. The walk *is* the vote.
 
 ---
 
-## 5. Sentry-shaped dimensions (preview, not the bible)
+## The floor (how the crowd looks)
 
-Do **not** start from geography and “are they a developer.” Start from what actually changes a Sentry customer’s vote.
+Same ants. Different floors. Motion is the demo.
 
-**Commercial / relationship**
+**Poll floor** — you ask; they walk to stations. You change the copy; they walk again.
 
-- Plan: Developer / Team / Business / Enterprise  
-- Motion: self-serve vs sales-assisted vs TAM’d  
-- Deployment: SaaS vs self-hosted vs dedicated  
-- Tenure + renewal proximity  
-- Quota posture: plenty of headroom / always near limit / recently spiked  
-- Competitive frame: Sentry-only vs also Datadog/New Relic/self-rolled  
-
-**Runtime (this is the Sentry-specific gold)**
-
-- Primary platforms / SDKs (JS, Python, mobile, .NET, Go, Ruby, PHP, Unity, …)  
-- SDK hygiene: current vs pinned / several major versions behind  
-- Product surface in use: Errors, Performance/spans, Replays, Profiling, Crons, Uptime, Seer, Logs, Size Analysis  
-- Alert load / noise sensitivity (the historical #1 wound)  
-- Data residency (US / EU / elsewhere)  
-
-**Who is speaking (role)**
-
-- Instrumenting developer  
-- On-call engineer  
-- Eng manager / platform / SRE  
-- Billing admin / procurement  
-- Product manager (uses Sentry as “is this bug real”)  
-- Security / compliance  
-- Open-source maintainer on the free plan  
-
-**Org context (use sparingly)**
-
-- Company size, industry, region — as *modifiers*, not the identity  
-- Language / timezone — for comms rehearsals only  
-
-**Calibration traits (how the House stays honest)**
-
-- Support density, GitHub/forum vocality, recent incident with Sentry, champion vs silent majority  
-
-Geography is a **comms and residency** dimension, not a personality. Expertise is **SDK + product surface + quota posture**, not years-of-experience.
-
-The full attribute list is question 2. We should not write it until this spine is locked.
-
----
-
-## 6. How it should feel (the ants)
-
-Reference image: a **four-corners / spectrogram**. You ask a question; the room walks. You change the question; they walk again. Most questions are not two corners.
-
-**Scene — Python SDK deprecation email, v1 copy (90-day window, no codemod)**
-
-Stations on the floor:
+Python deprecation email, 90-day window, no codemod:
 
 1. Upgrade this sprint  
-2. Pin and wait for a migration guide  
-3. This breaks our CI / we have many services — angry  
+2. Pin and wait for a guide  
+3. This breaks CI / many services — angry  
 4. Not my platform — sit out  
-5. Ping TAM / legal / procurement  
+5. Ping TAM / legal  
 6. Evaluate leaving  
 
-The House walks. Enterprise Python + pinned SDKs pile into 2 and 3. JS-only orgs sit at 4 (correct — they were filtered poorly if they dominate the shot). Self-hosted vocality-weight makes 3 look bigger than ARR-weight. Cabinet member “Lars, self-hosted platform, 40 services” walks to 3 and says the quote you will actually hear.
+Enterprise Python + pinned SDKs pile into 2 and 3. JS-only should be filtered off this floor. Vocality-weight makes 3 look bigger than ARR-weight. Lars walks to 3 and says the quote you will actually hear.
 
-**You change one thing:** 12-month window + a codemod in the email.
+Change to 12-month window + a codemod: particles flow. 3 shrinks toward 2, some of 2 toward 1. Lars moves to 2, not 1. ARR looks fine. Vocality still has a public-thread risk. **That split is the product.**
 
-Particles flow. 3 shrinks toward 2, then some of 2 toward 1. Lars moves to 2, not 1. The ARR-weighted House looks fine. The vocality-weighted House still has a public-thread risk. That split **is the product**.
+**Life floor** — nobody asked a question. Time passed. The same ants have drifted toward expanding / healthy / noisy / at-risk / churned. Color by plan, SDK, or role. This is how you *see* buying more Sentry, and leaving.
 
-Interaction, not a slide:
+Click an ant → the person: identity, personality, life, last memories, why they walked. You can talk to them (they are chatbots). Talking is a **touch** unless you mark it probe.
 
-- Pose / revise stimulus (the copy is a first-class object; editing it re-runs the walk)  
-- Toggle weight (org / ARR / volume / vocality) — same census, different gravity  
-- Filter the floor (“only Business+, only mobile, only near-quota”)  
-- Click an ant → persona card + quote + which station + confidence  
-- Census slider: drag “self-hosted 8% → 12%” and the *next* walk uses the new mix (optionally animate a re-cast)  
-- Prompt book: every rehearsal is an audit row (stimulus version, census version, weight, station mix, HOLD/proceed)
+God-mode slider: drag “self-hosted 8% → 12%.” That is a rewrite, not a walk. Optionally morph the crowd so the floor matches the new census.
 
-Graphic direction: particles with weak identity (color = dimension you are currently coloring by: plan, SDK, role). Stations are labeled regions, not bars. Motion on stimulus change is the demo. Avoid a literal ant farm if it reads as cute instead of operational — “audience” / “house lights” / “spectrogram” can carry the same motion with Sentry’s seriousness.
+Avoid cute ant-farm if it reads as a toy. Audience / house lights / spectrogram — operational, Sentry-serious.
 
 ---
 
-## 7. How we keep the House from lying
+## Sentry-shaped lives (preview, not the bible)
 
-This is the hard product. Visualization is the easy one.
+Do not start from geography and “are they a developer.” Start from what changes a Sentry life.
 
-1. **Stations are closed-set and typed** — same discipline as line readings.  
-2. **Filter by who would really see it** — a House that includes the wrong people is a lie.  
-3. **Weighting modes are visible** — never show a single % as “customers think.”  
-4. **Cabinet is allowed to dissent from the swarm.**  
-5. **Calibration nights:** replay a past real event (a quota email, an SDK break, a pricing page change) and score the House against what CS actually heard. Census versions that fail calibration get a scarlet letter.  
-6. **Dress rehearsal is the default.** The House never sends the email. HOLD is a first-class output.  
-7. **Fictionalize the Cabinet.** Sentry-shaped, not real customer names, not real event dumps, not confidential TAM notes pasted into prompts.
+- **Commercial:** Developer / Team / Business / Enterprise · self-serve vs TAM’d · SaaS vs self-hosted vs dedicated · tenure · renewal clock · quota posture (headroom / near-limit / recently spiked) · competitive frame (Sentry-only vs Datadog/New Relic/self-rolled)  
+- **Runtime:** primary SDKs · pinned vs current · Errors / Performance / Replays / Profiling / Crons / Seer / Logs / Size Analysis · alert noise · residency  
+- **Who is speaking:** instrumenting developer · on-call · eng manager / SRE · billing admin · PM · security · OSS maintainer on free  
+- **Modifiers:** company size, industry, region, language — not the identity  
+- **Personality:** noise tolerance, price sensitivity, change appetite, trust, vocality, loyalty  
 
-If we cannot name how a rehearsal could prove us *wrong*, we should not build it.
+A German PM and a German on-call engineer will split on the same email. Expertise is SDK + surface + quota, not years-of-experience. Geography is comms and residency.
 
----
-
-## 8. What we are not building (v1)
-
-- A replacement for user research, CAB, or analytics  
-- A CSAT oracle or churn predictor with fake precision  
-- Outbound to real customers  
-- Always-on thousands of LLM agents  
-- A generic “synthetic users” SaaS unmoored from Sentry’s runtime  
-- Yes/no as the default station set  
+The attribute bible is question 2, after this spine locks.
 
 ---
 
-## 9. Review locks — decide these, then we answer 1–4
+## How the House stays honest
 
-Please mark agree / change on each. The numbered questions in the original ask are downstream of these.
+A living sim will agree with you forever if we let it.
+
+1. Stations are closed-set and typed.  
+2. Stimuli only hit who would really see them.  
+3. Weights are visible — never one % as “customers think.”  
+4. Named members may dissent from the swarm.  
+5. **Calibration nights:** replay a past real event (quota email, SDK break, pricing page) and score the House against what CS actually heard. Drifted trunks get retuned in god-mode, with a scarlet letter on that commit.  
+6. Probe vs touch vs ship is visible on every action.  
+7. Fictionalize people. Sentry-shaped, not real names, not real event dumps, not TAM notes pasted into prompts.  
+8. The House can **hurt you** — or it is theatre.
+
+This is a digital twin for rehearsal and simulation. It does not replace research, CAB, or analytics. It does not email real customers. It is not a churn oracle with fake precision.
+
+---
+
+## Review locks
+
+Mark agree / change. Questions 1–4 in the original ask are downstream.
 
 | # | Lock | Proposed default |
 | --- | --- | --- |
-| L1 | **Job** is preflight for irreversible customer-facing decisions, not a chatbot zoo | Agree |
-| L2 | **Name / metaphor** | **The House** + sampling (Sentry) + spectrogram (viz) |
-| L3 | **Three populations** | Census (mix) + Sample (ants, disposable) + Cabinet (named, persistent) |
-| L4 | **“Live”** means standing census + on-demand cast, not idle LLM sessions | Agree |
-| L5 | **Stimulus is typed** and chooses who is cast | Breaking / comms / launch / policy / pricing / support-policy |
-| L6 | **Stations are closed-set and scenario-specific** | Not yes/no by default |
-| L7 | **Census edits are recipe diffs** with an explicit **weight** (org / ARR / volume / vocality) | “15% of *what*” is mandatory |
-| L8 | **Sentry dimensions start from plan, deployment, SDK, product surface, quota posture, role** — geo and “are they a developer” are modifiers | Agree |
-| L9 | **Honesty mechanics** (wrong-audience filter, calibration against past events, HOLD) are in v1, not a later ethic slide | Agree |
-| L10 | **Relationship to Stage Manager** | Sibling: House = before the damage; Stage Manager = after a named account is already on fire. No phone in House v1. |
-| L11 | **v1 surface** | One rehearsal loop + spectrogram + census editor. Not a multi-tenant platform. |
+| L1 | **Job** | A **living swarm** of Sentry customer agents. Polling, comms, launches, breaks, pricing are operations on that swarm. They keep living. |
+| L2 | **Name** | **The House** — the audience that lives between shows |
+| L3 | **Populations** | One persistent swarm. Census = initial conditions + god-mode. Named members = featured ants in the *same* physics, not a disposable panel. |
+| L4 | **Live** | Persistent state + memory + trajectory. Cognition on ticks and touches, not idle LLM sockets. |
+| L5 | **Shared world** | Every Sentry role polls and acts on the same House. |
+| L6 | **Trunk / branch** | Branch = dress rehearsal universe. Commit to trunk = sim curtain-up. God-mode retunes trunk against reality. |
+| L7 | **Verbs** | Probe / touch / ship / god-mode. Polls may be touches. |
+| L8 | **Stimuli are typed** | Breaking / comms / launch / policy / pricing / support-policy. Type chooses who feels it. |
+| L9 | **Stations** | Closed-set, scenario-specific. Not yes/no by default. |
+| L10 | **Mix** | God-mode census diffs *and* endogenous life. Denominator required (org / ARR / volume / vocality). |
+| L11 | **Dimensions** | Plan, deployment, SDK, product surface, quota posture, role, personality. Geo and “developer?” are modifiers. |
+| L12 | **Honesty** | Wrong-audience filter, calibration, visible verbs, HOLD on real-world send. In v1. |
+| L13 | **Stage Manager** | Sibling. No phone in House v1. |
+| L14 | **v1 vs later** | v1: the swarm exists, you can talk to them, poll them, touch them, see them walk, god-mode the mix. World clock is real but coarse. Later: they buy, expand, churn as first-class life — same beings, richer ticks. **Do not build disposable v1.** |
 
 ---
 
-## 10. Open questions (only the ones that change the story)
+## Open questions (only what changes the story)
 
-1. Is the primary operator **Product** (launches / breaks), **CS** (comms / policy), or a **launch review room** with both? The census weights and the Cabinet roster follow this.  
-2. Do we optimize v1 for **one stimulus type** (recommendation: **breaking change + mass comms**, because Sentry has scar tissue there) or a generic “ask the House anything”?  
-3. Is vocality-weight in v1, or do we only ship org-count + ARR and add vocality when we have a real proxy?  
-4. How fictional must the Cabinet be for an internal Sentry tool vs a public demo?  
-5. Is this an internal Sentry instrument, a hackathon sequel to Stage Manager, or both? (Brief assumes *internal instrument first*; theater vocabulary still works.)
+1. Is the **trunk** a single company-wide House, or does each team fork by default and only CS/Product maintain a canonical trunk?  
+2. v1 world clock: **coarse ticks** (weekly health drift) or a real **economy** (quota → paywall → upgrade/churn) from day one? Recommendation: coarse ticks in v1, economy as the first “later,” on the same agents.  
+3. When any role can ship into the House, who is allowed to **commit to trunk**? (Otherwise Marketing’s campaign poisons Eng’s baseline.)  
+4. How fictional must named members be for an internal Sentry tool vs a public demo?
 
 ---
 
-## 11. What we will answer after lock (not now)
+## What we will answer after lock (not now)
 
-Once L1–L11 are marked:
+1. **How we build it** — agent schema, clocks, verb pipeline, where LLMs sit, what is a state machine.  
+2. **Attribute bible** — dimensions, personality, life fields; which are quotas vs tags; what Sentry could export later.  
+3. **N, look, interaction** — how many live, how the floor works, talking to one ant vs watching the crowd.  
+4. **Mass management** — census god-mode, watching life change the mix, spectrogram motion.
 
-1. **How we build it** — census file → stimulus schema → cast → station walk → spectrogram → prompt book; where LLMs sit; what is deterministic.  
-2. **Attribute bible** — the dimension list, allowed values, which are quotas vs tags, which are Sentry-exportable later vs authored.  
-3. **N, look, interaction** — exact cast sizes, dashboard loop, what “inhabited House” means when nothing is rehearsing.  
-4. **Mass management** — census UX (sliders, diffs, versions), re-cast vs morph, coloring, and the spectrogram motion spec.
-
-Until then, treating (2) as “list every demographic” or (3) as “how many live agents” would freeze the wrong product.
+The starting point does not change: **there is a swarm of Sentry customers.** Then we build everything else on top of them still being there tomorrow.
