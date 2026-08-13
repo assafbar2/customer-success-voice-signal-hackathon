@@ -34,6 +34,20 @@ def test_move_remember_writes_memory(tmp_path, monkeypatch):
     assert len(remembered) == 40
 
 
+def test_outage_walks_everyone_and_self_hosted_sit_out(tmp_path, monkeypatch):
+    _seed(tmp_path, monkeypatch, n=200)
+    out = run_move(target="sentry.down", remember=True)
+    people = load_people()
+    assert sum(out["counts"].values()) == 200
+    assert out["target"] == "sentry.down"
+    assert "we_were_blind" in out["labels"]
+    self_hosted = [p for p in people if p["sentry"]["deployment"] == "self_hosted"]
+    assert self_hosted
+    assert all(p["_camp"] == "not_me" for p in self_hosted)
+    remembered = [p for p in people if any(m.get("target") == "sentry.down" for m in p["life"].get("memory") or [])]
+    assert len(remembered) == 200
+
+
 def test_jump_changes_some_lives(tmp_path, monkeypatch):
     _seed(tmp_path, monkeypatch, n=200)
     before = [p["life"]["stage"] for p in load_people()]

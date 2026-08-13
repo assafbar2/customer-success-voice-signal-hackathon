@@ -9,8 +9,8 @@ from sentrants.db import (
     swarm_dots,
     upsert_people,
 )
-from sentrants.layout import LIFE, SEER_AUTO, SEER_AUTO_LABELS
-from sentrants.physics import apply_move, jump, to_life_floor
+from sentrants.layout import LIFE
+from sentrants.physics import MOVES, apply_move, jump, to_life_floor
 from sentrants.room import room_talk
 
 
@@ -22,17 +22,23 @@ def current_day() -> int:
     return int(meta_get("sim_day", "0") or 0)
 
 
+def current_target() -> str:
+    return meta_get("move_target", "") or ""
+
+
 def swarm_payload() -> dict:
     people = load_people()
     mode = current_mode()
-    camps = LIFE if mode == "life" else SEER_AUTO
-    labels = (
-        {k: k for k in LIFE}
-        if mode == "life"
-        else SEER_AUTO_LABELS
-    )
+    target = current_target()
+    spec = MOVES.get(target) if mode == "move" else None
+    if spec:
+        camps, labels, title = spec["camps"], spec["labels"], spec["title"]
+    else:
+        camps, labels, title = LIFE, {k: k for k in LIFE}, "life"
     return {
         "mode": mode,
+        "target": target if spec else "life",
+        "title": title,
         "day": current_day(),
         "camps": {k: list(v) for k, v in camps.items()},
         "labels": labels,
@@ -46,6 +52,7 @@ def run_move(*, target: str = "seer.auto", remember: bool = False) -> dict:
     quotes = room_talk(people)
     upsert_people(people)
     meta_set("mode", "move")
+    meta_set("move_target", target)
     log_event("move", {"counts": summary["counts"], "remember": remember}, target)
     summary["quotes"] = quotes
     summary["day"] = current_day()
@@ -65,6 +72,7 @@ def run_jump(*, days: int = 30) -> dict:
     summary["quotes"] = quotes
     summary["day"] = day
     summary["mode"] = "life"
+    summary["target"] = "life"
     summary["labels"] = {k: k for k in LIFE}
     summary["camps"] = {k: list(v) for k, v in LIFE.items()}
     summary["swarm"] = swarm_dots(people)

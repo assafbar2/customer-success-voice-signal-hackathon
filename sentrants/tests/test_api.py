@@ -15,7 +15,7 @@ def test_floor_page_has_jump(tmp_path, monkeypatch):
     page = client.get("/")
     assert page.status_code == 200
     assert "Jump in time" in page.text
-    assert "Move: Seer auto" in page.text
+    assert "Sentry down 90m" in page.text
 
 
 def test_move_and_jump_endpoints(tmp_path, monkeypatch):
@@ -45,3 +45,7 @@ def test_move_and_jump_endpoints(tmp_path, monkeypatch):
     life = client.post("/life")
     assert life.status_code == 200
     assert life.json()["mode"] == "life"
+    down = client.post("/move", json={"target": "sentry.down", "remember": True})
+    assert down.status_code == 200
+    assert down.json()["target"] == "sentry.down"
+    assert down.json()["mode"] == "move"

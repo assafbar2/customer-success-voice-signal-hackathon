@@ -26,6 +26,23 @@ SEER_AUTO_LABELS = {
     "leaving": "I'm done",
 }
 
+# Sentry SaaS down ~90 minutes
+OUTAGE = {
+    "wait_it_out": (40, 40, 250, 400),
+    "we_were_blind": (310, 40, 280, 400),
+    "also_datadog": (610, 40, 250, 400),
+    "not_me": (880, 40, 280, 400),
+    "leaving": (40, 480, 1140, 180),
+}
+
+OUTAGE_LABELS = {
+    "wait_it_out": "Status page. Waiting.",
+    "we_were_blind": "We were blind",
+    "also_datadog": "This is why we dual-run",
+    "not_me": "Not my Sentry",
+    "leaving": "I'm done",
+}
+
 
 def place(camps: dict, camp: str, rng: Random) -> tuple[float, float]:
     x, y, w, h = camps[camp]
