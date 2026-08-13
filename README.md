@@ -79,6 +79,7 @@ Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](res
 | [skills/customer-success-voice-signal/](skills/customer-success-voice-signal/) | **Stage Manager skill** |
 | [docs/02-prd.md](docs/02-prd.md) | Product decisions |
 | [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | As-built flow |
+| [docs/06-the-house-design-brief.md](docs/06-the-house-design-brief.md) | **The House** — synthetic installed-base audience (proposal; review before build) |
 | [submission/awesome-list/PACKAGING.md](submission/awesome-list/PACKAGING.md) | Awesome-list PR packaging |
 | [submission/PRE-SUBMIT.md](submission/PRE-SUBMIT.md) | Pre-submit: video · GIF · awesome-list · MVF · Devpost |
 | [submission/mvf-feedback.md](submission/mvf-feedback.md) | Most Valuable Feedback survey draft |
