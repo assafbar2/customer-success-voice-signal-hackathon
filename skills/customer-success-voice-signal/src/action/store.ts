@@ -79,8 +79,8 @@ export async function loadPendingIntentById(
 
 /**
  * Apply (or dry-run) a pending action intent.
- * Default: local receipt only. When `sent` is provided, a live adapter
- * (Slack webhook / GitHub comment) already posted — the receipt records it.
+ * Default: local receipt only. `sent` is unused by the CLI (live Slack/GitHub
+ * send is out of MVP); kept so unit tests can record a hypothetical post.
  */
 export async function applyActionIntent(args: {
   dataDir: string;

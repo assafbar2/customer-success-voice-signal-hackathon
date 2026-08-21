@@ -102,9 +102,9 @@ curl -sS -X POST http://127.0.0.1:8787/cue \
   -H 'content-type: application/json' \
   -d @events/webhook_stuck_support.json
 
-# Decision → system handoff (Slack/GitHub live when env set)
+# Decision → system handoff (local dry-run; Slack/GitHub stab — do not fire)
 npm run apply-action -- --last --dry-run
-npm run apply-action -- --last --adapter slack
+npm run apply-action -- --last
 
 # Curtain up — real CALL-E (operator only)
 # Key: https://dashboard.heycall-e.com/account/api-keys

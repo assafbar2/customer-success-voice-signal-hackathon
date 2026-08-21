@@ -98,7 +98,7 @@ Clear. Break a leg — or just open the ticket.
 - [ ] Curtain-up command (`--live PLACES`) — **no secrets**  
 - [ ] Stage code identity beat (or dress-rehearsal note of the code)  
 - [ ] Writeback with `stuck_support` → decision 1  
-- [ ] Adapter beat (Slack/GitHub) if env available  
+- [ ] Adapter beat: `apply-action --dry-run` only (Slack/GitHub live send is out of scope — do not fire)  
 - [ ] `agent_needs_decision` name-drop  
 - [ ] End card: `skills/customer-success-voice-signal/` + repo URL  
 - [ ] **Pre-submit (same day as upload):** MVF survey filled from [`mvf-feedback.md`](mvf-feedback.md) — see [`PRE-SUBMIT.md`](PRE-SUBMIT.md)
@@ -127,9 +127,8 @@ Ideas from repo review — take or leave per beat:
    repo. It stays.
 3. **End card joke** (doubles as the safety differentiator):
    *"No customers were called in the making of this demo."*
-4. **Adapter beat.** If the Slack-shaped webhook / GitHub-comment adapters are in by shoot
-   time, show the decision landing in the next system (~5s) right after the writeback shot —
-   that's the "Most Practical" money shot.
+4. **No Slack land.** Slack/GitHub adapters are a stab to show the handoff is possible.
+   Video writeback is the prompt book. Do not fire a real channel.
 5. Metaphor rationing on screen: pair theater terms with plain speech on first use
    ("dress rehearsal — dry-run", "curtain up — live call"). VO can stay theatrical.
 6. **Identity beat.** Stage code read-back before “one” — shows the decision is bound to

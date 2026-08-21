@@ -22,4 +22,4 @@ https://assafbar2.github.io/customer-success-voice-signal-hackathon/
 
 ## Suggested README one-liner
 
-> **customer-success-voice-signal** — Stage Manager rings the CS owner (never the customer) for stuck support / SLA / agent-needs-decision / onboarding cues; closed-set 1/2/3 → action intent (Slack/GitHub).
+> **customer-success-voice-signal** — Stage Manager rings the CS owner (never the customer) for stuck support / SLA / agent-needs-decision / onboarding cues; closed-set 1/2/3 → action intent.

@@ -98,7 +98,7 @@ Read [references/safety.md](references/safety.md).
 - Prompt book: `data/prompt-book.ndjson`  
 - Show report: `data/show-report.md`  
 - Cue history (live dial outcomes only): `data/cue-history.ndjson`  
-- Action intents: `data/actions/pending/` → `npm run apply-action` (see [references/action-intents.md](references/action-intents.md))
-- Live adapters: `--adapter slack` (webhook `{text}`) · `--adapter github` (issue comment) — env-gated, placeholder HOLDs
+- Action intents: `data/actions/pending/` → `npm run apply-action -- --dry-run` (see [references/action-intents.md](references/action-intents.md))
+- Slack/GitHub adapters: **stab only** (out of MVP — do not fire). Dry-run prints the payload.
 - HTTP cue: `npm run serve-cue` → `POST /cue` (optional `CUE_WEBHOOK_SECRET`)
 - CALL-E SDK notes: [references/calle-sdk.md](references/calle-sdk.md)

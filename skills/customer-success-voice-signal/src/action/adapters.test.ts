@@ -6,6 +6,7 @@ import type { ActionIntent } from "./types.js";
 import { applyActionIntent, writeActionIntent } from "./store.js";
 import {
   formatAdapterText,
+  mustHoldLiveAdapterSend,
   resolveSlackTarget,
   resolveGithubTarget,
   sendToSlack,
@@ -41,6 +42,15 @@ describe("adapter message", () => {
     expect(text).toContain("Take over in chat now");
     expect(text).toContain("stuck_support");
     expect(text).toContain("1");
+  });
+});
+
+describe("live adapter send is out of MVP", () => {
+  it("HOLDs --adapter without --dry-run so Slack/GitHub never fire", () => {
+    expect(mustHoldLiveAdapterSend("slack", false)).toBe(true);
+    expect(mustHoldLiveAdapterSend("github", false)).toBe(true);
+    expect(mustHoldLiveAdapterSend("slack", true)).toBe(false);
+    expect(mustHoldLiveAdapterSend(undefined, false)).toBe(false);
   });
 });
 

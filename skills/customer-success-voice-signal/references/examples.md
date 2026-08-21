@@ -23,8 +23,8 @@ npm run apply-action -- --last --dry-run
 # Local POC receipt (still no external API)
 npm run apply-action -- --last
 
-# Live adapter (env-gated Slack / GitHub)
-npm run apply-action -- --last --adapter slack
+# Stab only — prints Slack-shaped payload; do not live-send (out of MVP)
+npm run apply-action -- --last --adapter slack --dry-run
 ```
 
 See [action-intents.md](action-intents.md).
@@ -70,5 +70,5 @@ Before a 1/2/3 counts, the owner must speak the **stage code** (identity read-ba
 | `serve-cue` + `POST /cue` | Same as CLI dress rehearsal / curtain-up (query `?live=1&confirm=PLACES`) |
 | `apply-action --dry-run` | Local dry-run receipt only |
 | `apply-action` (no dry-run) | Moves intent to executed + local receipt — **no** live CRM/Slack |
-| `apply-action --adapter slack\|github` | Real HTTP send when env is set (else HOLD) |
+| `apply-action --adapter slack\|github` | Stab: `--dry-run` prints payload. Live HTTP send is **out of MVP** (do not fire). |
 Cancel / do not ring: omit `--live`, or do not type `PLACES`. There is no recurring schedule.

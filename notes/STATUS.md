@@ -20,8 +20,8 @@
 
 ## Product loop (closed)
 
-- [x] Decision → action intent → Slack / GitHub live adapters (env-gated)
-- [x] HTTP cue listener — `npm run serve-cue` → `POST /cue` (curl → engine → apply-action)
+- [x] Decision → action intent (Slack/GitHub adapters are a **stab** — out of MVP; do not fire)
+- [x] HTTP cue listener — `npm run serve-cue` → `POST /cue` (curl → engine → apply-action dry-run)
 - [x] HTTP live arming — `CUE_ALLOW_LIVE=1` required; non-loopback needs secret; timingSafeEqual
 - [x] SDK depth — `failureCode` / `completionConfidence` / optional `webhookUrl` (create→persist→wait)
 - [x] Identity read-back — spoken stage code before 1/2/3 counts
@@ -46,8 +46,8 @@ Master list: [`submission/PRE-SUBMIT.md`](../submission/PRE-SUBMIT.md)
 Rubric state: Technical ✓ · Idea ✓ · Impact ✓ · **Demo ✗** — the video is 25% of the
 rubric and 100% of the emotional argument. Everything below serves it.
 
-- [ ] **Video spine = the full loop live:** `curl → serve-cue → phone rings → "one" → apply-action --adapter slack → message lands`. That 30 seconds IS "Most Practical".
-- [ ] **One live curtain-up run of the whole new chain** (listener + adapter, not components separately) → append to the live ladder in `research/calle-api-notes.md`. Do it as the video take — one stone, two birds.
+- [ ] **Video spine = the in-scope loop live:** `curl → serve-cue → phone rings → stage code → "one" → prompt book`. Slack/GitHub adapters are a stab (dry-run only) — **do not fire**, not the money shot.
+- [ ] **One live curtain-up** of the in-scope chain (listener + ring + prompt book) → append to the live ladder in `research/calle-api-notes.md`. Do it as the video take.
 - [ ] **Fresh-clone judge sanity pass:** clean `git clone → npm install → npm test → curl POST /cue`, exactly as a judge would, before Devpost submit.
 - [ ] Awesome-list PR timing: bar was "v1 solid" — with 67+ tests, live adapters, HTTP listener, green CI, v1 is arguably solid now. Their PR review latency is the one clock we don't control.
 - Operational: two agents (Cursor + Claude Code) commit here — **sync clones before each session** to avoid merge-conflict theater.
