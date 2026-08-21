@@ -15,7 +15,7 @@ import {
   type CueReservation,
 } from "./policy/cueLock.js";
 import { buildCallIntent } from "./calle/intent.js";
-import { curtainUp } from "./calle/client.js";
+import { curtainUp, fetchCallResult, type CurtainUpResult } from "./calle/client.js";
 import { categorizeCalleError } from "./calle/errors.js";
 import { previewIntentSummary, toDecision } from "./map/toDecision.js";
 import {
@@ -38,6 +38,10 @@ export interface RunSignalArgs {
   log?: (msg: string) => void;
   /** Injectable curtain-up for tests (defaults to real client). */
   dial?: typeof curtainUp;
+  /** Fetch an existing CALL-E run and map it — no new ring. */
+  fromCallId?: string;
+  /** Injectable GET for --from-call tests. */
+  fetchCall?: typeof fetchCallResult;
 }
 
 export interface RunSignalOutcome {
@@ -63,10 +67,149 @@ function resolveOwner(event: AccountEvent, env: SkillEnv, mode: RingMode): CsOwn
 
 function resolveMode(args: RunSignalArgs): RingMode {
   if (args.dryRunFlag) return "dress_rehearsal";
+  if (args.fromCallId) return "curtain_up";
   if (liveGateOpen({ liveFlag: args.liveFlag, placesTyped: args.placesTyped, env: args.env })) {
     return "curtain_up";
   }
   return "dress_rehearsal";
+}
+
+function decisionFromCurtainUp(args: {
+  event: AccountEvent;
+  intent: CallIntent;
+  options: ReturnType<typeof pickOptions>;
+  mode: RingMode;
+  call: CurtainUpResult["call"];
+  structured: Record<string, unknown> | null;
+}): DecisionResult {
+  const stageCode =
+    typeof args.intent.metadata?.stage_code === "string"
+      ? args.intent.metadata.stage_code
+      : null;
+  const rec = args.call.recipients?.[0];
+  return toDecision({
+    event: args.event,
+    intent: args.intent,
+    options: args.options,
+    mode: args.mode,
+    callRunId: args.call.id,
+    structured: args.structured,
+    callSummary: args.call.summary ?? rec?.summary ?? null,
+    taskCompleted: args.call.taskCompleted,
+    failureCodes: collectFailureCodes(args.call),
+    failureMessages: collectFailureMessages(args.call),
+    completionConfidence: args.call.completionConfidence ?? null,
+    evidence: args.call.evidence ?? [],
+    expectedStageCode: stageCode,
+    transcriptTexts: rec?.attempts?.[0]?.transcriptTurns
+      ?.filter((t) => t.speaker === "user")
+      .map((t) => t.text ?? "")
+      .filter(Boolean),
+  });
+}
+
+async function recordFromExistingCall(
+  args: RunSignalArgs,
+  event: AccountEvent,
+  log: (msg: string) => void,
+): Promise<RunSignalOutcome> {
+  const callId = args.fromCallId ?? "";
+  const mode: RingMode = "curtain_up";
+  const owner = resolveOwner(event, args.env, mode);
+  const options = event.option_set ?? pickOptions(event.trigger_id);
+  const intent = buildCallIntent({ ...event, cs_owner: owner }, owner.e164, options);
+  const preview = previewIntentSummary(intent);
+  if (args.verbose) log(preview);
+
+  if (!args.env.calleApiKey) {
+    return {
+      exit: "failure",
+      mode,
+      event,
+      intent,
+      result: null,
+      message: "Failure: CALLE_API_KEY missing — cannot fetch an existing call.",
+    };
+  }
+
+  const fetch = args.fetchCall ?? fetchCallResult;
+  try {
+    log(`Remap — fetching CALL-E run ${callId} (no new ring).`);
+    const { call, structured } = await fetch(callId, {
+      apiKey: args.env.calleApiKey,
+      baseUrl: args.env.calleBaseUrl,
+    });
+    const result = decisionFromCurtainUp({
+      event,
+      intent,
+      options,
+      mode,
+      call,
+      structured,
+    });
+    const paths = await writeback({
+      dataDir: args.env.dataDir,
+      mode,
+      event,
+      intent,
+      result,
+      preview,
+      note: `Remap of existing CALL-E run ${call.id} — no new ring.`,
+      recordDedupe: false,
+    });
+    log(
+      [
+        "=== Remap (no ring) ===",
+        `Call run: ${call.id}`,
+        `Status: ${call.status}`,
+        call.completionConfidence
+          ? `completionConfidence: ${call.completionConfidence.score} (${call.completionConfidence.label})`
+          : null,
+        `Decision: ${result.option_id} — ${result.decision_label}`,
+        `Prompt book: ${paths.promptBook}`,
+        `Show report: ${paths.showReport}`,
+        paths.actionIntent ? `Action intent: ${paths.actionIntent}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+    return {
+      exit: "ok",
+      mode,
+      event,
+      intent,
+      result,
+      message: "Remap complete — existing CALL-E run mapped into the prompt book.",
+    };
+  } catch (err) {
+    const { category, summary } = categorizeCalleError(err);
+    const result = toDecision({
+      event,
+      intent,
+      options,
+      mode,
+      callRunId: callId,
+      failure: { category, summary },
+    });
+    await writeback({
+      dataDir: args.env.dataDir,
+      mode,
+      event,
+      intent,
+      result,
+      preview,
+      note: `Remap fetch failed for ${callId} — cue-history not appended.`,
+      recordDedupe: false,
+    });
+    return {
+      exit: "failure",
+      mode,
+      event,
+      intent,
+      result,
+      message: `Failure: could not fetch CALL-E run ${callId} — ${summary}`,
+    };
+  }
 }
 
 /**
@@ -121,6 +264,10 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
       result: null,
       message: `Failure: could not normalize cue — ${err instanceof Error ? err.message : String(err)}`,
     };
+  }
+
+  if (args.fromCallId) {
+    return recordFromExistingCall(args, event, log);
   }
 
   const owner = resolveOwner(event, args.env, mode);
@@ -427,27 +574,13 @@ export async function runSignal(args: RunSignalArgs): Promise<RunSignalOutcome> 
         };
       }
 
-      const failureCodes = collectFailureCodes(call);
-      const failureMessages = collectFailureMessages(call);
-
-      const result = toDecision({
+      const result = decisionFromCurtainUp({
         event,
         intent,
         options,
         mode,
-        callRunId: call.id,
+        call,
         structured,
-        callSummary: call.summary ?? call.recipients[0]?.summary ?? null,
-        taskCompleted: call.taskCompleted,
-        failureCodes,
-        failureMessages,
-        completionConfidence: call.completionConfidence ?? null,
-        evidence: call.evidence ?? [],
-        expectedStageCode: stageCode,
-        transcriptTexts: call.recipients[0]?.attempts?.[0]?.transcriptTurns
-          ?.filter((t) => t.speaker === "user")
-          .map((t) => t.text ?? "")
-          .filter(Boolean),
       });
       const paths = await writeback({
         dataDir: args.env.dataDir,

@@ -14,5 +14,5 @@ See the **full live ladder** (including voicemail and unclear captures) in
 
 Files:
 
-- `prompt-book-sample.ndjson` — two successful curtain-up rows (redacted)
+- `prompt-book-sample.ndjson` — successful curtain-up rows (redacted)
 - `show-report-excerpt.md` — matching show-report blocks

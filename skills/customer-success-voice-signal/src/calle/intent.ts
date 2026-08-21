@@ -4,39 +4,45 @@ import { pickOptions } from "../policy/options.js";
 import { formatUntrustedCueBlock } from "./cueContext.js";
 import { stageCodeForEvent } from "./stageCode.js";
 
-const RESULT_SCHEMA = {
-  type: "object",
-  required: ["option_id", "decision", "decision_label", "stage_code", "identity_confirmed"],
-  properties: {
-    option_id: {
-      type: "string",
-      enum: ["1", "2", "3"],
-      description: "The closed-set choice the CS owner selected (1, 2, or 3).",
+/** Per-cue result schema so CALL-E fills the stable decision id, not a paraphrase. */
+export function buildResultSchema(opts: DecisionOption[]): Record<string, unknown> {
+  const decisionIds = opts.map((o) => o.decision);
+  const labels = opts.map((o) => o.decision_label);
+  return {
+    type: "object",
+    required: ["option_id", "decision", "decision_label", "stage_code", "identity_confirmed"],
+    properties: {
+      option_id: {
+        type: "string",
+        enum: ["1", "2", "3"],
+        description: "The closed-set choice the CS owner selected (1, 2, or 3).",
+      },
+      decision: {
+        type: "string",
+        enum: decisionIds,
+        description: `Stable decision id matching the chosen option. Must be exactly one of: ${decisionIds.join(", ")}. Do not paraphrase.`,
+      },
+      decision_label: {
+        type: "string",
+        description: `Human-readable label of the chosen option. Prefer exactly: ${labels.join(" | ")}.`,
+      },
+      stage_code: {
+        type: "string",
+        description:
+          "The 4-digit stage code the CS owner spoke back for identity read-back (digits only).",
+      },
+      identity_confirmed: {
+        type: "boolean",
+        description:
+          "True only if the spoken stage_code matched the code given on this call.",
+      },
+      notes_short: {
+        type: "string",
+        description: "Optional short note from the CS owner.",
+      },
     },
-    decision: {
-      type: "string",
-      description: "Stable decision id matching the chosen option.",
-    },
-    decision_label: {
-      type: "string",
-      description: "Human-readable label of the chosen option.",
-    },
-    stage_code: {
-      type: "string",
-      description:
-        "The 4-digit stage code the CS owner spoke back for identity read-back (digits only).",
-    },
-    identity_confirmed: {
-      type: "boolean",
-      description:
-        "True only if the spoken stage_code matched the code given on this call.",
-    },
-    notes_short: {
-      type: "string",
-      description: "Optional short note from the CS owner.",
-    },
-  },
-} as const;
+  };
+}
 
 /**
  * Build a CALL-E task as the Stage Manager.
@@ -79,7 +85,7 @@ export function buildCallIntent(
     `If they say anything other than 1, 2, or 3, ask once more for 1, 2, or 3, then hang up if still unclear.`,
     `Confirm the choice in one sentence, say you're logging it to the prompt book, then: "Clear. Break a leg — or just open the ticket." Hang up.`,
     `Voicemail / automated unavailable: brief "Stage Manager will try again," hang up. Do not invent a line reading.`,
-    `Fill structured result: stage_code (digits they spoke), identity_confirmed (true only on match), option_id ("1"|"2"|"3"), decision, and decision_label for the chosen line only.`,
+    `Fill structured result: stage_code (digits they spoke), identity_confirmed (true only on match), option_id ("1"|"2"|"3"), decision (exactly one of: ${opts.map((o) => o.decision).join(" | ")} — do not paraphrase), and decision_label for the chosen line only.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -94,7 +100,7 @@ export function buildCallIntent(
     callee_e164: calleeE164,
     task,
     options: opts,
-    result_schema: RESULT_SCHEMA,
+    result_schema: buildResultSchema(opts),
     never_call_customer: true,
     metadata: {
       event_id: event.event_id,
@@ -104,5 +110,3 @@ export function buildCallIntent(
     },
   });
 }
-
-export { RESULT_SCHEMA };

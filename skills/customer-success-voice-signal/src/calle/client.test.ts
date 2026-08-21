@@ -10,17 +10,18 @@ import { toDecision } from "../map/toDecision.js";
 const create = vi.fn();
 const waitForResult = vi.fn();
 const listEvents = vi.fn();
+const get = vi.fn();
 
 vi.mock("@call-e/calle", () => ({
   CalleClient: class {
-    calls = { create, waitForResult, listEvents };
+    calls = { create, waitForResult, listEvents, get };
     constructor(_opts: { apiKey: string; baseUrl?: string }) {
       void _opts;
     }
   },
 }));
 
-const { curtainUp } = await import("./client.js");
+const { curtainUp, fetchCallResult } = await import("./client.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(
@@ -32,6 +33,7 @@ describe("curtainUp — mocked CALL-E", () => {
     create.mockReset();
     waitForResult.mockReset();
     listEvents.mockReset();
+    get.mockReset();
     listEvents.mockResolvedValue({ object: "list", data: [], nextCursor: null });
   });
 
@@ -164,5 +166,29 @@ describe("curtainUp — mocked CALL-E", () => {
     const intent = buildCallIntent(event, "+14155552671");
     await expect(curtainUp(intent, { apiKey: "" })).rejects.toThrow(/CALLE_API_KEY/);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it("fetchCallResult uses calls.get and does not create", async () => {
+    get.mockResolvedValue({
+      id: "call_existing",
+      status: "completed",
+      summary: null,
+      taskCompleted: true,
+      structuredResult: {
+        option_id: "1",
+        decision: "takeover",
+        decision_label: "Take over in chat now",
+      },
+      recipients: [{ structuredResult: null, summary: null, attempts: [] }],
+    });
+    const { call, structured, awaited } = await fetchCallResult("call_existing", {
+      apiKey: "test_key",
+    });
+    expect(awaited).toBe(true);
+    expect(call.id).toBe("call_existing");
+    expect(structured?.option_id).toBe("1");
+    expect(get).toHaveBeenCalledWith("call_existing");
+    expect(create).not.toHaveBeenCalled();
+    expect(waitForResult).not.toHaveBeenCalled();
   });
 });

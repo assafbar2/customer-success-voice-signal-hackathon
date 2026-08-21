@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Last update | 2026-08-03 |
+| Last update | 2026-08-12 |
 | Product | **Stage Manager** — skill id `customer-success-voice-signal` |
 | Judge site | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ (live) |
 | Hardening PR | https://github.com/assafbar2/customer-success-voice-signal-hackathon/pull/3 |
@@ -15,7 +15,7 @@
 
 | Cue | Best curtain-up result | Also observed |
 | --- | --- | --- |
-| `stuck_support` | Decision **1** take over in chat | Prior voicemail → `no_answer` |
+| `stuck_support` | Decision **1** take over in chat (incl. 2026-08-12 live: stage code 4821 + “1”) | Prior voicemail → `no_answer`; first 2026-08-12 map was `unclear` (CALL-E paraphrased `decision`) |
 | `agent_needs_decision` | Decision **1** approve A | Prior `unclear` (mapping) |
 
 ## Product loop (closed)

@@ -69,6 +69,14 @@ function defaultIdempotencyKey(intent: CallIntent): string {
   return `csvs:${intent.trigger_id}:${intent.account_id}:${eventId}`;
 }
 
+function structuredFromCall(call: Call): Record<string, unknown> | null {
+  return (
+    (call.structuredResult as Record<string, unknown> | null) ??
+    (call.recipients[0]?.structuredResult as Record<string, unknown> | null) ??
+    null
+  );
+}
+
 /**
  * Curtain-up: create → persist call.id → waitForResult.
  * Deliberately not createAndWait — crash after dial still has call.id on disk.
@@ -142,8 +150,7 @@ export async function curtainUp(
   if (!shouldWait) {
     return {
       call: created,
-      structured:
-        (created.structuredResult as Record<string, unknown> | null) ?? null,
+      structured: structuredFromCall(created),
       awaited: false,
     };
   }
@@ -173,10 +180,27 @@ export async function curtainUp(
     );
   }
 
-  const structured =
-    (call.structuredResult as Record<string, unknown> | null) ??
-    (call.recipients[0]?.structuredResult as Record<string, unknown> | null) ??
-    null;
+  return { call, structured: structuredFromCall(call), awaited: true };
+}
 
-  return { call, structured, awaited: true };
+/**
+ * Fetch an existing CALL-E run (crash recovery / remap). Does not place a call.
+ */
+export async function fetchCallResult(
+  callId: string,
+  config: Pick<CurtainUpConfig, "apiKey" | "baseUrl">,
+): Promise<CurtainUpResult> {
+  if (!config.apiKey) {
+    throw new Error("CALLE_API_KEY is required to fetch a call.");
+  }
+  const id = callId.trim();
+  if (!id) {
+    throw new Error("call id is required.");
+  }
+  const client = new CalleClient({
+    apiKey: config.apiKey,
+    baseUrl: config.baseUrl,
+  });
+  const call = await client.calls.get(id);
+  return { call, structured: structuredFromCall(call), awaited: true };
 }

@@ -2,6 +2,20 @@
 
 Operator curtain-up samples. Callee was always the CS owner. Customer was never dialed.
 
+## Cue — 2026-08-12T17:05:39.763Z
+
+| Field | Value |
+| --- | --- |
+| Mode | Curtain up |
+| Trigger | `stuck_support` |
+| Account | Acme Corp (`acct_acme`) |
+| CS owner | `cs_assaf` |
+| Option | 1 |
+| Decision | Take over in chat now (`take_over_chat`) |
+| Call run | `call_C5B0fdaD…` |
+| HOLD | — |
+| Notes | Stage code 4821 spoken; line reading “1”; CALL-E `decision` was paraphrased `takeover` |
+
 ## Cue — 2026-08-01T08:54:15.004Z
 
 | Field | Value |

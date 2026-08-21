@@ -169,14 +169,14 @@ describe("concurrent cue reservation", () => {
 });
 
 describe("structured contradictions + taskCompleted", () => {
-  it("rejects contradictory structured result as unclear", () => {
+  it("rejects structured fields that point at different options", () => {
     const event = normalizeEvent(fixture);
     const options = pickOptions(event.trigger_id);
     const intent = buildCallIntent(event, "+14155552671", options);
     const parsed = parseStructuredOption(options, {
       option_id: "1",
-      decision: "page_backup",
-      decision_label: "Approve B",
+      decision: "assign_se",
+      decision_label: "Take over in chat now",
     });
     expect(parsed.kind).toBe("contradiction");
 
@@ -188,13 +188,49 @@ describe("structured contradictions + taskCompleted", () => {
       callRunId: "call_x",
       structured: {
         option_id: "1",
-        decision: "page_backup",
-        decision_label: "Approve B",
+        decision: "assign_se",
+        decision_label: "Take over in chat now",
       },
       taskCompleted: true,
       expectedStageCode: "4821",
     });
     expect(result.decision).toBe("unclear");
+  });
+
+  it("accepts CALL-E paraphrased decision id when option_id and label agree", () => {
+    const event = normalizeEvent(fixture);
+    const options = pickOptions(event.trigger_id);
+    const intent = buildCallIntent(event, "+14155552671", options);
+    // Live 2026-08-12: CALL-E returned decision "takeover" not "take_over_chat"
+    const parsed = parseStructuredOption(options, {
+      option_id: "1",
+      decision: "takeover",
+      decision_label: "Take over in chat now",
+      stage_code: "4821",
+      identity_confirmed: true,
+    });
+    expect(parsed.kind).toBe("ok");
+    if (parsed.kind === "ok") expect(parsed.option.option_id).toBe("1");
+
+    const result = toDecision({
+      event,
+      intent,
+      options,
+      mode: "curtain_up",
+      callRunId: "call_C5B0fdaDHiR-jiFxMVazdA",
+      structured: {
+        decision: "takeover",
+        option_id: "1",
+        stage_code: "4821",
+        decision_label: "Take over in chat now",
+        identity_confirmed: true,
+      },
+      taskCompleted: true,
+      expectedStageCode: "4821",
+      completionConfidence: { score: 0.9, label: "high" },
+    });
+    expect(result.option_id).toBe("1");
+    expect(result.decision).toBe("take_over_chat");
   });
 
   it("refuses normal decision when taskCompleted is false", () => {
@@ -219,5 +255,82 @@ describe("structured contradictions + taskCompleted", () => {
     });
     expect(result.decision).toBe("unclear");
     expect(result.option_id).toBe("unknown");
+  });
+});
+
+describe("--from-call remap (no ring)", () => {
+  let tmp: string;
+  afterEach(async () => {
+    if (tmp) await rm(tmp, { recursive: true, force: true });
+  });
+
+  it("maps an existing CALL-E run without dialing and skips cue-history", async () => {
+    tmp = await mkdtemp(path.join(os.tmpdir(), "csvs-remap-"));
+    const dial = vi.fn();
+    const fetchCall = vi.fn().mockResolvedValue({
+      call: {
+        id: "call_C5B0fdaDHiR-jiFxMVazdA",
+        status: "completed",
+        summary:
+          "Assaf repeated the stage code and selected option 1: take over in chat now.",
+        taskCompleted: true,
+        failureCode: null,
+        failureMessage: null,
+        completionConfidence: { score: 0.9, label: "high" },
+        evidence: ["The stage code was repeated correctly."],
+        structuredResult: {
+          decision: "takeover",
+          option_id: "1",
+          stage_code: "4821",
+          decision_label: "Take over in chat now",
+          identity_confirmed: true,
+        },
+        recipients: [
+          {
+            structuredResult: null,
+            summary: null,
+            attempts: [
+              {
+                transcriptTurns: [
+                  { speaker: "user", text: "4 8 2 1." },
+                  { speaker: "user", text: "1. 1." },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      structured: {
+        decision: "takeover",
+        option_id: "1",
+        stage_code: "4821",
+        decision_label: "Take over in chat now",
+        identity_confirmed: true,
+      },
+      awaited: true,
+    });
+
+    const outcome = await runSignal({
+      raw: fixture,
+      env: baseEnv(tmp),
+      liveFlag: false,
+      placesTyped: false,
+      dryRunFlag: false,
+      fromCallId: "call_C5B0fdaDHiR-jiFxMVazdA",
+      dial,
+      fetchCall,
+    });
+    expect(dial).not.toHaveBeenCalled();
+    expect(fetchCall).toHaveBeenCalledTimes(1);
+    expect(outcome.exit).toBe("ok");
+    expect(outcome.result?.option_id).toBe("1");
+    expect(outcome.result?.decision).toBe("take_over_chat");
+    const history = await readFile(path.join(tmp, "cue-history.ndjson"), "utf8").catch(
+      () => "",
+    );
+    expect(history).toBe("");
+    const book = await readFile(path.join(tmp, "prompt-book.ndjson"), "utf8");
+    expect(book).toMatch(/"option_id":"1"/);
+    expect(book).toMatch(/take_over_chat/);
   });
 });

@@ -60,6 +60,7 @@ Full ladder from operator curtain-up runs. Winning rows are real; earlier rows a
 | 2026-08-01 | `agent_needs_decision` | `unclear` | `call_pBTeqKhl…` | Ring OK; capture flaky |
 | 2026-08-01 | `agent_needs_decision` | `unclear` | `call_9FtyqEiM…` | Ring OK; capture flaky |
 | 2026-08-01 | `agent_needs_decision` | **Decision 1** `approve_a` | `call_ylJkGID4…` | Answered; prompt book OK |
+| 2026-08-12 | `stuck_support` | Ring + stage code **4821** + **1**; first map `unclear` (CALL-E `decision: "takeover"` vs `take_over_chat`); remap → **Decision 1** `take_over_chat` | `call_C5B0fdaD…` | Identity OK; completionConfidence 0.9. Mapper now treats paraphrased decision ids as non-contradictions. |
 
 Redacted committed samples: [`../submission/evidence/`](../submission/evidence/).
 
