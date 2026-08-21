@@ -2,7 +2,10 @@
 
 **Product:** Stage Manager · skill id [`customer-success-voice-signal`](skills/customer-success-voice-signal/)  
 **Hackathon:** [CALL-E: Your Code Is Calling](https://call-e.devpost.com/) · aiming **Most Practical**  
-**Live site:** https://assafbar2.github.io/customer-success-voice-signal-hackathon/
+**Live site:** https://assafbar2.github.io/customer-success-voice-signal-hackathon/  
+**Demo (~65s):** [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · loop: [`site/assets/stage-manager-loop.gif`](site/assets/stage-manager-loop.gif)
+
+![Stage Manager dress rehearsal — no ring, no API key](site/assets/stage-manager-loop.gif)
 
 > Every company pages an engineer when a server goes down. Nobody pages the human who owns the renewal when the account goes quiet.
 >
@@ -98,9 +101,9 @@ Master pre-submit (video · GIF · awesome-list · **MVF** · Devpost):
 
 - [x] Skill + dress rehearsal + curtain-up path
 - [x] Judge site on GitHub Pages
-- [ ] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md)
+- [x] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md)
 - [ ] Awesome-list PR — [`submission/awesome-list/PACKAGING.md`](submission/awesome-list/PACKAGING.md) (MVF is a gate)
-- [ ] Demo video — [`submission/video-script.md`](submission/video-script.md)
+- [x] Demo video (agent-recorded CLI + live transcript; TTS VO) — [`submission/demo-reel/`](submission/demo-reel/)
 - [ ] **MVF survey** — paste [`submission/mvf-feedback.md`](submission/mvf-feedback.md) on Devpost
 - [ ] Devpost form — [`submission/devpost.md`](submission/devpost.md)
 

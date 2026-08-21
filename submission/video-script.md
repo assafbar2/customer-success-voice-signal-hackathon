@@ -1,6 +1,6 @@
 # Demo video script — Stage Manager (≤3:00)
 
-**Status:** APPROVED — regenerating reel with audio.  
+**Status:** Agent-recorded reel shipped (`submission/demo-reel/stage-manager-demo.mp4`, ~65s). TTS VO. Call beat from 2026-08-12 live transcript. CLI is a real screen recording.  
 **Problem framing:** Customer Success and other customer-facing teams.
 
 **Goal:** Problem → why phone → product → dress rehearsal → live decision → writeback → business value → end.  

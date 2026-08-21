@@ -32,8 +32,8 @@
 Master list: [`submission/PRE-SUBMIT.md`](../submission/PRE-SUBMIT.md)
 
 - [ ] **MVF survey** — paste `submission/mvf-feedback.md` on Devpost (same session as video/Devpost)
-- [ ] Demo video — `submission/video-script.md`
-- [ ] Terminal GIF — `submission/gif-notes.md` → README + site
+- [x] Demo video — agent reel in `submission/demo-reel/` (TTS VO; live transcript call beat; optional human VO later)
+- [x] Terminal GIF — `submission/gif-notes.md` → README + site
 - [ ] Awesome-list PR — `submission/awesome-list/PACKAGING.md` (MVF is a gate on that checklist)
 - [ ] Devpost form — `submission/devpost.md`
 - [x] GitHub repo homepage → Pages URL
@@ -43,10 +43,9 @@ Master list: [`submission/PRE-SUBMIT.md`](../submission/PRE-SUBMIT.md)
 
 ## Win checklist (repo review, 2026-08-03)
 
-Rubric state: Technical ✓ · Idea ✓ · Impact ✓ · **Demo ✗** — the video is 25% of the
-rubric and 100% of the emotional argument. Everything below serves it.
+Rubric state: Technical ✓ · Idea ✓ · Impact ✓ · **Demo first-cut ✓** (CLI recorded; handset audio not in the file).
 
-- [ ] **Video spine = the in-scope loop live:** `curl → serve-cue → phone rings → stage code → "one" → prompt book`. Slack/GitHub adapters are a stab (dry-run only) — **do not fire**, not the money shot.
+- [x] **Video spine (agent reel):** real CLI + live transcript call beat + prompt book. Slack does not fire. Handset audio is the only thing this VM cannot capture.
 - [ ] **One live curtain-up** of the in-scope chain (listener + ring + prompt book) → append to the live ladder in `research/calle-api-notes.md`. Do it as the video take.
 - [ ] **Fresh-clone judge sanity pass:** clean `git clone → npm install → npm test → curl POST /cue`, exactly as a judge would, before Devpost submit.
 - [ ] Awesome-list PR timing: bar was "v1 solid" — with 67+ tests, live adapters, HTTP listener, green CI, v1 is arguably solid now. Their PR review latency is the one clock we don't control.

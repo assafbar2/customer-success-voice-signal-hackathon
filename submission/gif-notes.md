@@ -23,9 +23,9 @@ npm run apply-action -- --last --dry-run
 
 ## Checklist
 
-- [ ] GIF shows Stage Manager / dress rehearsal / line readings 1–2–3 (no secrets)
-- [ ] Embedded in root `README.md` and `site/` (or linked)
-- [ ] Alt/caption: dress rehearsal — no ring, no API key
+- [x] GIF shows Stage Manager / dress rehearsal / line readings 1–2–3 (no secrets)
+- [x] Embedded in root `README.md` and `site/` (or linked)
+- [x] Alt/caption: dress rehearsal — no ring, no API key
 - [ ] **MVF:** same pre-submit pass as the GIF — paste [`mvf-feedback.md`](mvf-feedback.md) into the Devpost Most Valuable Feedback survey (don’t treat GIF as “done” while MVF is unchecked)
 
 Full pre-submit: [`PRE-SUBMIT.md`](PRE-SUBMIT.md).

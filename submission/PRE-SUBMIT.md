@@ -17,19 +17,19 @@ MVF is a separate prize (~5 × $200 + credits). Same judges read it. Fill it whe
 
 Script: [`video-script.md`](video-script.md) · reel notes: [`demo-reel/README.md`](demo-reel/README.md)
 
-- [ ] Shoot/edit per script (cold open on ring preferred)
-- [ ] Stage code + line reading visible on live beat
-- [ ] Decision → prompt book (action-intent dry-run optional; Slack/GitHub live send is out of scope)
-- [ ] End card: repo + skill path + *“No customers were called…”*
+- [x] Shoot/edit per script (cold open on ring preferred) — agent reel in [`demo-reel/`](demo-reel/); TTS VO; call beat from live transcript
+- [x] Stage code + line reading visible on live beat
+- [x] Decision → prompt book (action-intent dry-run optional; Slack/GitHub live send is out of scope)
+- [x] End card: repo + skill path + *“No customers were called…”*
 - [ ] **Before upload:** paste MVF from [`mvf-feedback.md`](mvf-feedback.md) into the Devpost MVF survey (same submit session as the video)
 
 ## 2 — Terminal GIF (video-before-the-video)
 
 Cheap social/README asset — dress rehearsal loop judges can see without pressing play.
 
-- [ ] Capture: `npm run signal -- --fixture stuck_support_acme.json` (large terminal font)
-- [ ] Optional second loop: `serve-cue` + `curl POST /cue` or `apply-action --last --dry-run` (do **not** live-send Slack)
-- [ ] Drop into README + site
+- [x] Capture: `npm run signal -- --fixture stuck_support_acme.json` (large terminal font)
+- [x] Optional second loop: `serve-cue` + `curl POST /cue` or `apply-action --last --dry-run` (do **not** live-send Slack)
+- [x] Drop into README + site
 - [ ] Caption / alt text mentions **Most Practical** demo; README link to [`mvf-feedback.md`](mvf-feedback.md) so MVF isn’t invisible next to the GIF
 
 ## 3 — Skill submission list (awesome-list PR)

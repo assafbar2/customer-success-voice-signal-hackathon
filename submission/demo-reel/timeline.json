@@ -1,37 +1,25 @@
-[
-  {
-    "id": "01",
-    "frame": "01_title",
-    "approx_seconds": 16.0
-  },
-  {
-    "id": "02",
-    "frame": "02_value",
-    "approx_seconds": 12.7
-  },
-  {
-    "id": "03",
-    "frame": "03_dress",
-    "approx_seconds": 11.0
-  },
-  {
-    "id": "04",
-    "frame": "04_cues",
-    "approx_seconds": 8.4
-  },
-  {
-    "id": "05",
-    "frame": "05_call",
-    "approx_seconds": 18.4
-  },
-  {
-    "id": "06",
-    "frame": "06_writeback",
-    "approx_seconds": 15.8
-  },
-  {
-    "id": "07",
-    "frame": "07_end",
-    "approx_seconds": 7.4
-  }
-]
+{
+  "total_seconds": 64.6,
+  "parts": [
+    {
+      "part": "title",
+      "seconds": 10.1
+    },
+    {
+      "part": "value",
+      "seconds": 8.8
+    },
+    {
+      "part": "cli",
+      "seconds": 18.3
+    },
+    {
+      "part": "call",
+      "seconds": 16.8
+    },
+    {
+      "part": "end",
+      "seconds": 10.6
+    }
+  ]
+}
