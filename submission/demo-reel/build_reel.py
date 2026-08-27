@@ -657,6 +657,12 @@ def crossfade_pair(a: Path, b: Path, out: Path, fade: float = 0.6) -> None:
 
 
 def main() -> None:
+    if not VO_DIR and os.environ.get("REGEN_TTS") != "1":
+        raise SystemExit(
+            "Refusing to regenerate TTS (that replaced the shipped neural VO). "
+            "Video-only: mux new video onto the current mp4 audio. "
+            "Set REGEN_TTS=1 to synthesize again, or VO_DIR=human-vo for a recut."
+        )
     for d in (FRAMES, AUDIO, PARTS):
         d.mkdir(parents=True, exist_ok=True)
     generate_og()
