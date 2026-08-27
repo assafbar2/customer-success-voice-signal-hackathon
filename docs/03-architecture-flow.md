@@ -1,128 +1,94 @@
-# Architecture & flow — `customer-success-voice-signal`
+# Architecture — Stage Manager
 
-What was built. Stage Manager tone lives in call copy and CLI; this page stays structural.
+What was built. Theater language lives in call copy and the CLI; this page stays structural.
 
 ---
 
 ## 1. System context
 
 ```text
-┌─────────────┐   fixture / CLI   ┌──────────────────────────────────┐
-│  Cue sheet  │ ─────────────────►│  customer-success-voice-signal   │
-│  (4 JSON)   │                   │  npm run signal                  │
-└─────────────┘                   └───────────┬──────────────────────┘
-                                              │ curtain-up only
-                                              ▼
-                                     ┌─────────────────┐
-                                     │     CALL-E      │
-                                     │  createAndWait  │
-                                     └────────┬────────┘
-                                              │ rings CS owner only
-                                              ▼
-                                     ┌─────────────────┐
-                                     │   Writeback     │
-                                     │ prompt-book     │
-                                     │ show-report     │
-                                     │ cue-history*    │
-                                     └─────────────────┘
-* cue-history on curtain-up only
+Cue (fixture | stdin | POST /cue)
+        │
+        ▼
+┌───────────────────────────────────┐
+│  customer-success-voice-signal    │
+│  npm run signal  /  serve-cue     │
+└───────────────┬───────────────────┘
+                │
+     ┌──────────┴──────────┐
+     │ dress rehearsal     │ curtain-up (--live + PLACES)
+     │ default, no ring    │ CALL-E: create → persist id → waitForResult
+     └──────────┬──────────┘
+                ▼
+         CS owner phone only
+                ▼
+     prompt book + show report
+     + action intent (local; Slack/GitHub stab — do not fire)
 ```
 
-**Never in MVP:** CALL-E → customer. No Slack required. No DB. No demo UI app.
+**Never in MVP:** CALL-E → customer. No required Slack. No DB. No demo UI app.
 
 ---
 
 ## 2. End-to-end flow
 
 ```text
-CLI (--fixture | --trigger)
-        │
-        ▼
-   normalize  →  AccountEvent
-        │
-        ▼
-   shouldRing →  HOLD? ──yes──► writeback (hold) → exit 2
-        │ no
-        ▼
-   buildCallIntent (Stage Manager task + line readings 1/2/3)
-        │
-   ┌────┴────────────────────────────┐
-   │ dress rehearsal (default)       │ curtain-up
-   │ no CALLE key needed             │ --live + PLACES
-   │ simulate option 1               │ curtainUp(createAndWait)
-   └────┬────────────────────────────┴────┬
-        │                                 │
-        ▼                                 ▼
-   toDecision                        toDecision (structured /
-                                     transcript / no_answer)
-        │                                 │
-        └────────────┬────────────────────┘
-                     ▼
-              writeback
-              · prompt-book.ndjson
-              · show-report.md
-              · cue-history.ndjson (curtain-up only)
+normalize  →  AccountEvent
+     │
+shouldRing →  HOLD? ──yes──► writeback (hold) → exit 2
+     │ no
+buildCallIntent (task + line readings 1/2/3 + stage code)
+     │
+     ├─ dress rehearsal (simulate option 1)
+     └─ curtainUp: calls.create → persist open-calls/<id>.json → waitForResult
+              (--from-call remaps an existing id, no new ring)
+     │
+toDecision (option_id / structured / failureCode / transcript)
+     │
+writeback → prompt-book.ndjson · show-report.md · cue-history (live only)
+     │
+action intent → data/actions/pending/ → apply-action --dry-run
 ```
 
-### Call beat (what CS hears)
+### Call beat (what the CS owner hears)
 
 ```text
 Ring → "Hi {name}. Stage Manager. You're up for {account}."
-     → Short cue brief (no secrets dump)
-     → "Line reading. Press or say 1, 2, or 3." [closed set]
-     → Confirm → log to prompt book → hang up
+     → Stage code read-back (binds the decision to the call-sheet owner)
+     → Cue brief (no secrets dump)
+     → "Line reading. Say 1, 2, or 3."
+     → Confirm → prompt book → hang up
 ```
-
-**Modes:** dress rehearsal (default, no ring) · curtain up (`--live` + `PLACES`).
 
 ---
 
-## 3. Source layout (as built)
+## 3. Source layout
 
 ```text
 skills/customer-success-voice-signal/
 ├── src/
 │   ├── cli.ts                 # npm run signal
 │   ├── runSignal.ts           # orchestrator
-│   ├── schemas.ts             # Zod: AccountEvent, CallIntent, DecisionResult
-│   ├── config/env.ts          # .env + live gate
-│   ├── ingest/normalize.ts    # raw fixture → AccountEvent
-│   ├── policy/
-│   │   ├── shouldRing.ts      # opt-in, severity, house dark, dedupe, placeholders
-│   │   └── options.ts         # closed-set line readings per trigger
-│   ├── calle/
-│   │   ├── intent.ts          # buildCallIntent (Stage Manager task)
-│   │   └── client.ts          # curtainUp → CalleClient.createAndWait
-│   ├── map/toDecision.ts      # structured / transcript / no_answer → DecisionResult
-│   └── writeback/index.ts     # prompt book · show report · cue-history
-├── fixtures/                  # 4 cues (Acme / Globex / Initech)
-└── data/                      # local writeback (gitignored)
+│   ├── serveCli.ts / http/    # POST /cue
+│   ├── applyActionCli.ts      # apply-action
+│   ├── schemas.ts
+│   ├── config/env.ts
+│   ├── ingest/normalize.ts
+│   ├── policy/                # shouldRing, house dark, options, cue lock
+│   ├── calle/                 # intent, client, stage code, cue context
+│   ├── map/                   # sdkOutcome, toDecision
+│   ├── action/                # action intent + adapters (stab)
+│   └── writeback/
+├── fixtures/                  # four cues
+├── events/                    # webhook-shaped inbound
+└── data/                      # gitignored writeback
 ```
 
-| Module | Responsibility |
-| --- | --- |
-| `normalize` | One `AccountEvent` shape for all four triggers |
-| `shouldRing` | Opt-in, severity ≥ high, house dark (live only), dedupe, placeholder reject |
-| `buildCallIntent` | Stage Manager task + result schema |
-| `curtainUp` | **Only** CALL-E invocation (`createAndWait`) |
-| `toDecision` | Map structured result / transcript / voicemail → schema |
-| `writeback` | Prompt book + show report; cue-history on curtain-up |
+Crash-safe live dial is **create → persist `call.id` → waitForResult**, not `createAndWait`. `--from-call` remaps a stuck run without ringing again.
 
 ---
 
-## 4. Entities
-
-| Entity | Role |
-| --- | --- |
-| **Account** | Named customer org CS owns |
-| **CsOwner** | Only person we call (`CS_OWNER_E164` overrides fixture on live) |
-| **AccountEvent** | Normalized cue |
-| **CallIntent** | Task + options + result schema for CALL-E |
-| **DecisionResult** | Closed-set choice (or hold / no_answer / unclear) |
-
----
-
-## 5. Trigger → line readings
+## 4. Trigger → line readings
 
 | trigger_id | Demo fixture | Options (1 / 2 / 3) |
 | --- | --- | --- |
@@ -131,28 +97,18 @@ skills/customer-success-voice-signal/
 | `sla_risk` | `sla_risk_globex.json` | own it · page backup · accept risk |
 | `health_onboarding` | `health_onboarding_initech.json` | book SE · watchlist · flag churn |
 
-Demo-ready live path: **`stuck_support`** (+ name-drop `agent_needs_decision`).
+Primary live path: **`stuck_support`**.
 
 ---
 
-## 6. CLI
+## 5. CLI
 
 ```bash
-npm run signal -- --fixture stuck_support_acme.json          # dress rehearsal
-npm run signal -- --fixture stuck_support_acme.json --live PLACES  # curtain-up
-npm run signal -- --list | --last | --verbose | --help
+npm run signal -- --fixture stuck_support_acme.json
+npm run signal -- --fixture stuck_support_acme.json --live PLACES
+npm run signal -- --from-call call_xxx
+npm run serve-cue
+npm run apply-action -- --last --dry-run
 ```
 
 Exit: `0` ok · `2` HOLD · `3` failure.
-
----
-
-## 7. Done glance
-
-```text
-[Fixture] → [normalize] → [shouldRing] → [dress rehearsal | CALL-E → CS]
-                                              → [toDecision] → [writeback]
-```
-
-**Shipped:** four fixtures, dress rehearsal, curtain-up client, writeback, vitest.  
-**Not shipped:** demo UI, Slack writeback, DB.

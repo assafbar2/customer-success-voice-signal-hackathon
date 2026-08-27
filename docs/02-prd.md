@@ -6,7 +6,7 @@
 **Last updated:** 2026-08-01  
 **Status:** MVP decisions locked · skill built under `skills/customer-success-voice-signal/`
 
-**Related:** [03-architecture-flow.md](./03-architecture-flow.md) · [04-stack-hosting-tone.md](./04-stack-hosting-tone.md) · [05-dev-design-plan.md](./05-dev-design-plan.md)
+**Related:** [03-architecture-flow.md](./03-architecture-flow.md) · historical notes in [`../notes/archive/`](../notes/archive/)
 
 ## Decisions (Assaf)
 
@@ -103,7 +103,7 @@ Options are trigger-specific, always closed set. Unmapped live outcomes may be `
 Cue (fixture via CLI)
   → normalize → AccountEvent
   → shouldRing (owned? severity? house dark? already cued?)
-  → dress rehearsal preview (default)  OR  curtainUp(createAndWait)
+  → dress rehearsal preview (default)  OR  curtainUp (create → persist → waitForResult)
   → toDecision → DecisionResult
   → writeback (prompt-book.ndjson + show-report.md; cue-history on live)
 ```
@@ -136,7 +136,7 @@ Cue (fixture via CLI)
 | --- | --- |
 | Real World Impact | Named-account CS interrupt is a real job |
 | Quality of Idea | Phone as CS control plane; multi-trigger one engine; Stage Manager |
-| Technical Implementation | CALL-E `createAndWait` at runtime; schema; dress rehearsal; writeback |
+| Technical Implementation | CALL-E create → persist → wait at runtime; schema; dress rehearsal; writeback |
 | Demo | ≤3 min: cue → dress rehearsal → curtain-up → prompt book |
 
 **Prize target:** Most Practical first; Innovative secondary; always submit Most Valuable Feedback survey.

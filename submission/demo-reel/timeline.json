@@ -1,25 +1,25 @@
 {
-  "total_seconds": 64.6,
+  "total_seconds": 127.89999999999999,
   "parts": [
     {
-      "part": "title",
-      "seconds": 10.1
+      "part": "problem",
+      "seconds": 31.9
     },
     {
-      "part": "value",
-      "seconds": 8.8
+      "part": "insight",
+      "seconds": 16.2
     },
     {
       "part": "cli",
-      "seconds": 18.3
+      "seconds": 20.6
     },
     {
       "part": "call",
-      "seconds": 16.8
+      "seconds": 40.3
     },
     {
-      "part": "end",
-      "seconds": 10.6
+      "part": "close",
+      "seconds": 18.9
     }
   ]
 }

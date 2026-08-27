@@ -20,3 +20,5 @@ submission/demo-reel/audio/
 submission/demo-reel/frames/
 submission/demo-reel/parts/
 submission/demo-reel/parts.txt
+submission/demo-reel/human-vo/*.wav
+submission/demo-reel/human-vo/*.mp3

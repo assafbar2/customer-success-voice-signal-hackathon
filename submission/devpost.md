@@ -45,7 +45,7 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 - Result mapping prefers `failureCode` / `completionConfidence` / `structuredResult`; summary heuristics only when codes are absent. Never invent a decision.
 - **Identity read-back:** spoken 4-digit stage code before a 1/2/3 is logged as the call-sheet owner’s decision.
 - **Safety rails:** dress rehearsal (dry-run) by default; live requires `--live` + `PLACES`; CS owner only; fixture phones rejected on live; per-owner call budget; timezone-aware quiet hours; HOLD/failure never poison cue dedupe; untrusted cue text wrapped before it reaches the prompt.
-- 85 tests + typecheck; webhook-shaped stdin **and** `POST /cue` HTTP listener; exit codes 0/2 (HOLD)/3.
+- 93 tests + typecheck; webhook-shaped stdin **and** `POST /cue` HTTP listener; exit codes 0/2 (HOLD)/3.
 - **Operator-proven live ladder,** misses included: voicemail and `unclear` captures logged alongside the two successful curtain-up decisions. Redacted evidence in the repo.
 
 ### 4 — Product Experience & Demo
@@ -53,18 +53,18 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 - Judges run the full loop in four commands with **no API key**: dress rehearsal → line readings → action-intent dry-run → local receipt.
 - Deployable inbound: `npm run serve-cue` → `curl POST /cue` → same engine → `apply-action --dry-run` shows the action-intent seam (Slack/GitHub live send is a stab, out of MVP — we do not fire a channel).
 - Curtain-up (real ring) is one env file away, gated on purpose.
-- ≤3 min demo video with real call audio: problem → dress rehearsal → live decision → writeback → handoff.
+- ≤3 min demo: problem first, then dress rehearsal CLI, then the live CALL-E transcript (stage code + option 1). Handset audio lives on the CS owner’s phone.
 
 ### What's next
 
 - Zendesk / Salesforce adapter shapes documented at the seam. Slack + GitHub HTTP send is a **stab** (out of MVP — do not fire).
-- Awesome-list PR once v1 is battle-tested.
+- Awesome-list PR to `CALLE-AI/awesome-phone-call-agents` (omit skill README).
 
 ### Most Valuable Feedback
 
 See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for the MVF survey (closed-set flakiness, no DTMF, failureCode docs, idempotency retries, identity primitive wishlist).
 
-**Submit MVF in the same pre-submit pass as the video, GIF, and awesome-list PR** — checklist: [`PRE-SUBMIT.md`](PRE-SUBMIT.md).
+**Submit MVF in the same sitting as Devpost.** Operator steps: [`../notes/SUBMIT.md`](../notes/SUBMIT.md).
 
 ---
 
