@@ -98,3 +98,5 @@ PLACES             Live gate (or SIGNAL_CONFIRM=PLACES)
 Sample non-fixture event: `events/sample_stuck_support.json` (pipe with `--stdin`).
 
 Operator-proven redacted evidence: [`submission/evidence/`](../../submission/evidence/).
+
+Awesome-list PR (Devpost wants this URL, not this repo): https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250

@@ -14,37 +14,27 @@ Source file: `submission/demo-reel/stage-manager-demo.mp4` (~2:08). Judge site s
 
 ## 2. Awesome-list PR
 
-Hackathon rule: open a PR to https://github.com/CALLE-AI/awesome-phone-call-agents and paste **that PR URL** on Devpost. This cloud agent **cannot** open it (`cursor[bot]` is scoped to this repo only; fork/push to CALLE-AI returns 403). Status: [`../submission/awesome-list/STATUS.md`](../submission/awesome-list/STATUS.md).
+**Opened:** https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250
 
-**Fast path — your Mac, logged into GitHub as you (not Cursor Cloud):**
+Paste **that PR URL** on Devpost (not this repo). Opened 2026-08-27 by `assafbar2` from a laptop. This cloud agent **cannot** open or update it (`cursor[bot]` is scoped to this repo only). Status: [`../submission/awesome-list/STATUS.md`](../submission/awesome-list/STATUS.md).
 
-```text
-WRONG:  cursor.com/agents terminal     (pwd is /workspace, gh is cursor[bot])
-RIGHT:  Mac Terminal.app or Cursor desktop local terminal
-        (pwd is /Users/...  and  gh api user --jq .login  prints assafbar2)
-```
+Do **not** run `open-pr.sh` again unless you need to reprint the URL — it now exits if #250 is already open.
 
-```bash
-# one-time if needed:
-brew install gh
-gh auth login          # GitHub.com → HTTPS → browser → assafbar2
+Packaging notes (already applied in #250): [`../submission/awesome-list/PACKAGING.md`](../submission/awesome-list/PACKAGING.md).
 
-cd /path/to/customer-success-voice-signal-hackathon
-git pull origin main
-bash submission/awesome-list/open-pr.sh
-```
+<details>
+<summary>How it was opened (do not repeat)</summary>
 
-The script refuses to run on `/workspace` and refuses `cursor[bot]`. Paste the printed PR URL into Devpost, then into `submission/awesome-list/STATUS.md`.
+Hackathon rule: one PR to https://github.com/CALLE-AI/awesome-phone-call-agents.
 
-Manual path (if you prefer not to run the script) — their branch names cannot be `cursor/…`:
+**Fast path was:** Mac Terminal, `gh api user --jq .login` = `assafbar2`, then `bash submission/awesome-list/open-pr.sh`.
+
+Manual path — their branch names cannot be `cursor/…`:
 
 ```bash
 git clone https://github.com/CALLE-AI/awesome-phone-call-agents.git
 cd awesome-phone-call-agents
 python3 scripts/create_branch.py feat/customer-success-voice-signal
-# if the helper is missing:
-# python3 scripts/check_branch_name.py --branch feat/customer-success-voice-signal
-# git switch -c feat/customer-success-voice-signal
 ```
 
 Copy **this** repo’s skill in, with the differences their validator requires:
@@ -61,29 +51,17 @@ rsync -a --delete \
   skills/customer-success-voice-signal/
 ```
 
-- **Omit** skill `README.md` (their validator rejects it). Keep `SKILL.md`.
-- Keep `references/examples.md` and `references/safety.md`.
-- `SKILL.md` frontmatter `name:` must equal the folder name `customer-success-voice-signal`.
+Keep `.env.example` (not matched by `.env.*` if you copy file-by-file; `open-pr.sh` keeps it). **Omit** skill `README.md`. Keep `SKILL.md`. Keep `references/examples.md` and `references/safety.md`. `SKILL.md` frontmatter `name:` must equal `customer-success-voice-signal`.
 
-Add **one** README list entry under **Skills** (factual, CS/renewal lane — not marketing):
+README Skills one-liner:
 
 ```markdown
 - [`customer-success-voice-signal`](skills/customer-success-voice-signal/) - Stage Manager skill that rings the CS owner (never the customer) for stuck-support / SLA / agent-needs-decision / onboarding cues; closed-set 1/2/3 with dress rehearsal by default and prompt-book writeback.
 ```
 
-Then:
+Commit style: `feat(customer-success-voice-signal): add CS owner decision skill`
 
-```bash
-python3 scripts/validate_repository.py
-```
-
-Commit in **their** Conventional Commit style, e.g.
-
-`feat(customer-success-voice-signal): add CS owner decision skill`
-
-PR title the same. Open the PR against `CALLE-AI/awesome-phone-call-agents`. Copy the PR URL for Devpost.
-
-Packaging notes: [`../submission/awesome-list/PACKAGING.md`](../submission/awesome-list/PACKAGING.md).
+</details>
 
 ## 3. Devpost project (Most Practical package)
 
@@ -97,7 +75,7 @@ Packaging notes: [`../submission/awesome-list/PACKAGING.md`](../submission/aweso
    - Built with: `typescript` `node` `call-e` `vitest` `zod`
 5. Required links:
    - GitHub repo: `https://github.com/assafbar2/customer-success-voice-signal-hackathon`
-   - Awesome-list **PR URL** (not this repo)
+   - Awesome-list **PR URL:** https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250
    - Demo video: https://youtu.be/yvRq7P8F5-c
    - Optional demo app: judge site `https://assafbar2.github.io/customer-success-voice-signal-hackathon/`
    - CALL-E account email
@@ -118,7 +96,7 @@ Do **not** submit a second form. Discord share was left unchecked (not posted). 
 Repo Settings:
 
 - Homepage URL already points at Pages. Keep it.
-- **Social preview:** upload `site/og.png` (Settings → General → Social preview). Cloud cannot do this: the GitHub App token is not admin, and `POST https://uploads.github.com/repos/.../social-previews` returns 422. Pages already serves the same image at `https://assafbar2.github.io/customer-success-voice-signal-hackathon/og.png`. The **GitHub repo card** still uses the default `opengraph.githubassets.com` image until you upload.
+- **Social preview:** uploaded (`site/og.png` → GitHub Settings → Social preview). Live card uses `repository-images.githubusercontent.com`. Pages also serves https://assafbar2.github.io/customer-success-voice-signal-hackathon/og.png.
 - Description can stay: voice signals for Customer Success — ring the CS owner, not the customer.
 - Topics are fine; `site-operator` is optional to remove (cosmetic).
 
@@ -142,7 +120,7 @@ Checked against https://call-e.devpost.com/ and [official rules](https://call-e.
 | --- | --- | --- |
 | Functional project using CALL-E SDK / SKILL (TypeScript) | Yes | `skills/customer-success-voice-signal/` — 93 tests, dress rehearsal default |
 | English description of features | Yes | [`../submission/devpost.md`](../submission/devpost.md) — name **Stage Manager**, tagline **Ack is not a decision.** |
-| PR to `CALLE-AI/awesome-phone-call-agents` (Agent Skills) | **Blocked here** | Packaged + `python3 scripts/validate_repository.py` **passed** on latest upstream. Open with `bash submission/awesome-list/open-pr.sh`. **Devpost wants that PR URL, not this repo.** |
+| PR to `CALLE-AI/awesome-phone-call-agents` (Agent Skills) | **Yes** | https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 — paste **that** URL on Devpost, not this repo |
 | Demo video &lt; 3 min, **public YouTube or Vimeo** | **Yes** | https://youtu.be/yvRq7P8F5-c (~2:08) |
 | CALL-E account email | You type it | `assaf.barnir@sentry.io` |
 | Optional demo app URL | Yes (live) | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ |
@@ -150,3 +128,5 @@ Checked against https://call-e.devpost.com/ and [official rules](https://call-e.
 | MVF Feedback Survey (separate prize) | **Submitted** | [`../submission/mvf-feedback.md`](../submission/mvf-feedback.md) |
 
 Validated this sitting: `npm test` (93) + `npm run typecheck` + dress rehearsal fixture + `POST /cue` (`decision: take_over_chat`) + `apply-action --last --dry-run` + awesome-list validator. Did **not** run curtain-up. Slack/GitHub adapters were **not** fired.
+
+2026-08-27 later: recorded https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 in this repo. Only leftover for Assaf is **Enter a Submission** on Devpost.
