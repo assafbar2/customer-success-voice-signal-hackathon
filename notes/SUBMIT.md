@@ -129,4 +129,8 @@ Checked against https://call-e.devpost.com/ and [official rules](https://call-e.
 
 Validated this sitting: `npm test` (93) + `npm run typecheck` + dress rehearsal fixture + `POST /cue` (`decision: take_over_chat`) + `apply-action --last --dry-run` + awesome-list validator. Did **not** run curtain-up. Slack/GitHub adapters were **not** fired.
 
-2026-08-27 later: recorded https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 in this repo. Only leftover for Assaf is **Enter a Submission** on Devpost.
+2026-08-27 later: recorded https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 in this repo.
+
+**Devpost submitted:** https://devpost.com/software/stage-manager-customer-success-support
+
+Public-page review: required fields are filled (PR #250, YouTube embed, CALL-E email on the form/story, demo app, submitted to CALL-E). Cleanup: delete the `iams_live_…` key line from the Story, rotate that key, drop “paste that URL…” / broken `mvf-feedback.md` links. Optional: add the GitHub repo as a source URL. Clean Story paste: [`../submission/devpost.md`](../submission/devpost.md).

@@ -4,7 +4,7 @@
 
 Every company pages an engineer when a server goes down. Almost nobody pages the human who owns the account. Slack hides the signal. PagerDuty phones you to *acknowledge* an alert. **Ack is not a decision.**
 
-[Live site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/) · [Skill](skills/customer-success-voice-signal/) · [Awesome-list PR](https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250) · [CALL-E hackathon](https://call-e.devpost.com/)
+[Live site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/) · [Skill](skills/customer-success-voice-signal/) · [Awesome-list PR](https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250) · [Devpost](https://devpost.com/software/stage-manager-customer-success-support) · [CALL-E hackathon](https://call-e.devpost.com/)
 
 ![Stage Manager dress rehearsal — no ring, no API key](site/assets/stage-manager-loop.gif)
 
@@ -88,7 +88,8 @@ CLI is a real screen recording. Call beat is the 2026-08-12 live transcript (han
 | | |
 | --- | --- |
 | Product | [`skills/customer-success-voice-signal/`](skills/customer-success-voice-signal/) · [`SKILL.md`](skills/customer-success-voice-signal/SKILL.md) |
-| Awesome-list | [PR #250](https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250) — paste **that** URL on Devpost, not this repo |
+| Awesome-list | [PR #250](https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250) |
+| Devpost | [Stage Manager](https://devpost.com/software/stage-manager-customer-success-support) |
 | Architecture | [`docs/03-architecture-flow.md`](docs/03-architecture-flow.md) |
 | PRD | [`docs/02-prd.md`](docs/02-prd.md) |
 | License | [MIT](LICENSE) |
