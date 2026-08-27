@@ -8,13 +8,9 @@ Deadline: **2026-09-14, 11:45 pm SGT** ([official rules](https://call-e.devpost.
 
 ## 1. Demo video (YouTube / Vimeo)
 
-Devpost **rejects a GitHub file**. Upload `submission/demo-reel/stage-manager-demo.mp4` as a **public** YouTube or Vimeo video, then paste that URL on Devpost.
+**Uploaded:** https://youtu.be/yvRq7P8F5-c — paste this on the Devpost form.
 
-Play it on the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo) or in QuickTime/VLC — **unmute**. GitHub’s file preview often looks silent even when the AAC track is there.
-
-Voice is Microsoft neural TTS (`edge-tts`, `en-US-AndrewMultilingualNeural`). If you want a human recut: `submission/demo-reel/vo/narration.md` → wavs in `human-vo/` → `VO_DIR=human-vo bash submission/demo-reel/build.sh`.
-
-Do not show API keys, full E.164, `.env`, or a live Slack send.
+Source file: `submission/demo-reel/stage-manager-demo.mp4` (~2:08). Judge site still hosts the same cut. GitHub’s file preview often looks silent; YouTube is the submission host.
 
 ## 2. Awesome-list PR
 
@@ -102,7 +98,7 @@ Packaging notes: [`../submission/awesome-list/PACKAGING.md`](../submission/aweso
 5. Required links:
    - GitHub repo: `https://github.com/assafbar2/customer-success-voice-signal-hackathon`
    - Awesome-list **PR URL** (not this repo)
-   - Demo video: the **YouTube/Vimeo** URL
+   - Demo video: https://youtu.be/yvRq7P8F5-c
    - Optional demo app: judge site `https://assafbar2.github.io/customer-success-voice-signal-hackathon/`
    - CALL-E account email
 6. Submit. You can edit until the deadline.
@@ -147,7 +143,7 @@ Checked against https://call-e.devpost.com/ and [official rules](https://call-e.
 | Functional project using CALL-E SDK / SKILL (TypeScript) | Yes | `skills/customer-success-voice-signal/` — 93 tests, dress rehearsal default |
 | English description of features | Yes | [`../submission/devpost.md`](../submission/devpost.md) — name **Stage Manager**, tagline **Ack is not a decision.** |
 | PR to `CALLE-AI/awesome-phone-call-agents` (Agent Skills) | **Blocked here** | Packaged + `python3 scripts/validate_repository.py` **passed** on latest upstream. Open with `bash submission/awesome-list/open-pr.sh`. **Devpost wants that PR URL, not this repo.** |
-| Demo video &lt; 3 min, **public YouTube or Vimeo** | mp4 ready; host missing | `submission/demo-reel/stage-manager-demo.mp4` is **2:08**. GitHub/Pages file is **not** accepted. |
+| Demo video &lt; 3 min, **public YouTube or Vimeo** | **Yes** | https://youtu.be/yvRq7P8F5-c (~2:08) |
 | CALL-E account email | You type it | `assaf.barnir@sentry.io` |
 | Optional demo app URL | Yes (live) | https://assafbar2.github.io/customer-success-voice-signal-hackathon/ |
 | Join the hackathon on Devpost | You | If the button still says **Join hackathon**, register first |
