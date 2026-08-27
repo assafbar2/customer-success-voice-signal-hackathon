@@ -4,7 +4,7 @@ Target: [CALLE-AI/awesome-phone-call-agents](https://github.com/CALLE-AI/awesome
 
 This hackathon repo keeps a skill `README.md` for judges. Their validator **rejects** skill-level `README.md` and **requires** `references/examples.md` + `references/safety.md`.
 
-Operator steps (clone, branch name, rsync, README one-liner, validator): [`../../notes/SUBMIT.md`](../../notes/SUBMIT.md).
+Laptop one-shot (fork + copy without skill README + validate + `gh pr create`): [`open-pr.sh`](open-pr.sh). Status / PR URL: [`STATUS.md`](STATUS.md). Manual steps: [`../../notes/SUBMIT.md`](../../notes/SUBMIT.md).
 
 ## Copy rules
 

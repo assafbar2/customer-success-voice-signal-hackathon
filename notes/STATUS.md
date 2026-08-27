@@ -19,8 +19,15 @@ See [`SUBMIT.md`](SUBMIT.md) for Devpost / awesome-list / MVF / video upload.
 
 ## Operator leftovers
 
-- Upload demo mp4 to YouTube/Vimeo (GitHub file ≠ Devpost)
-- Awesome-list PR (omit skill README)
-- Devpost form + MVF survey (same sitting)
-- GitHub social preview: `site/og.png`
+- **YouTube/Vimeo:** upload `submission/demo-reel/stage-manager-demo.mp4` (2:08). GitHub file ≠ Devpost.
+- **Awesome-list PR:** run `bash submission/awesome-list/open-pr.sh` on a laptop; paste URL into [`../submission/awesome-list/STATUS.md`](../submission/awesome-list/STATUS.md). Cloud cannot fork CALLE-AI.
+- **Devpost form:** Join if needed, then paste from [`../submission/devpost.md`](../submission/devpost.md). You submit.
+- **GitHub Social preview:** Settings → General → upload `site/og.png` (API 422; not admin). Pages `og.png` is already live.
 - Slack/GitHub adapters remain a **stab** — do not fire
+
+## Done this sitting (2026-08-27)
+
+- PR #18 merged to `main` (judge package).
+- MVF survey **submitted** — edit/confirm: see [`../submission/mvf-feedback.md`](../submission/mvf-feedback.md).
+- Skill validated (93 tests, typecheck, dress rehearsal, `POST /cue`).
+- Awesome-list packaging validated against upstream (`validate_repository.py` passed; skill `README.md` omitted).
