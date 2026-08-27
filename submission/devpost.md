@@ -64,7 +64,7 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 
 See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for the MVF survey (closed-set flakiness, no DTMF, failureCode docs, idempotency retries, identity primitive wishlist).
 
-**Submit MVF in the same sitting as Devpost.** Operator steps: [`../notes/SUBMIT.md`](../notes/SUBMIT.md).
+**MVF survey submitted 2026-08-27.** Confirm/edit link in [`mvf-feedback.md`](mvf-feedback.md). Operator steps: [`../notes/SUBMIT.md`](../notes/SUBMIT.md).
 
 ---
 
@@ -78,7 +78,14 @@ See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for 
 - Judge site: https://assafbar2.github.io/customer-success-voice-signal-hackathon/
 - Skill: `skills/customer-success-voice-signal/`
 - Live evidence (redacted): `submission/evidence/` · full ladder: `research/calle-api-notes.md`
-- MVF: `submission/mvf-feedback.md`
+- MVF: `submission/mvf-feedback.md` (**survey submitted 2026-08-27**)
+- Awesome-list PR (required on the form): `_Not opened yet — cloud cannot fork CALLE-AI. Run bash submission/awesome-list/open-pr.sh then paste the URL here and in awesome-list/STATUS.md._`
+- Demo video (required YouTube/Vimeo): `_Upload submission/demo-reel/stage-manager-demo.mp4 (2:08) then paste the public URL here._`
+- CALL-E account email: `assaf.barnir@sentry.io`
+
+## After you submit on Devpost
+
+Paste the **Devpost project URL** here: `TBD`
 
 ---
 

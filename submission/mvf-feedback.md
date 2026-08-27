@@ -2,7 +2,13 @@
 
 Copy/adapt into the Devpost **Most Valuable Feedback** survey. Written from operator live ladder + SDK integration work on `customer-success-voice-signal` (@call-e/calle ^0.6.0). Honest, specific, actionable.
 
-Paste this into the Devpost **CALL-E Feedback Survey** (a separate form from the project submission). Operator steps: [`../notes/SUBMIT.md`](../notes/SUBMIT.md).
+**Submitted 2026-08-27** (do not submit a second form). Confirm or edit the recorded response:
+
+https://docs.google.com/forms/d/e/1FAIpQLSfGWkt2F_ED6aLatQjtjBX8YEpBVQ47A39yeDd1KQRKX488Lg/viewform?usp=form_confirm&edit2=2_ABaOnufgH5C--yO4GwGkPGJicH5_pqVl5g81j3ndR2nLoqtuacRYq0PRI1xu1HSkdKZmEOQ
+
+Recorded as Assaf / Barnir / Devpost username `assafbar2` / `assaf.barnir@sentry.io` / started after 2026-07-23 Yes / interfaces SDK+API+CLI+SKILL / pain 8 / likely-to-use 8 / contact Yes. Discord box left unchecked. If your Devpost handle is not `assafbar2` (profile https://devpost.com/assafbar2 404’d), edit that field.
+
+Operator steps: [`../notes/SUBMIT.md`](../notes/SUBMIT.md).
 
 ---
 
