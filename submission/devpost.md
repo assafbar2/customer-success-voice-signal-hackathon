@@ -80,7 +80,7 @@ See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for 
 - Live evidence (redacted): `submission/evidence/` · full ladder: `research/calle-api-notes.md`
 - MVF: `submission/mvf-feedback.md` (**survey submitted 2026-08-27**)
 - Awesome-list PR (required on the form): `_Not opened yet — cloud cannot fork CALLE-AI. Run bash submission/awesome-list/open-pr.sh then paste the URL here and in awesome-list/STATUS.md._`
-- Demo video (required YouTube/Vimeo): `_Upload submission/demo-reel/stage-manager-demo.mp4 (2:08) then paste the public URL here._`
+- Demo video (required YouTube/Vimeo): https://youtu.be/yvRq7P8F5-c
 - CALL-E account email: `assaf.barnir@sentry.io`
 
 ## After you submit on Devpost

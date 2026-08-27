@@ -3,6 +3,7 @@
 ## What ships
 
 - [`stage-manager-demo.mp4`](stage-manager-demo.mp4) — problem-first narrative (~2 min)
+- YouTube (Devpost host): https://youtu.be/yvRq7P8F5-c
 - [`stage-manager-loop.gif`](stage-manager-loop.gif) — dress-rehearsal CLI for README + site
 
 ## What you are looking at

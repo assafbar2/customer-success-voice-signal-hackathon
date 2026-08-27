@@ -79,7 +79,7 @@ Redacted rows: [`submission/evidence/`](submission/evidence/). Full ladder: [`re
 
 ## Demo
 
-[`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · on the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo)
+[`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · [YouTube](https://youtu.be/yvRq7P8F5-c) · on the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo)
 
 CLI is a real screen recording. Call beat is the 2026-08-12 live transcript (handset audio lives on the CS owner’s phone). Slack does not fire.
 
