@@ -1,40 +1,33 @@
 # Demo reel — Stage Manager
 
-## What you get
+## What ships
 
-- [`stage-manager-demo.mp4`](stage-manager-demo.mp4) — ~65s
-- [`stage-manager-loop.gif`](stage-manager-loop.gif) — CLI loop for README + site
+- [`stage-manager-demo.mp4`](stage-manager-demo.mp4) — problem-first narrative (~2 min)
+- [`stage-manager-loop.gif`](stage-manager-loop.gif) — dress-rehearsal CLI for README + site
 
-## What was recorded here (this machine)
+## What you are looking at
 
-1. **Real CLI screen recording** on the cloud desktop (`xfce4-terminal`, JetBrains Mono): `--last` (live prompt book, option 1), dress rehearsal, `--list`, `apply-action --dry-run`.
-2. **Title / value / end cards** with espeak-ng VO from [`../video-script.md`](../video-script.md).
-3. **Call beat** reconstructed from the **2026-08-12 live CALL-E transcript** (Assaf, stage code 4821, “1”). Caption on screen: handset audio lives on the owner’s phone.
+1. **Editorial cards** — long holds, not slogan stacks. Problem is the first beat.
+2. **Real CLI** — `xfce4-terminal` dress rehearsal (no key, no ring).
+3. **Live call beat** — reconstructed from the **2026-08-12 CALL-E transcript** (stage code 4821, option 1). Caption: handset audio lives on the owner’s phone.
+4. **Voice** — Microsoft neural TTS (`en-US-AndrewMultilingualNeural`). Still synthetic; a human recut is [`vo/narration.md`](vo/narration.md).
 
 Slack does not fire. Customer was never called.
 
-## Honest limits
-
-- Voice is **espeak-ng** (robotic). Swap in a human mic later if you want polish — the CLI take does not need to be re-shot.
-- The physical phone ring / earpiece audio cannot be captured from this VM. The live call already happened; this reel uses that transcript instead of pretending we held the handset.
-- No talking-head. Intentional.
-
 ## Rebuild
 
-Needs: `espeak-ng`, `ffmpeg`, `python3-pillow`, plus the CLI recording at `/opt/cursor/artifacts/stage-manager-cli-demo.mp4` (or re-run `record_cli.sh` on a desktop with `DISPLAY`).
+Needs: `ffmpeg`, `python3`, `pillow`, `edge-tts` (`pip install edge-tts pillow`), plus a CLI recording at `/opt/cursor/artifacts/stage-manager-cli-demo.mp4` (or re-run `record_cli.sh` on a desktop with `DISPLAY`).
 
 ```bash
 bash submission/demo-reel/build.sh
 ```
 
-On-camera CLI (fullscreen terminal):
+Human VO (optional): drop wavs in `human-vo/` as named in `vo/narration.md`, then:
 
 ```bash
-DISPLAY=:1 xfce4-terminal --fullscreen --hide-menubar --font="JetBrains Mono 18" \
-  --color-bg="#0c0a08" --color-text="#f4efe6" \
-  --command="bash submission/demo-reel/record_cli.sh"
+VO_DIR=human-vo bash submission/demo-reel/build.sh
 ```
 
-## Pre-submit
+## Upload
 
-Tick video + GIF on [`../PRE-SUBMIT.md`](../PRE-SUBMIT.md) **together with** the MVF survey. MVF is not part of the reel.
+GitHub is not a valid Devpost video host. Public YouTube or Vimeo. Steps: [`../../notes/SUBMIT.md`](../../notes/SUBMIT.md).

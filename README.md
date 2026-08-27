@@ -1,36 +1,36 @@
-# customer-success-voice-signal-hackathon
+# Stage Manager
 
-**Product:** Stage Manager · skill id [`customer-success-voice-signal`](skills/customer-success-voice-signal/)  
-**Hackathon:** [CALL-E: Your Code Is Calling](https://call-e.devpost.com/) · aiming **Most Practical**  
-**Live site:** https://assafbar2.github.io/customer-success-voice-signal-hackathon/  
-**Demo (~65s):** [`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · loop: [`site/assets/stage-manager-loop.gif`](site/assets/stage-manager-loop.gif)
+**When the renewal goes quiet, page the owner — not the customer.**
+
+Every company pages an engineer when a server goes down. Almost nobody pages the human who owns the account. Slack hides the signal. PagerDuty phones you to *acknowledge* an alert. **Ack is not a decision.**
+
+[Live site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/) · [Skill](skills/customer-success-voice-signal/) · [CALL-E hackathon](https://call-e.devpost.com/)
 
 ![Stage Manager dress rehearsal — no ring, no API key](site/assets/stage-manager-loop.gif)
 
-> Every company pages an engineer when a server goes down. Nobody pages the human who owns the renewal when the account goes quiet.
->
-> *PagerDuty phones you to acknowledge an alert. Ack is not a decision.*
-
-When a named account hits a high-risk **cue** (trigger event), **Stage Manager** rings the **CS owner** (never the customer) with a ~60s closed-set line reading — a 1/2/3 decision menu. The decision is **state** in the prompt book (NDJSON audit log) — and an **action intent** for the next system (ticket / CRM / Slack), not a chat ack.
+Stage Manager is a CALL-E skill. When a named account hits a high-risk **cue**, it rings the **CS owner only** (never the customer) with a ~60s closed-set line reading — say **1 / 2 / 3**. The decision is written to a **prompt book** (audit log) and an **action intent** for the next system. Dress rehearsal is the default: judges run the full loop with no API key.
 
 ---
 
-## Why this vs paging tools
+## Why this exists
 
-| | PagerDuty / Opsgenie-style page | Stage Manager |
+| | Incident pager | Stage Manager |
 | --- | --- | --- |
 | Who | On-call engineer | **CS owner** of a named account |
-| Output | Acknowledge / escalate | **Closed-set CS decision** + **action intent** |
-| Audit | Incident timeline | Prompt book + show report + `data/actions/` |
-| Default | Live page | **Dress rehearsal** (dry-run) — live needs `--live` + `PLACES` |
+| Output | Acknowledge / escalate | **Closed-set CS decision** + action intent |
+| Audit | Incident timeline | Prompt book + show report |
+| Default | Live page | **Dress rehearsal** — live needs `--live` + `PLACES` |
 
-Lane check: awesome-list phone agents already cover deploy approvals; **B2B customer success / renewal** is still open.
+Phone still cuts through. Only if it is rare, short, structured, and aimed at the firefighter — not a spam dialer to the building.
 
-## Judge site
+## Four cues, one engine
 
-- Source: [`site/`](site/) via **GitHub Pages** (GitHub Actions)  
-- URL: https://assafbar2.github.io/customer-success-voice-signal-hackathon/  
-- Set the GitHub repo **Homepage** field to that URL (not the old Vercel 404)
+1. **stuck_support** — take over in chat · assign SE · snooze 2 hours
+2. **agent_needs_decision** — approve A · approve B · escalate
+3. **sla_risk** — own the ticket · page backup · accept risk
+4. **health_onboarding** — book SE · watchlist · flag churn
+
+Cue in (fixture, stdin, or `POST /cue`) → call sheet (owned? quiet hours? owner budget?) → dress rehearsal or curtain-up → spoken **stage code** (identity) → 1/2/3 → prompt book + action intent.
 
 ## How judges run this
 
@@ -40,23 +40,20 @@ cd customer-success-voice-signal-hackathon/skills/customer-success-voice-signal
 npm install
 npm test && npm run typecheck
 
-# Inbound seam — webhook-shaped JSON (not fixtures-only)
+# Dress rehearsal — default, no ring, no CALL-E key
+npm run signal -- --fixture stuck_support_acme.json
+
+# Same engine, webhook-shaped inbound
 npm run signal -- --stdin < events/webhook_stuck_support.json
 
-# Or HTTP listener (deployable — same engine)
+# HTTP listener (deployable)
 npm run serve-cue &
 curl -sS -X POST http://127.0.0.1:8787/cue \
   -H 'content-type: application/json' \
   -d @events/webhook_stuck_support.json
 
-# Decision → system handoff (local receipt; Slack/GitHub are a stab — do not fire)
+# Decision → local handoff (Slack/GitHub adapters are a stab — do not fire)
 npm run apply-action -- --last --dry-run
-npm run apply-action -- --last
-
-# Curtain-up — operator only
-# https://dashboard.heycall-e.com/account/api-keys
-# cp .env.example .env → CALLE_API_KEY, CS_OWNER_E164, SIGNAL_CONFIRM=PLACES
-# npm run signal -- --fixture stuck_support_acme.json --live PLACES
 ```
 
 | Exit | Meaning |
@@ -65,56 +62,35 @@ npm run apply-action -- --last
 | 2 | HOLD (policy / live gate / quiet hours / owner budget) |
 | 3 | Failure |
 
-**Seam:** `POST /cue` or stdin → phone decision → `data/actions/pending/*.json` → `apply-action --dry-run` → local receipt. Slack/GitHub adapters are a **stab** (out of MVP — do not fire). Zendesk / Salesforce shapes documented at the seam. See [`references/action-intents.md`](skills/customer-success-voice-signal/references/action-intents.md).
+Curtain-up (operator only): copy `.env.example` → `.env`, set `CALLE_API_KEY`, `CS_OWNER_E164`, then `npm run signal -- --fixture stuck_support_acme.json --live PLACES`. Never commit `.env`.
 
-**Safety:** CS owner only · dress rehearsal (dry-run) default · per-owner call budget · owner/env quiet-hours precedence · untrusted cue wrapping · concurrent dial lock · house dark (quiet hours) timezone-aware · HOLD/failure never poison cue dedupe · fixture phones never dialed live · SDK `failureCode`/`completionConfidence` preferred · identity stage-code read-back before 1/2/3.
+**Safety:** CS owner only · dress rehearsal default · per-owner call budget · timezone-aware quiet hours · fixture phones never dialed live · identity stage-code before 1/2/3 · HOLD never poisons cue dedupe.
 
-Live ladder (including voicemail / unclear): [`research/calle-api-notes.md`](research/calle-api-notes.md) · redacted rows: [`submission/evidence/`](submission/evidence/) · SDK notes: [`skills/customer-success-voice-signal/references/calle-sdk.md`](skills/customer-success-voice-signal/references/calle-sdk.md) · MVF: [`submission/mvf-feedback.md`](submission/mvf-feedback.md)
+## Live, honestly
 
-## Docs map
+Real curtain-up against CALL-E — misses included.
 
-| Path | Purpose |
+| Cue | Best result | Also observed |
+| --- | --- | --- |
+| `stuck_support` | Line reading **1** — take over in chat | Voicemail → `no_answer`; paraphrased `decision` first mapped `unclear` |
+| `agent_needs_decision` | Line reading **1** — approve A | Earlier `unclear` captures |
+
+Redacted rows: [`submission/evidence/`](submission/evidence/). Full ladder: [`research/calle-api-notes.md`](research/calle-api-notes.md).
+
+## Demo
+
+[`submission/demo-reel/stage-manager-demo.mp4`](submission/demo-reel/stage-manager-demo.mp4) · on the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo)
+
+CLI is a real screen recording. Call beat is the 2026-08-12 live transcript (handset audio lives on the CS owner’s phone). Slack does not fire.
+
+## More
+
+| | |
 | --- | --- |
-| [skills/customer-success-voice-signal/](skills/customer-success-voice-signal/) | **Stage Manager skill** |
-| [docs/02-prd.md](docs/02-prd.md) | Product decisions |
-| [docs/03-architecture-flow.md](docs/03-architecture-flow.md) | As-built flow |
-| [submission/awesome-list/PACKAGING.md](submission/awesome-list/PACKAGING.md) | Awesome-list PR packaging |
-| [submission/PRE-SUBMIT.md](submission/PRE-SUBMIT.md) | Pre-submit: video · GIF · awesome-list · MVF · Devpost |
-| [submission/mvf-feedback.md](submission/mvf-feedback.md) | Most Valuable Feedback survey draft |
-| [submission/gif-notes.md](submission/gif-notes.md) | Terminal GIF capture notes |
-| [skills/customer-success-voice-signal/references/calle-sdk.md](skills/customer-success-voice-signal/references/calle-sdk.md) | SDK fields + identity read-back |
-| [notes/STATUS.md](notes/STATUS.md) | Operator status (not a pitch deck) |
-| [LICENSE](LICENSE) | MIT |
-
-## Official links
-
-- Devpost: https://call-e.devpost.com/  
-- Rules: https://call-e.devpost.com/rules  
-- **CALL-E API keys:** https://dashboard.heycall-e.com/account/api-keys  
-- **Submit list PR:** https://github.com/CALLE-AI/awesome-phone-call-agents  
-- Extra calls form: https://forms.gle/EPQttEZ1rkW8iq9q6  
-
-## Submit checklist
-
-Master pre-submit (video · GIF · awesome-list · **MVF** · Devpost):  
-[`submission/PRE-SUBMIT.md`](submission/PRE-SUBMIT.md)
-
-- [x] Skill + dress rehearsal + curtain-up path
-- [x] Judge site on GitHub Pages
-- [x] Terminal GIF — [`submission/gif-notes.md`](submission/gif-notes.md)
-- [ ] Awesome-list PR — [`submission/awesome-list/PACKAGING.md`](submission/awesome-list/PACKAGING.md) (MVF is a gate)
-- [x] Demo video (agent-recorded CLI + live transcript; TTS VO) — [`submission/demo-reel/`](submission/demo-reel/)
-- [ ] **MVF survey** — paste [`submission/mvf-feedback.md`](submission/mvf-feedback.md) on Devpost
-- [ ] Devpost form — [`submission/devpost.md`](submission/devpost.md)
-
-## Judging criteria (Devpost)
-
-1. Real World Impact
-2. Quality of the Idea
-3. Technical Implementation (CALL-E at runtime)
-4. Product Experience & Demo (≤3 min video)
-
-Also submit **Most Valuable Feedback** (separate survey) — draft in repo.
+| Product | [`skills/customer-success-voice-signal/`](skills/customer-success-voice-signal/) · [`SKILL.md`](skills/customer-success-voice-signal/SKILL.md) |
+| Architecture | [`docs/03-architecture-flow.md`](docs/03-architecture-flow.md) |
+| PRD | [`docs/02-prd.md`](docs/02-prd.md) |
+| License | [MIT](LICENSE) |
 
 ---
 
