@@ -111,6 +111,40 @@ def centered(draw: ImageDraw.ImageDraw, text: str, y: int, f, fill=CREAM) -> Non
     draw.text(((W - tw) / 2, y), text, font=f, fill=fill)
 
 
+def mean_volume_db(path: Path) -> float:
+    out = subprocess.check_output(
+        ["ffmpeg", "-i", str(path), "-af", "volumedetect", "-f", "null", "-"],
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    for line in out.splitlines():
+        if "mean_volume:" in line:
+            return float(line.split("mean_volume:")[1].split("dB")[0].strip())
+    return -99.0
+
+
+def loudnorm_wav(src: Path, dst: Path | None = None) -> Path:
+    dst = dst or src
+    tmp = src.with_name(src.stem + ".__ln.wav")
+    run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(src),
+            "-af",
+            "loudnorm=I=-16:TP=-1.5:LRA=11",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            str(tmp),
+        ]
+    )
+    tmp.replace(dst)
+    return dst
+
+
 def to_wav(src: Path, dst: Path) -> None:
     run(
         [
@@ -136,6 +170,10 @@ def speak_edge(text: str, dst: Path, voice: str) -> None:
 
     asyncio.run(_go())
     to_wav(mp3, dst)
+    loudnorm_wav(dst)
+    db = mean_volume_db(dst)
+    if db < -45:
+        raise SystemExit(f"TTS produced near-silence for {dst.name} ({db:.1f} dB)")
 
 
 def speak(name: str, text: str, voice: str = NARRATOR) -> Path:
@@ -154,6 +192,7 @@ def speak(name: str, text: str, voice: str = NARRATOR) -> Path:
                 to_wav(human, wav)
         else:
             to_wav(human, wav)
+        loudnorm_wav(wav)
         return wav
     speak_edge(text, wav, voice)
     return wav
@@ -350,7 +389,7 @@ def mix_vo_under(video: Path, wav: Path, out: Path, overlay: str | None = None) 
             "-i",
             str(wav),
             "-filter_complex",
-            f"{vf};[1:a]apad=pad_dur={max(0, vdur - adur):.3f},volume=1.0[a]",
+            f"{vf};[1:a]apad=pad_dur={max(0, vdur - adur):.3f},loudnorm=I=-16:TP=-1.5:LRA=11[a]",
             "-map",
             "[v]",
             "-map",
@@ -654,6 +693,7 @@ def main() -> None:
     )
     w_call = AUDIO / "04_call.wav"
     concat_wavs([w_host, gap, ring, gap, sm1, gap, own1, gap, sm2, gap, own2, gap, sm3], w_call)
+    loudnorm_wav(w_call)
     w_close = speak(
         "05_close",
         "That decision is state. Not a Slack shrug. An action intent for the next system. Ack is not a decision. This is. When the account is on fire, we cue the firefighter — not the building. Stage Manager. No customers were called in the making of this demo.",
@@ -734,6 +774,10 @@ def main() -> None:
     print("audio:", astreams or "MISSING")
     if "aac" not in astreams:
         raise SystemExit("final mp4 has no AAC audio")
+    db = mean_volume_db(out)
+    print(f"mean_volume: {db:.1f} dB")
+    if db < -40:
+        raise SystemExit(f"final mp4 audio is too quiet / silent ({db:.1f} dB)")
     if total > 180:
         raise SystemExit(f"reel is {total:.1f}s — over the 3:00 Devpost cap")
 

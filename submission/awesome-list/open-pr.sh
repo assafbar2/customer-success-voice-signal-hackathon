@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Open the CALL-E awesome-list PR from a laptop where YOU are logged into GitHub.
-# This cloud agent cannot fork CALLE-AI/awesome-phone-call-agents (GitHub App
-# token is scoped to this repo only).
+# Open the CALL-E awesome-list PR from YOUR GitHub login on YOUR machine.
+# Cursor Cloud / cursor.com/agents terminals cannot do this (cursor[bot] 403).
 set -euo pipefail
 
 HACKATHON="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -9,14 +8,73 @@ SRC="$HACKATHON/skills/customer-success-voice-signal"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-command -v gh >/dev/null || { echo "Need GitHub CLI (gh) authenticated as you."; exit 1; }
-command -v python3 >/dev/null
+howto() {
+  cat <<'EOF' >&2
 
+HOW TO RUN THIS (must be YOU, not Cursor Cloud):
+
+  1. Open Terminal on your Mac — Spotlight → Terminal
+     or Cursor *desktop* local terminal.
+
+     Check you are NOT on the cloud VM:
+       pwd
+     WRONG:  /workspace          (cursor.com/agents / Cloud Agent)
+     RIGHT:  /Users/yourname/... (your laptop)
+
+  2. Confirm GitHub CLI is you:
+       gh api user --jq .login
+     Must print:  assafbar2
+     WRONG: 403 / "Resource not accessible by integration" / cursor
+
+     If wrong:
+       brew install gh          # if gh is missing
+       gh auth login            # GitHub.com → HTTPS → Login with a web browser
+                                # authenticate as assafbar2
+
+  3. Get this repo on the laptop, then:
+       cd /path/to/customer-success-voice-signal-hackathon
+       git pull origin main
+       bash submission/awesome-list/open-pr.sh
+
+  4. Paste the printed AWESOME_LIST_PR_URL into Devpost and into
+     submission/awesome-list/STATUS.md
+
+EOF
+}
+
+command -v gh >/dev/null || { echo "Need GitHub CLI (gh)." >&2; howto; exit 1; }
+command -v python3 >/dev/null || { echo "Need python3 (used by their validator)." >&2; exit 1; }
+
+if [[ "$HACKATHON" == /workspace || "$PWD" == /workspace || "$PWD" == /workspace/* ]]; then
+  echo "ERROR: this is the Cursor Cloud VM (/workspace). gh here is cursor[bot] — it cannot fork CALLE-AI." >&2
+  howto
+  exit 1
+fi
+
+LOGIN="$(gh api user --jq .login 2>/dev/null || true)"
+if [[ -z "$LOGIN" || "$LOGIN" == *'{'* || "$LOGIN" == cursor || "$LOGIN" == *'[bot]'* ]]; then
+  echo "ERROR: gh is not logged in as you (got ${LOGIN:-empty / 403})." >&2
+  howto
+  exit 1
+fi
+if [[ ! "$LOGIN" =~ ^[A-Za-z0-9-]+$ ]]; then
+  echo "ERROR: unexpected GitHub login: $LOGIN" >&2
+  howto
+  exit 1
+fi
+
+echo "GitHub user: $LOGIN"
 echo "Using skill source: $SRC"
 echo "Workdir: $WORKDIR"
 
-gh repo fork CALLE-AI/awesome-phone-call-agents --clone=false --remote=false || true
-gh repo clone "$(gh api user --jq .login)/awesome-phone-call-agents" "$WORKDIR/awesome-phone-call-agents"
+# Do not pass --remote: gh rejects it when a repository argument is given.
+if ! gh repo fork CALLE-AI/awesome-phone-call-agents --clone=false; then
+  echo "ERROR: could not fork CALLE-AI/awesome-phone-call-agents as $LOGIN." >&2
+  howto
+  exit 1
+fi
+
+gh repo clone "$LOGIN/awesome-phone-call-agents" "$WORKDIR/awesome-phone-call-agents"
 cd "$WORKDIR/awesome-phone-call-agents"
 git remote add upstream https://github.com/CALLE-AI/awesome-phone-call-agents.git 2>/dev/null || true
 git fetch upstream
@@ -103,9 +161,8 @@ EOF
 )"
 )"
 if [ -z "${PR_URL:-}" ]; then
-  PR_URL="$(gh pr list --repo CALLE-AI/awesome-phone-call-agents --head "$(gh api user --jq .login):feat/customer-success-voice-signal" --json url --jq '.[0].url' 2>/dev/null || true)"
+  PR_URL="$(gh pr list --repo CALLE-AI/awesome-phone-call-agents --head "$LOGIN:feat/customer-success-voice-signal" --json url --jq '.[0].url' 2>/dev/null || true)"
 fi
 echo
 echo "AWESOME_LIST_PR_URL=${PR_URL:-}"
 echo "Paste that URL into Devpost and into $HACKATHON/submission/awesome-list/STATUS.md"
-
