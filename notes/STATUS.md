@@ -19,8 +19,7 @@ See [`SUBMIT.md`](SUBMIT.md) for Devpost / awesome-list / MVF / video upload.
 
 ## Operator leftovers
 
-- **Awesome-list PR:** run `bash submission/awesome-list/open-pr.sh` on a laptop; paste URL into [`../submission/awesome-list/STATUS.md`](../submission/awesome-list/STATUS.md). Cloud cannot fork CALLE-AI.
-- **Devpost form:** Join if needed, then paste from [`../submission/devpost.md`](../submission/devpost.md) (YouTube URL is already in that file). You submit.
+- **Devpost form:** Join if needed, then paste from [`../submission/devpost.md`](../submission/devpost.md) (YouTube + awesome-list PR #250 are already in that file). You submit.
 - Slack/GitHub adapters remain a **stab** — do not fire
 
 ## Done this sitting (2026-08-27)
@@ -28,4 +27,5 @@ See [`SUBMIT.md`](SUBMIT.md) for Devpost / awesome-list / MVF / video upload.
 - PR #18 merged to `main` (judge package).
 - MVF survey **submitted** — edit/confirm: see [`../submission/mvf-feedback.md`](../submission/mvf-feedback.md).
 - YouTube demo: https://youtu.be/yvRq7P8F5-c
-- Awesome-list packaging validated against upstream (`validate_repository.py` passed; skill `README.md` omitted).
+- Awesome-list PR **opened:** https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 (from laptop; recorded in this repo).
+- GitHub social preview uploaded.

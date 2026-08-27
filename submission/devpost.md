@@ -58,7 +58,7 @@ Phone-call agents mostly point outward (sales dialers, customer bots) or stop at
 ### What's next
 
 - Zendesk / Salesforce adapter shapes documented at the seam. Slack + GitHub HTTP send is a **stab** (out of MVP — do not fire).
-- Awesome-list PR to `CALLE-AI/awesome-phone-call-agents` (omit skill README).
+- Awesome-list PR is **open:** https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 — paste that URL on the Devpost form.
 
 ### Most Valuable Feedback
 
@@ -79,7 +79,7 @@ See [`submission/mvf-feedback.md`](mvf-feedback.md) — structured feedback for 
 - Skill: `skills/customer-success-voice-signal/`
 - Live evidence (redacted): `submission/evidence/` · full ladder: `research/calle-api-notes.md`
 - MVF: `submission/mvf-feedback.md` (**survey submitted 2026-08-27**)
-- Awesome-list PR (required on the form): `_Not opened yet — cloud cannot fork CALLE-AI. Run bash submission/awesome-list/open-pr.sh then paste the URL here and in awesome-list/STATUS.md._`
+- Awesome-list PR (required on the form): https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250
 - Demo video (required YouTube/Vimeo): https://youtu.be/yvRq7P8F5-c
 - CALL-E account email: `assaf.barnir@sentry.io`
 

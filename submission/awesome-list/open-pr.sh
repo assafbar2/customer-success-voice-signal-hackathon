@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Open the CALL-E awesome-list PR from YOUR GitHub login on YOUR machine.
 # Cursor Cloud / cursor.com/agents terminals cannot do this (cursor[bot] 403).
+# Already opened: https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250
+# Re-running this script should print that URL and exit — do not open a second PR.
 set -euo pipefail
 
 HACKATHON="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -64,6 +66,16 @@ if [[ ! "$LOGIN" =~ ^[A-Za-z0-9-]+$ ]]; then
 fi
 
 echo "GitHub user: $LOGIN"
+EXISTING="$(gh pr list --repo CALLE-AI/awesome-phone-call-agents --head "$LOGIN:feat/customer-success-voice-signal" --state open --json url --jq '.[0].url // empty' 2>/dev/null || true)"
+if [[ -z "$EXISTING" ]]; then
+  EXISTING="$(gh pr list --repo CALLE-AI/awesome-phone-call-agents --search "customer-success-voice-signal author:$LOGIN" --state open --json url --jq '.[0].url // empty' 2>/dev/null || true)"
+fi
+if [[ -n "$EXISTING" ]]; then
+  echo "Already open: $EXISTING"
+  echo "Do not open a second PR. Paste that URL on Devpost."
+  echo "AWESOME_LIST_PR_URL=$EXISTING"
+  exit 0
+fi
 echo "Using skill source: $SRC"
 echo "Workdir: $WORKDIR"
 
