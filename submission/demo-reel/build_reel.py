@@ -342,12 +342,19 @@ def extract_cli_from_old(out: Path) -> bool:
 
 def trim_cli(out: Path) -> None:
     if CLI_SRC.exists():
+        # Drop the last ~2s: the xfce recording captures desktop wallpaper
+        # after the terminal exits. mix_vo_under clones the last frame to
+        # cover remaining VO, so a bad tail becomes the 1:06 "rubbish" hold.
+        src_dur = probe_dur(CLI_SRC)
+        keep = max(8.0, min(src_dur - 2.2, src_dur) - 0.4)
         run(
             [
                 "ffmpeg",
                 "-y",
                 "-ss",
                 "0.4",
+                "-t",
+                f"{keep:.3f}",
                 "-i",
                 str(CLI_SRC),
                 "-vf",
