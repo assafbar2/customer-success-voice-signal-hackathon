@@ -19,7 +19,7 @@ See [`SUBMIT.md`](SUBMIT.md) for Devpost / awesome-list / MVF / video upload.
 
 ## Operator leftovers
 
-- **Devpost form:** Join if needed, then paste from [`../submission/devpost.md`](../submission/devpost.md) (YouTube + awesome-list PR #250 are already in that file). You submit.
+- **Devpost Story cleanup:** https://devpost.com/software/stage-manager-customer-success-support — remove the CALL-E key line, rotate the key, drop operator leftover sentences. Clean paste is in [`../submission/devpost.md`](../submission/devpost.md).
 - Slack/GitHub adapters remain a **stab** — do not fire
 
 ## Done this sitting (2026-08-27)
@@ -29,3 +29,4 @@ See [`SUBMIT.md`](SUBMIT.md) for Devpost / awesome-list / MVF / video upload.
 - YouTube demo: https://youtu.be/yvRq7P8F5-c
 - Awesome-list PR **opened:** https://github.com/CALLE-AI/awesome-phone-call-agents/pull/250 (from laptop; recorded in this repo).
 - GitHub social preview uploaded.
+- Devpost **submitted:** https://devpost.com/software/stage-manager-customer-success-support
