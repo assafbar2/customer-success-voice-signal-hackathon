@@ -10,7 +10,7 @@
 1. **Editorial cards** — long holds, not slogan stacks. Problem is the first beat.
 2. **Real CLI** — `xfce4-terminal` dress rehearsal (no key, no ring).
 3. **Live call beat** — reconstructed from the **2026-08-12 CALL-E transcript** (stage code 4821, option 1). Caption: handset audio lives on the owner’s phone.
-4. **Voice** — Microsoft neural TTS (`en-US-AndrewMultilingualNeural`). Still synthetic; a human recut is [`vo/narration.md`](vo/narration.md).
+4. **Voice** — Microsoft neural TTS (`edge-tts`, `en-US-AndrewMultilingualNeural`), loudnorm’d to speech level. GitHub’s file preview often looks silent; play the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo) or VLC/QuickTime with **sound on**. Human recut: [`vo/narration.md`](vo/narration.md).
 
 Slack does not fire. Customer was never called.
 

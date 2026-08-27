@@ -13,10 +13,21 @@ Target: https://github.com/CALLE-AI/awesome-phone-call-agents
 - **`python3 scripts/validate_repository.py` passed** on 2026-08-27 against upstream `main` + this skill.
 - Branch name `feat/customer-success-voice-signal` passes their `check_branch_name.py`.
 
-## What you do (~2 minutes, laptop, logged into GitHub)
+## What you do (~2 minutes)
+
+**Not** the Cursor Cloud / cursor.com/agents terminal (`/workspace` → `cursor[bot]` 403).
+
+On your **Mac** (Terminal.app or Cursor desktop local terminal):
 
 ```bash
-chmod +x submission/awesome-list/open-pr.sh
+pwd
+# must be /Users/...  not /workspace
+gh api user --jq .login
+# must print assafbar2
+# if 403:  brew install gh && gh auth login
+
+cd /path/to/customer-success-voice-signal-hackathon
+git pull origin main
 bash submission/awesome-list/open-pr.sh
 ```
 

@@ -10,7 +10,9 @@ Deadline: **2026-09-14, 11:45 pm SGT** ([official rules](https://call-e.devpost.
 
 Devpost **rejects a GitHub file**. Upload `submission/demo-reel/stage-manager-demo.mp4` as a **public** YouTube or Vimeo video, then paste that URL on Devpost.
 
-If the TTS still sounds wrong: `submission/demo-reel/vo/narration.md` is the current script. Record it in ElevenLabs / ChatGPT Voice / a mic, drop wavs into `submission/demo-reel/human-vo/` (see that folder’s README), rebuild with `bash submission/demo-reel/build.sh`.
+Play it on the [judge site](https://assafbar2.github.io/customer-success-voice-signal-hackathon/#demo) or in QuickTime/VLC — **unmute**. GitHub’s file preview often looks silent even when the AAC track is there.
+
+Voice is Microsoft neural TTS (`edge-tts`, `en-US-AndrewMultilingualNeural`). If you want a human recut: `submission/demo-reel/vo/narration.md` → wavs in `human-vo/` → `VO_DIR=human-vo bash submission/demo-reel/build.sh`.
 
 Do not show API keys, full E.164, `.env`, or a live Slack send.
 
@@ -18,14 +20,25 @@ Do not show API keys, full E.164, `.env`, or a live Slack send.
 
 Hackathon rule: open a PR to https://github.com/CALLE-AI/awesome-phone-call-agents and paste **that PR URL** on Devpost. This cloud agent **cannot** open it (`cursor[bot]` is scoped to this repo only; fork/push to CALLE-AI returns 403). Status: [`../submission/awesome-list/STATUS.md`](../submission/awesome-list/STATUS.md).
 
-**Fast path (laptop, logged into GitHub as you):**
+**Fast path — your Mac, logged into GitHub as you (not Cursor Cloud):**
+
+```text
+WRONG:  cursor.com/agents terminal     (pwd is /workspace, gh is cursor[bot])
+RIGHT:  Mac Terminal.app or Cursor desktop local terminal
+        (pwd is /Users/...  and  gh api user --jq .login  prints assafbar2)
+```
 
 ```bash
+# one-time if needed:
+brew install gh
+gh auth login          # GitHub.com → HTTPS → browser → assafbar2
+
+cd /path/to/customer-success-voice-signal-hackathon
 git pull origin main
 bash submission/awesome-list/open-pr.sh
 ```
 
-Paste the printed PR URL into Devpost, then into `submission/awesome-list/STATUS.md`.
+The script refuses to run on `/workspace` and refuses `cursor[bot]`. Paste the printed PR URL into Devpost, then into `submission/awesome-list/STATUS.md`.
 
 Manual path (if you prefer not to run the script) — their branch names cannot be `cursor/…`:
 
